@@ -1,5 +1,7 @@
 package scot.massie.lib.permissions;
 
+import java.util.List;
+
 public final class Permission
 {
     public Permission(boolean isNegation, boolean isWildcard)
@@ -30,4 +32,30 @@ public final class Permission
 
     public String getArgOr(String defaultVal)
     { return argument != null ? argument : defaultVal; }
+
+    public String toString(List<String> path)
+    { return toString(String.join(".", path));  }
+
+    public String toString(String[] path)
+    { return toString(String.join(".", path)); }
+
+    public String toString(String pathAsString)
+    {
+        String result = pathAsString;
+
+        if(isNegation)
+            result = "-" + result;
+
+        if(isWildcard)
+            result += ".*";
+
+        if(argument != null)
+            result = result + ": " + argument;
+
+        return result;
+    }
+
+    @Override
+    public String toString()
+    { return toString("(path)"); }
 }
