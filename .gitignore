@@ -1,0 +1,8 @@
+.*
+!.gitignore
+!.gitattributes
+
+*.iml
+
+/.idea/
+/out/
