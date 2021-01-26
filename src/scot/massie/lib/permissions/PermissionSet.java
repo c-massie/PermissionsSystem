@@ -48,15 +48,12 @@ public final class PermissionSet
         permissionTree.setAt(new Permission(isNegation, isWildcard, permArg), nodes);
     }
 
-    public boolean hasPermission(String permissionAsString)
-    { return hasPermission(permissionAsString.split("\\.")); }
-
-    public boolean hasPermission(List<String> permissionPath)
+    private Permission getMostRelevantPermission(List<String> permissionPath)
     {
         List<Tree.Entry<String, Permission>> relevantPerms = permissionTree.getEntriesAlong(permissionPath);
 
         if(relevantPerms.isEmpty())
-            return false;
+            return null;
 
         // mrp = most relevant permission
         Tree.Entry<String, Permission> mrpWithPath = relevantPerms.get(relevantPerms.size() - 1);
@@ -66,14 +63,35 @@ public final class PermissionSet
         if((mrpPath.size() == permissionPath.size()) && (mrp.isWildcard()))
         {
             if(relevantPerms.size() <= 1)
-                return false;
+                return null;
 
             mrp = relevantPerms.get(relevantPerms.size() - 2).getItem();
         }
 
-        return !mrp.isNegation();
+        return mrp;
+    }
+
+    public boolean hasPermission(String permissionAsString)
+    { return hasPermission(Arrays.asList(permissionAsString.split("\\."))); }
+
+    public boolean hasPermission(List<String> permissionPath)
+    {
+        Permission mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && (!mrp.isNegation());
     }
 
     public boolean hasPermission(String... permissionPath)
     { return hasPermission(Arrays.asList(permissionPath)); }
+
+    public boolean negatesPermission(String permissionAsString)
+    { return negatesPermission(Arrays.asList(permissionAsString.split("\\."))); }
+
+    public boolean negatesPermission(List<String> permissionPath)
+    {
+        Permission mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && (mrp.isNegation());
+    }
+
+    public boolean negatesPermission(String... permissionPath)
+    { return negatesPermission(Arrays.asList(permissionPath)); }
 }
