@@ -3,6 +3,8 @@ package scot.massie.lib.permissions;
 import scot.massie.lib.collections.tree.Tree;
 import scot.massie.lib.collections.tree.RecursiveTree;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
 
 public final class PermissionSet
 {
@@ -45,4 +47,33 @@ public final class PermissionSet
         String[] nodes = permWithoutArg.split("\\.");
         permissionTree.setAt(new Permission(isNegation, isWildcard, permArg), nodes);
     }
+
+    public boolean hasPermission(String permissionAsString)
+    { return hasPermission(permissionAsString.split("\\.")); }
+
+    public boolean hasPermission(List<String> permissionPath)
+    {
+        List<Tree.Entry<String, Permission>> relevantPerms = permissionTree.getEntriesAlong(permissionPath);
+
+        if(relevantPerms.isEmpty())
+            return false;
+
+        // mrp = most relevant permission
+        Tree.Entry<String, Permission> mrpWithPath = relevantPerms.get(relevantPerms.size() - 1);
+        Permission mrp = mrpWithPath.getItem();
+        Tree.TreePath<String> mrpPath = mrpWithPath.getPath();
+
+        if((mrpPath.size() == permissionPath.size()) && (mrp.isWildcard()))
+        {
+            if(relevantPerms.size() <= 1)
+                return false;
+
+            mrp = relevantPerms.get(relevantPerms.size() - 2).getItem();
+        }
+
+        return !mrp.isNegation();
+    }
+
+    public boolean hasPermission(String... permissionPath)
+    { return hasPermission(Arrays.asList(permissionPath)); }
 }
