@@ -12,11 +12,6 @@ public final class Permission
         this.argument = argument;
     }
 
-    public Permission(String permissionAsString)
-    {
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
     boolean isNegation;
     boolean isWildcard;
     String argument;
