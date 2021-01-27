@@ -18,8 +18,8 @@ public final class PermissionSet
         boolean isNegation = false;
         boolean isWildcard = false;
         String[] parts = permissionAsString.split(":", 2);
-        String permWithoutArg = parts[0];
-        String permArg = parts.length > 1 ? parts[1] : null;
+        String permWithoutArg = parts[0].trim();
+        String permArg = parts.length > 1 ? parts[1].trim() : null;
 
         if(permWithoutArg.startsWith("-"))
         {
@@ -47,8 +47,23 @@ public final class PermissionSet
                 permissionAsString.indexOf("-", isNegation ? 1 : 0)
             );
 
-        String[] nodes = permWithoutArg.split("\\.");
-        permissionTree.setAt(new Permission(isNegation, isWildcard, permArg), nodes);
+        permissionTree.setAt(new Permission(isNegation, isWildcard, permArg), splitPath(permWithoutArg));
+    }
+
+    public void remove(String permissionAsString)
+    {
+        permissionAsString = permissionAsString.trim();
+
+        if(permissionAsString.contains(":"))
+            permissionAsString = permissionAsString.substring(0, permissionAsString.indexOf(":")).trim();
+
+        if(permissionAsString.startsWith("-"))
+            permissionAsString = permissionAsString.substring(1).trim();
+
+        if(permissionAsString.endsWith(".*"))
+            permissionAsString = permissionAsString.substring(0, permissionAsString.length() - 2).trim();
+
+        permissionTree.clearAt(splitPath(permissionAsString));
     }
 
     private Permission getMostRelevantPermission(List<String> permissionPath)
