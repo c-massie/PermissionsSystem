@@ -10,6 +10,9 @@ public final class PermissionSet
 {
     Tree<String, Permission> permissionTree = new RecursiveTree<>();
 
+    protected String[] splitPath(String permissionPath)
+    { return permissionPath.split("\\."); }
+
     public void add(String permissionAsString) throws ParseException
     {
         boolean isNegation = false;
@@ -71,8 +74,8 @@ public final class PermissionSet
         return mrp;
     }
 
-    public boolean hasPermission(String permissionAsString)
-    { return hasPermission(Arrays.asList(permissionAsString.split("\\."))); }
+    public boolean hasPermission(String permissionPath)
+    { return hasPermission(Arrays.asList(splitPath(permissionPath))); }
 
     public boolean hasPermission(List<String> permissionPath)
     {
@@ -83,8 +86,17 @@ public final class PermissionSet
     public boolean hasPermission(String... permissionPath)
     { return hasPermission(Arrays.asList(permissionPath)); }
 
-    public boolean negatesPermission(String permissionAsString)
-    { return negatesPermission(Arrays.asList(permissionAsString.split("\\."))); }
+    public boolean hasPermissionExactly(String permissionPath)
+    { return hasPermissionExactly(splitPath(permissionPath)); }
+
+    public boolean hasPermissionExactly(List<String> permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && !perm.isNegation()); }
+
+    public boolean hasPermissionExactly(String... permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && !perm.isNegation()); }
+
+    public boolean negatesPermission(String permissionPath)
+    { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
 
     public boolean negatesPermission(List<String> permissionPath)
     {
@@ -94,4 +106,13 @@ public final class PermissionSet
 
     public boolean negatesPermission(String... permissionPath)
     { return negatesPermission(Arrays.asList(permissionPath)); }
+
+    public boolean negatesPermissionExactly(String permissionPath)
+    { return negatesPermissionExactly(splitPath(permissionPath)); }
+
+    public boolean negatesPermissionExactly(List<String> permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.isNegation()); }
+
+    public boolean negatesPermissionExactly(String... permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.isNegation()); }
 }
