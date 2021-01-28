@@ -8,6 +8,24 @@ import java.util.List;
 
 public final class PermissionSet
 {
+    private static final class PermissionWithPath
+    {
+        public PermissionWithPath(List<String> path, Permission perm)
+        {
+            this.path = path;
+            this.permission = perm;
+        }
+
+        private final List<String> path;
+        private final Permission permission;
+
+        public List<String> getPath()
+        { return path; }
+
+        public Permission getPermission()
+        { return permission; }
+    }
+
     Tree<String, Permission> permissionTree = new RecursiveTree<>();
 
     protected String[] splitPath(String permissionPath)
@@ -66,7 +84,7 @@ public final class PermissionSet
         permissionTree.clearAt(splitPath(permissionAsString));
     }
 
-    private Permission getMostRelevantPermission(List<String> permissionPath)
+    private PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
     {
         List<Tree.Entry<String, Permission>> relevantPerms = permissionTree.getEntriesAlong(permissionPath);
 
@@ -75,18 +93,16 @@ public final class PermissionSet
 
         // mrp = most relevant permission
         Tree.Entry<String, Permission> mrpWithPath = relevantPerms.get(relevantPerms.size() - 1);
-        Permission mrp = mrpWithPath.getItem();
-        Tree.TreePath<String> mrpPath = mrpWithPath.getPath();
 
-        if((mrpPath.size() == permissionPath.size()) && (mrp.isWildcard()))
+        if((mrpWithPath.getPath().size() == permissionPath.size()) && (!mrpWithPath.getItem().coversExact()))
         {
             if(relevantPerms.size() <= 1)
                 return null;
 
-            mrp = relevantPerms.get(relevantPerms.size() - 2).getItem();
+            mrpWithPath = relevantPerms.get(relevantPerms.size() - 2);
         }
 
-        return mrp;
+        return new PermissionWithPath(mrpWithPath.getPath().getNodes(), mrpWithPath.getItem());
     }
 
     public boolean hasPermission(String permissionPath)
@@ -94,8 +110,9 @@ public final class PermissionSet
 
     public boolean hasPermission(List<String> permissionPath)
     {
-        Permission mrp = getMostRelevantPermission(permissionPath);
-        return (mrp != null) && (!mrp.isNegation());
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && ((mrp.path.size() == permissionPath.size()) ? mrp.permission.includesExact()
+                                                                            : mrp.permission.includesDescendants());
     }
 
     public boolean hasPermission(String... permissionPath)
@@ -105,18 +122,19 @@ public final class PermissionSet
     { return hasPermissionExactly(splitPath(permissionPath)); }
 
     public boolean hasPermissionExactly(List<String> permissionPath)
-    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && !perm.isNegation()); }
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.includesExact()); }
 
     public boolean hasPermissionExactly(String... permissionPath)
-    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && !perm.isNegation()); }
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.includesExact()); }
 
     public boolean negatesPermission(String permissionPath)
     { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
 
     public boolean negatesPermission(List<String> permissionPath)
     {
-        Permission mrp = getMostRelevantPermission(permissionPath);
-        return (mrp != null) && (mrp.isNegation());
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && ((mrp.path.size() == permissionPath.size()) ? (mrp.permission.negatesExact())
+                                                                            : (mrp.permission.negatesDescendants()));
     }
 
     public boolean negatesPermission(String... permissionPath)
@@ -126,8 +144,8 @@ public final class PermissionSet
     { return negatesPermissionExactly(splitPath(permissionPath)); }
 
     public boolean negatesPermissionExactly(List<String> permissionPath)
-    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.isNegation()); }
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negatesExact()); }
 
     public boolean negatesPermissionExactly(String... permissionPath)
-    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.isNegation()); }
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negatesExact()); }
 }

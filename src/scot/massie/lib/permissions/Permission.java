@@ -8,21 +8,44 @@ public final class Permission
     { this(isNegation, isWildcard, null); }
 
     public Permission(boolean isNegation, boolean isWildcard, String argument)
+    { this(!isWildcard && !isNegation, !isWildcard && isNegation, !isNegation, isNegation, argument); }
+
+    Permission(boolean includesExact,
+               boolean negatesExact,
+               boolean includesDescendants,
+               boolean negatesDescendants,
+               String argument)
     {
-        this.isNegation = isNegation;
-        this.isWildcard = isWildcard;
+        this.includesExact = includesExact;
+        this.negatesExact = negatesExact;
+        this.includesDescendants = includesDescendants;
+        this.negatesDescendants = negatesDescendants;
         this.argument = argument;
     }
 
-    boolean isNegation;
-    boolean isWildcard;
-    String argument;
+    private final boolean includesExact;
+    private final boolean negatesExact;
+    private final boolean includesDescendants;
+    private final boolean negatesDescendants;
+    private final String  argument;
 
-    public boolean isNegation()
-    { return isNegation; }
+    public boolean includesExact()
+    { return includesExact; }
 
-    public boolean isWildcard()
-    { return isWildcard; }
+    public boolean negatesExact()
+    { return negatesExact; }
+
+    public boolean coversExact()
+    { return includesExact || negatesExact; }
+
+    public boolean includesDescendants()
+    { return includesDescendants; }
+
+    public boolean negatesDescendants()
+    { return negatesDescendants; }
+
+    public boolean coversDescendants()
+    { return includesDescendants || negatesDescendants; }
 
     public boolean hasArg()
     { return argument != null; }
@@ -32,30 +55,4 @@ public final class Permission
 
     public String getArgOr(String defaultVal)
     { return argument != null ? argument : defaultVal; }
-
-    public String toString(List<String> path)
-    { return toString(String.join(".", path));  }
-
-    public String toString(String[] path)
-    { return toString(String.join(".", path)); }
-
-    public String toString(String pathAsString)
-    {
-        String result = pathAsString;
-
-        if(isNegation)
-            result = "-" + result;
-
-        if(isWildcard)
-            result += ".*";
-
-        if(argument != null)
-            result = result + ": " + argument;
-
-        return result;
-    }
-
-    @Override
-    public String toString()
-    { return toString("(path)"); }
 }
