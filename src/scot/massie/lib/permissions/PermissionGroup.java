@@ -24,9 +24,13 @@ public class PermissionGroup
         this.priorityIsLong = true;
     }
 
-    public static final Comparator<PermissionGroup> priorityComparator
+    public static final Comparator<PermissionGroup> priorityComparatorLowestFirst
             = (a, b) -> a.priorityIsLong ? (Long.compare(a.priorityAsLong, b.priorityAsLong))
                                          : (Double.compare(a.priority,       b.priority      ));
+
+    public static final Comparator<PermissionGroup> priorityComparatorHighestFirst
+            = (a, b) -> a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
+                                         : (-Double.compare(a.priority,       b.priority      ));
 
     String name;
     double priority;
@@ -34,7 +38,7 @@ public class PermissionGroup
     boolean priorityIsLong;
 
     PermissionSet permissionSet = new PermissionSet();
-    SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparator);
+    SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparatorHighestFirst);
 
     public void addPermission(String permissionAsString) throws ParseException
     { permissionSet.add(permissionAsString); }
@@ -49,8 +53,38 @@ public class PermissionGroup
     { referencedGroups.remove(permissionGroup); }
 
     public boolean hasPermission(String permissionPath)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        PermissionSet.PermissionCoverage currentCoverage = permissionSet.getCoverageOf(permissionPath);
+
+        if(currentCoverage.coversPermission())
+            return currentCoverage.hasPermission();
+
+        for(PermissionGroup permGroup : referencedGroups)
+        {
+            currentCoverage = permGroup.permissionSet.getCoverageOf(permissionPath);
+
+            if(currentCoverage.coversPermission())
+                return currentCoverage.hasPermission();
+        }
+
+        return false;
+    }
 
     public boolean negatesPermission(String permissionPath)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        PermissionSet.PermissionCoverage currentCoverage = permissionSet.getCoverageOf(permissionPath);
+
+        if(currentCoverage.coversPermission())
+            return currentCoverage.negatesPermission();
+
+        for(PermissionGroup permGroup : referencedGroups)
+        {
+            currentCoverage = permGroup.permissionSet.getCoverageOf(permissionPath);
+
+            if(currentCoverage.coversPermission())
+                return currentCoverage.negatesPermission();
+        }
+
+        return false;
+    }
 }
