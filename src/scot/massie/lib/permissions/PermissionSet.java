@@ -148,4 +148,26 @@ public final class PermissionSet
 
     public boolean negatesPermissionExactly(String... permissionPath)
     { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negatesExact()); }
+
+    public boolean coversPermission(String permissionPath)
+    { return coversPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public boolean coversPermission(List<String> permissionPath)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && ((mrp.path.size() == permissionPath.size()) ? mrp.permission.coversExact()
+                                                                            : mrp.permission.coversDescendants());
+    }
+
+    public boolean coversPermission(String... permissionPath)
+    { return coversPermission(Arrays.asList(permissionPath)); }
+
+    public boolean coversPermissionExactly(String permissionPath)
+    { return coversPermissionExactly(Arrays.asList(splitPath(permissionPath))); }
+
+    public boolean coversPermissionExactly(List<String> permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.coversExact()); }
+
+    public boolean coversPermissionExactly(String... permissionPath)
+    { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.coversExact()); }
 }
