@@ -26,6 +26,27 @@ public final class PermissionSet
         { return permission; }
     }
 
+    public static final class PermissionCoverage
+    {
+        public PermissionCoverage(boolean hasPermission, boolean negatesPermission)
+        {
+            this.hasPermission = hasPermission;
+            this.negatesPermission = negatesPermission;
+        }
+
+        private final boolean hasPermission;
+        private final boolean negatesPermission;
+
+        public boolean hasPermission()
+        { return hasPermission; }
+
+        public boolean negatesPermission()
+        { return negatesPermission; }
+
+        public boolean coversPermission()
+        { return hasPermission || negatesPermission; }
+    }
+
     Tree<String, Permission> permissionTree = new RecursiveTree<>();
 
     protected String[] splitPath(String permissionPath)
@@ -170,4 +191,23 @@ public final class PermissionSet
 
     public boolean coversPermissionExactly(String... permissionPath)
     { return permissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.coversExact()); }
+
+    public PermissionCoverage getCoverageOf(String permissionPath)
+    { return getCoverageOf(Arrays.asList(splitPath(permissionPath))); }
+
+    public PermissionCoverage getCoverageOf(List<String> permissionPath)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(mrp == null)
+            return new PermissionCoverage(false, false);
+
+        boolean isForExact = mrp.path.size() == permissionPath.size();
+        boolean has     = isForExact ? mrp.permission.includesExact() : mrp.permission.includesDescendants();
+        boolean negates = isForExact ? mrp.permission.negatesExact()  : mrp.permission.negatesDescendants();
+        return new PermissionCoverage(has, negates);
+    }
+
+    public PermissionCoverage getCoverageOf(String... permissionPath)
+    { return getCoverageOf(Arrays.asList(permissionPath)); }
 }
