@@ -41,7 +41,7 @@ public class PermissionGroup
     SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparatorHighestFirst);
 
     public void addPermission(String permissionAsString) throws ParseException
-    { permissionSet.add(permissionAsString); }
+    { permissionSet.set(permissionAsString); }
 
     public void removePermission(String permissionPath)
     { permissionSet.remove(permissionPath); }
@@ -54,17 +54,17 @@ public class PermissionGroup
 
     public boolean hasPermission(String permissionPath)
     {
-        PermissionSet.PermissionCoverage currentCoverage = permissionSet.getCoverageOf(permissionPath);
+        Permission perm = permissionSet.getPermission(permissionPath);
 
-        if(currentCoverage.coversPermission())
-            return currentCoverage.hasPermission();
+        if(perm != null)
+            return perm.permits();
 
         for(PermissionGroup permGroup : referencedGroups)
         {
-            currentCoverage = permGroup.permissionSet.getCoverageOf(permissionPath);
+            perm = permGroup.permissionSet.getPermission(permissionPath);
 
-            if(currentCoverage.coversPermission())
-                return currentCoverage.hasPermission();
+            if(perm != null)
+                return perm.permits();
         }
 
         return false;
@@ -72,17 +72,17 @@ public class PermissionGroup
 
     public boolean negatesPermission(String permissionPath)
     {
-        PermissionSet.PermissionCoverage currentCoverage = permissionSet.getCoverageOf(permissionPath);
+        Permission perm = permissionSet.getPermission(permissionPath);
 
-        if(currentCoverage.coversPermission())
-            return currentCoverage.negatesPermission();
+        if(perm != null)
+            return perm.negates();
 
         for(PermissionGroup permGroup : referencedGroups)
         {
-            currentCoverage = permGroup.permissionSet.getCoverageOf(permissionPath);
+            perm = permGroup.permissionSet.getPermission(permissionPath);
 
-            if(currentCoverage.coversPermission())
-                return currentCoverage.negatesPermission();
+            if(perm != null)
+                return perm.negates();
         }
 
         return false;
