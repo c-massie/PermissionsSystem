@@ -4,6 +4,7 @@ import scot.massie.lib.collections.tree.Tree;
 import scot.massie.lib.collections.tree.RecursiveTree;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public final class PermissionSet
@@ -210,4 +211,76 @@ public final class PermissionSet
 
     public PermissionCoverage getCoverageOf(String... permissionPath)
     { return getCoverageOf(Arrays.asList(permissionPath)); }
+
+    private static String permissionToSaveString(List<String> permPath, Permission perm)
+    {
+        if(!perm.isValid())
+            return "(invalid permission)";
+
+        String permPathJoined = String.join(".", permPath);
+
+        if(perm.exactAndDescendantsAreSame())
+        {
+            String result = permPathJoined;
+
+            if(perm.negatesExact())
+                result = "-" + result;
+
+            if(perm.hasArg())
+                result += ": " + perm.getArg();
+
+            return result;
+        }
+
+        if(!perm.coversExact())
+        {
+            String result = permPathJoined + ".*";
+
+            if(perm.negatesDescendants())
+                result = "-" + result;
+
+            if(perm.hasArgForDescendants())
+                result += ": " + perm.getArgForDescendants();
+
+            return result;
+        }
+
+        if(!perm.coversDescendants())
+        {
+            // For exact-only permissions that don't cover descendants. Not yet implemented.
+            return "(invalid permission)";
+        }
+
+        String resultLine1 = permPathJoined;
+        String resultLine2 = permPathJoined;
+
+        if(perm.negatesExact())
+            resultLine1 = "-" + resultLine1;
+
+        if(perm.negatesDescendants())
+            resultLine2 = "-" + resultLine2;
+
+        if(perm.hasArg())
+            resultLine1 += ": " + perm.getArg();
+
+        if(perm.hasArgForDescendants())
+            resultLine2 += ": " + perm.getArgForDescendants();
+
+        return resultLine1 + "\n" + resultLine2;
+    }
+
+    public String toSaveString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        for(Tree.Entry<String, Permission> i : permissionTree.getEntriesInOrder(Comparator.naturalOrder()))
+            sb.append(permissionToSaveString(i.getPath().getNodes(), i.getItem())).append("\n");
+
+        String result = sb.toString();
+
+        if(result.isEmpty())
+            return result;
+
+        return result.substring(0, result.length() - 1); // Trim last newline character.
+    }
 }
