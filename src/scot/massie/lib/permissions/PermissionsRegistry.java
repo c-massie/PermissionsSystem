@@ -1,6 +1,7 @@
 package scot.massie.lib.permissions;
 
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.function.Function;
@@ -29,14 +30,31 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     final Path filePath;
 
+    private PermissionGroup getOrCreateUserPerms(ID userId)
+    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup("User permissions for: " + convertIdToString.apply(id))); }
+
+    private PermissionGroup getOrCreatePermGroup(String groupId)
+    { return assignableGroups.computeIfAbsent(groupId, PermissionGroup::new); }
+
     public void assignUserPermission(ID userId, String permission)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        try
+        { getOrCreateUserPerms(userId).addPermission(permission); }
+        catch(ParseException e)
+        { System.err.println("Invalid permission: " + permission + "\n -> " + e.getMessage()); }
     }
 
     public void assignGroupPermission(String groupId, String permission)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        try
+        { getOrCreatePermGroup(groupId).addPermission(permission); }
+        catch(ParseException e)
+        { System.err.println("Invalid permission: " + permission + "\n -> " + e.getMessage()); }
+    }
+
+    public Function<ID, String> getConvertIdToString()
+    {
+        return convertIdToString;
     }
 
     public void revokeUserPermission(ID userId, String permission)
