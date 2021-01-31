@@ -52,11 +52,6 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { System.err.println("Invalid permission: " + permission + "\n -> " + e.getMessage()); }
     }
 
-    public Function<ID, String> getConvertIdToString()
-    {
-        return convertIdToString;
-    }
-
     public void revokeUserPermission(ID userId, String permission)
     {
         throw new UnsupportedOperationException("Not implemented yet.");
@@ -67,14 +62,27 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
+    public boolean assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        PermissionGroup groupToBeAssigned = assignableGroups.get(groupIdBeingAssigned);
+
+        if(groupToBeAssigned == null)
+            return false;
+
+        getOrCreateUserPerms(userId).addPermissionGroup(groupToBeAssigned);
+        return true;
     }
 
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
+    public boolean assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        PermissionGroup groupToBeAssigned = assignableGroups.get(groupIdBeingAssigned);
+        PermissionGroup groupToBeAssignedTo = assignableGroups.get(groupId);
+
+        if(groupToBeAssigned == null || groupToBeAssignedTo == null)
+            return false;
+
+        groupToBeAssignedTo.addPermissionGroup(groupToBeAssigned);
+        return true;
     }
 
     public void revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
