@@ -49,8 +49,8 @@ public class PermissionGroup
     public void addPermissionGroup(PermissionGroup permGroup)
     { referencedGroups.add(permGroup); }
 
-    public void removePermissionGroup(PermissionGroup permissionGroup)
-    { referencedGroups.remove(permissionGroup); }
+    public boolean removePermissionGroup(PermissionGroup permissionGroup)
+    { return referencedGroups.remove(permissionGroup); }
 
     public boolean hasPermission(String permissionPath)
     {

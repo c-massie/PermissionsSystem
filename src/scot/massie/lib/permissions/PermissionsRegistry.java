@@ -110,24 +110,41 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     { getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
-    public void revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
+    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
     {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
-    public void revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
+    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
     {
         throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    private boolean revokeGroup(PermissionGroup permGroup, String groupIdBeingRevoked)
+    {
+        if(permGroup == null)
+            return false;
+
+        PermissionGroup permGroupBeingRemoved = assignableGroups.get(groupIdBeingRevoked);
+
+        if(permGroupBeingRemoved == null)
+            return false;
+
+        return permGroup.removePermissionGroup(permGroupBeingRemoved);
     }
 
     public boolean userHasPermission(ID userId, String permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasPermission(permissionsForUsers.get(userId), permission); }
 
     public boolean groupHasPermission(String groupId, String permission)
+    { return hasPermission(assignableGroups.get(groupId), permission); }
+
+    private boolean hasPermission(PermissionGroup permGroup, String permission)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+            return false;
+
+        return permGroup.hasPermission(permission);
     }
 
     public String getUserPermissionArg(ID userId, String permission)
