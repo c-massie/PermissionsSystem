@@ -104,28 +104,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.removePermission(permission);
     }
 
-    public boolean assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    {
-        PermissionGroup groupToBeAssigned = assignableGroups.get(groupIdBeingAssigned);
+    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
+    { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
-        if(groupToBeAssigned == null)
-            return false;
-
-        getOrCreateUserPerms(userId).addPermissionGroup(groupToBeAssigned);
-        return true;
-    }
-
-    public boolean assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    {
-        PermissionGroup groupToBeAssigned = assignableGroups.get(groupIdBeingAssigned);
-        PermissionGroup groupToBeAssignedTo = assignableGroups.get(groupId);
-
-        if(groupToBeAssigned == null || groupToBeAssignedTo == null)
-            return false;
-
-        groupToBeAssignedTo.addPermissionGroup(groupToBeAssigned);
-        return true;
-    }
+    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
+    { getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
     public void revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
     {
