@@ -40,6 +40,24 @@ public class PermissionGroup
     PermissionSet permissionSet = new PermissionSet();
     SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparatorHighestFirst);
 
+    private PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
+    {
+        PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
+
+        if(mrp != null)
+            return mrp;
+
+        for(PermissionGroup permGroup : referencedGroups)
+        {
+            mrp = permGroup.permissionSet.getMostRelevantPermission(permissionAsString);
+
+            if(mrp != null)
+                return mrp;
+        }
+
+        return null;
+    }
+
     public void addPermission(String permissionAsString) throws ParseException
     { permissionSet.set(permissionAsString); }
 
@@ -54,37 +72,21 @@ public class PermissionGroup
 
     public boolean hasPermission(String permissionPath)
     {
-        Permission perm = permissionSet.getPermission(permissionPath);
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
-        if(perm != null)
-            return perm.permits();
+        if(mrp == null)
+            return false;
 
-        for(PermissionGroup permGroup : referencedGroups)
-        {
-            perm = permGroup.permissionSet.getPermission(permissionPath);
-
-            if(perm != null)
-                return perm.permits();
-        }
-
-        return false;
+        return mrp.getPermission().permits();
     }
 
     public boolean negatesPermission(String permissionPath)
     {
-        Permission perm = permissionSet.getPermission(permissionPath);
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
-        if(perm != null)
-            return perm.negates();
+        if(mrp == null)
+            return false;
 
-        for(PermissionGroup permGroup : referencedGroups)
-        {
-            perm = permGroup.permissionSet.getPermission(permissionPath);
-
-            if(perm != null)
-                return perm.negates();
-        }
-
-        return false;
+        return mrp.getPermission().negates();
     }
 }

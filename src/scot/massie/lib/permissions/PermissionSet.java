@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public final class PermissionSet
 {
-    private static final class PermissionWithPath
+    public static final class PermissionWithPath
     {
         public PermissionWithPath(List<String> path, Permission perm)
         {
@@ -131,7 +131,10 @@ public final class PermissionSet
             return descendantPermissionTree.clearAt(path).valueWasPresent();
     }
 
-    private PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
+    public PermissionWithPath getMostRelevantPermission(String permissionPath)
+    { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
     {
         Permission relevantPerm = exactPermissionTree.getAtOrNull(permissionPath);
 
@@ -156,6 +159,9 @@ public final class PermissionSet
 
         return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
     }
+
+    public PermissionWithPath getMostRelevantPermission(String... permissionPath)
+    { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
 
     public Permission getPermission(String permissionPath)
     { return getPermission(Arrays.asList(splitPath(permissionPath))); }
