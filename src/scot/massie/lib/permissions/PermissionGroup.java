@@ -89,4 +89,14 @@ public class PermissionGroup
 
         return mrp.getPermission().negates();
     }
+
+    public String getPermissionArg(String permissionPath)
+    {
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(mrp == null)
+            return null;
+
+        return mrp.getPermission().getArg();
+    }
 }

@@ -111,26 +111,22 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
 
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked); }
 
-    private boolean revokeGroup(PermissionGroup permGroup, String groupIdBeingRevoked)
+    private boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
     {
         if(permGroup == null)
             return false;
 
-        PermissionGroup permGroupBeingRemoved = assignableGroups.get(groupIdBeingRevoked);
+        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
 
-        if(permGroupBeingRemoved == null)
+        if(permGroupBeingRevoked == null)
             return false;
 
-        return permGroup.removePermissionGroup(permGroupBeingRemoved);
+        return permGroup.removePermissionGroup(permGroupBeingRevoked);
     }
 
     public boolean userHasPermission(ID userId, String permission)
@@ -148,18 +144,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     public String getUserPermissionArg(ID userId, String permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return getPermissionArg(permissionsForUsers.get(userId), permission); }
 
     public String getGroupPermissionArg(String groupId, String permission)
+    { return getPermissionArg(assignableGroups.get(groupId), permission); }
+
+    private String getPermissionArg(PermissionGroup permGroup, String permission)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+            return null;
+
+        return permGroup.getPermissionArg(permission);
     }
 
     public void clear()
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        permissionsForUsers.clear();
+        assignableGroups.clear();
     }
 
     public String toSaveString()
