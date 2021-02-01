@@ -93,7 +93,7 @@ public final class PermissionSet
             descendantPermissionTree.setAt(primaryPerm, path);
     }
 
-    public void remove(String permissionAsString)
+    public boolean remove(String permissionAsString)
     {
         permissionAsString = permissionAsString.trim();
 
@@ -115,15 +115,20 @@ public final class PermissionSet
 
         if(!isForWildcard)
         {
-            exactPermissionTree.clearAt(path);
+            if(exactPermissionTree.clearAt(path).valueWasPresent())
+            {
+                Permission descendantPerm = descendantPermissionTree.getAtOrNull(path);
 
-            Permission descendantPerm = descendantPermissionTree.getAtOrNull(path);
+                if(descendantPerm != null && descendantPerm.isIndirect())
+                    descendantPermissionTree.clearAt(path);
 
-            if(descendantPerm != null && descendantPerm.isIndirect())
-                descendantPermissionTree.clearAt(path);
+                return true;
+            }
+            else
+                return false;
         }
         else
-            descendantPermissionTree.clearAt(path);
+            return descendantPermissionTree.clearAt(path).valueWasPresent();
     }
 
     private PermissionWithPath getMostRelevantPermission(List<String> permissionPath)

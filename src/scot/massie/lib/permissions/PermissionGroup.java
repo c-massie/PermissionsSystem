@@ -43,8 +43,8 @@ public class PermissionGroup
     public void addPermission(String permissionAsString) throws ParseException
     { permissionSet.set(permissionAsString); }
 
-    public void removePermission(String permissionPath)
-    { permissionSet.remove(permissionPath); }
+    public boolean removePermission(String permissionPath)
+    { return permissionSet.remove(permissionPath); }
 
     public void addPermissionGroup(PermissionGroup permGroup)
     { referencedGroups.add(permGroup); }

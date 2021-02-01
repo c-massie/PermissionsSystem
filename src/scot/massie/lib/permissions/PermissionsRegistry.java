@@ -8,6 +8,46 @@ import java.util.function.Function;
 
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
+    public static class PermissionsRegistryException extends RuntimeException
+    {
+        public PermissionsRegistryException() { super(); }
+        public PermissionsRegistryException(String message) { super(message); }
+        public PermissionsRegistryException(Throwable cause) { super(cause); }
+        public PermissionsRegistryException(String message, Throwable cause) { super(message, cause); }
+    }
+
+    public static class InvalidPermissionException extends PermissionsRegistryException
+    {
+        public InvalidPermissionException(String permission)
+        {
+            super();
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, String message)
+        {
+            super(message);
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, Throwable cause)
+        {
+            super(cause);
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, String message, Throwable cause)
+        {
+            super(message, cause);
+            this.permissionString = permission;
+        }
+
+        protected String permissionString;
+
+        public String getPermissionString()
+        { return permissionString; }
+    }
+
     public PermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString, Path filePath)
     {
         this.convertIdToString = idToString;
@@ -37,29 +77,31 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return assignableGroups.computeIfAbsent(groupId, PermissionGroup::new); }
 
     public void assignUserPermission(ID userId, String permission)
-    {
-        try
-        { getOrCreateUserPerms(userId).addPermission(permission); }
-        catch(ParseException e)
-        { System.err.println("Invalid permission: " + permission + "\n -> " + e.getMessage()); }
-    }
+    { assignPermission(getOrCreateUserPerms(userId), permission); }
 
     public void assignGroupPermission(String groupId, String permission)
+    { assignPermission(getOrCreatePermGroup(groupId), permission); }
+
+    private void assignPermission(PermissionGroup permGroup, String permission)
     {
         try
-        { getOrCreatePermGroup(groupId).addPermission(permission); }
+        { permGroup.addPermission(permission); }
         catch(ParseException e)
-        { System.err.println("Invalid permission: " + permission + "\n -> " + e.getMessage()); }
+        { throw new InvalidPermissionException(permission, e); }
     }
 
-    public void revokeUserPermission(ID userId, String permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean revokeUserPermission(ID userId, String permission)
+    { return revokePermission(permissionsForUsers.get(userId), permission); }
 
-    public void revokeGroupPermission(String groupId, String permission)
+    public boolean revokeGroupPermission(String groupId, String permission)
+    { return revokePermission(assignableGroups.get(groupId), permission); }
+
+    private boolean revokePermission(PermissionGroup permGroup, String permission)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+            return false;
+
+        return permGroup.removePermission(permission);
     }
 
     public boolean assignGroupToUser(ID userId, String groupIdBeingAssigned)
