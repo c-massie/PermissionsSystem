@@ -226,7 +226,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         int prioritySeparatorPosition = saveString.lastIndexOf(":");
 
         if(prioritySeparatorPosition < 0)
-            createGroup(saveString.trim());
+            return createGroup(saveString.trim());
 
         String groupId = saveString.substring(0, prioritySeparatorPosition);
         String priority = saveString.substring(prioritySeparatorPosition + 1);
