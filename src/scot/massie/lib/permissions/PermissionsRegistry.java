@@ -1,9 +1,6 @@
 package scot.massie.lib.permissions;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -286,32 +283,26 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     String usersToSaveString()
     {
-        StringBuilder sb = new StringBuilder();
+        StringWriter sw = new StringWriter();
 
-        permissionsForUsers.values()
-                           .stream()
-                           .sorted(Comparator.comparing(PermissionGroup::getName))
-                           .forEachOrdered(x ->
-                                           {
-                                               sb.append(x.toSaveString()).append("\n\n");
-                                           });
+        try(BufferedWriter writer = new BufferedWriter(sw))
+        { saveUsers(writer); }
+        catch(IOException e)
+        { e.printStackTrace(); }
 
-        return sb.toString();
+        return sw.toString();
     }
 
     String groupsToSaveString()
     {
-        StringBuilder sb = new StringBuilder();
+        StringWriter sw = new StringWriter();
 
-        assignableGroups.values()
-                        .stream()
-                        .sorted(PermissionGroup.priorityComparatorHighestFirst)
-                        .forEachOrdered(x ->
-                                        {
-                                            sb.append(x.toSaveString()).append("\n\n");
-                                        });
+        try(BufferedWriter writer = new BufferedWriter(sw))
+        { saveGroups(writer); }
+        catch(IOException e)
+        { e.printStackTrace(); }
 
-        return sb.toString();
+        return sw.toString();
     }
 
     public void save() throws IOException
