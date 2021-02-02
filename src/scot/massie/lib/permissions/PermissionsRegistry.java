@@ -7,9 +7,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -247,29 +245,26 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region Saving & Loading
     //region Saving
-    void saveUsers(BufferedWriter writer) throws IOException
+    void savePerms(BufferedWriter writer, Collection<PermissionGroup> permGroups) throws IOException
     {
-        for(PermissionGroup i : permissionsForUsers.values()
-                                                   .stream()
+        Iterator<PermissionGroup> iter = permGroups.stream()
                                                    .sorted(Comparator.comparing(PermissionGroup::getName))
-                                                   .collect(Collectors.toList()))
+                                                   .iterator();
+
+        while(iter.hasNext())
         {
-            writer.write(i.toSaveString());
-            writer.write("\n\n");
+            writer.write(iter.next().toSaveString());
+
+            if(iter.hasNext())
+                writer.write("\n\n");
         }
     }
 
+    void saveUsers(BufferedWriter writer) throws IOException
+    { savePerms(writer, permissionsForUsers.values()); }
+
     void saveGroups(BufferedWriter writer) throws IOException
-    {
-        for(PermissionGroup i : assignableGroups.values()
-                                                .stream()
-                                                .sorted(Comparator.comparing(PermissionGroup::getName))
-                                                .collect(Collectors.toList()))
-        {
-            writer.write(i.toSaveString());
-            writer.write("\n\n");
-        }
-    }
+    { savePerms(writer, assignableGroups.values()); }
 
     void saveUsers() throws IOException
     {
