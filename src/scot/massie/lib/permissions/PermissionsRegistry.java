@@ -1,10 +1,17 @@
 package scot.massie.lib.permissions;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.Map;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
@@ -48,18 +55,38 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { return permissionString; }
     }
 
-    public PermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString, Path filePath)
+    public static class InvalidPriorityException extends NumberFormatException
     {
-        this.convertIdToString = idToString;
-        this.parseIdFromString = idFromString;
-        this.filePath = filePath;
+        public InvalidPriorityException(String invalidPriority)
+        {
+            super("Invalid permission group priority: " + invalidPriority);
+            this.invalidPriority = invalidPriority;
+        }
+
+        final String invalidPriority;
+
+        public String getInvalidPriority()
+        { return invalidPriority; }
     }
 
-    public PermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
+    public PermissionsRegistry(Function<ID, String> idToString,
+                               Function<String, ID> idFromString,
+                               Path usersFile,
+                               Path groupsFile)
     {
         this.convertIdToString = idToString;
         this.parseIdFromString = idFromString;
-        this.filePath = null;
+        this.usersFilePath = usersFile;
+        this.groupsFilePath = groupsFile;
+    }
+
+    public PermissionsRegistry(Function<ID, String> idToString,
+                               Function<String, ID> idFromString)
+    {
+        this.convertIdToString = idToString;
+        this.parseIdFromString = idFromString;
+        this.usersFilePath = null;
+        this.groupsFilePath = null;
     }
 
     final Map<ID, PermissionGroup> permissionsForUsers = new HashMap<>();
@@ -68,10 +95,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     final Function<ID, String> convertIdToString;
     final Function<String, ID> parseIdFromString;
 
-    final Path filePath;
+    final Path usersFilePath;
+    final Path groupsFilePath;
 
     private PermissionGroup getOrCreateUserPerms(ID userId)
-    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup("User permissions for: " + convertIdToString.apply(id))); }
+    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup(convertIdToString.apply(id))); }
 
     private PermissionGroup getOrCreatePermGroup(String groupId)
     { return assignableGroups.computeIfAbsent(groupId, PermissionGroup::new); }
@@ -157,29 +185,236 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.getPermissionArg(permission);
     }
 
+    public PermissionGroup createGroup(String groupId)
+    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId)); }
+
+    public PermissionGroup createGroup(String groupId, long priority)
+    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId, priority)); }
+
+    public PermissionGroup createGroup(String groupId, double priority)
+    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId, priority)); }
+
+    public PermissionGroup createGroup(String groupId, String priorityAsString)
+    {
+        long priorityAsLong = 0;
+        boolean priorityIsLong = true;
+
+        try
+        { priorityAsLong = Long.parseLong(priorityAsString); }
+        catch(NumberFormatException e)
+        { priorityIsLong = false; }
+
+        if(priorityIsLong)
+            return createGroup(groupId, priorityAsLong);
+
+        double priorityAsDouble = 0;
+        boolean priorityIsDouble = true;
+
+        try
+        { priorityAsDouble = Double.parseDouble(priorityAsString); }
+        catch(NumberFormatException e)
+        { priorityIsDouble = false; }
+
+        if(priorityIsDouble)
+            return createGroup(groupId, priorityAsDouble);
+
+        throw new InvalidPriorityException(priorityAsString);
+    }
+
+    private PermissionGroup createGroupFromSaveString(String saveString)
+    {
+        int prioritySeparatorPosition = saveString.lastIndexOf(":");
+
+        if(prioritySeparatorPosition < 0)
+            createGroup(saveString.trim());
+
+        String groupId = saveString.substring(0, prioritySeparatorPosition);
+        String priority = saveString.substring(prioritySeparatorPosition + 1);
+        return createGroup(groupId, priority);
+    }
+
+    public PermissionGroup createUserPermissions(ID userId)
+    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup(convertIdToString.apply(id))); }
+
+    private PermissionGroup createUserPermissionsFromSaveString(String saveString)
+    { return createUserPermissions(parseIdFromString.apply(saveString.trim())); }
+
     public void clear()
     {
         permissionsForUsers.clear();
         assignableGroups.clear();
     }
 
-    public String toSaveString()
+    //region Saving & Loading
+    //region Saving
+    void saveUsers(BufferedWriter writer) throws IOException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        for(PermissionGroup i : permissionsForUsers.values()
+                                                   .stream()
+                                                   .sorted(Comparator.comparing(PermissionGroup::getName))
+                                                   .collect(Collectors.toList()))
+        {
+            writer.write(i.toSaveString());
+            writer.write("\n\n");
+        }
     }
 
-    public String loadFromSaveString(String saveString)
+    void saveGroups(BufferedWriter writer) throws IOException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        for(PermissionGroup i : assignableGroups.values()
+                                                .stream()
+                                                .sorted(Comparator.comparing(PermissionGroup::getName))
+                                                .collect(Collectors.toList()))
+        {
+            writer.write(i.toSaveString());
+            writer.write("\n\n");
+        }
     }
 
-    public void save()
+    void saveUsers() throws IOException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(usersFilePath == null)
+            return;
+
+        try(BufferedWriter writer = Files.newBufferedWriter(usersFilePath))
+        { saveUsers(writer); }
     }
 
-    public void load()
+    void saveGroups() throws IOException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(groupsFilePath == null)
+            return;
+
+        try(BufferedWriter writer = Files.newBufferedWriter(groupsFilePath))
+        { saveGroups(writer); }
     }
+
+    String usersToSaveString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        permissionsForUsers.values()
+                           .stream()
+                           .sorted(Comparator.comparing(PermissionGroup::getName))
+                           .forEachOrdered(x ->
+                                           {
+                                               sb.append(x.toSaveString()).append("\n\n");
+                                           });
+
+        return sb.toString();
+    }
+
+    String groupsToSaveString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        assignableGroups.values()
+                        .stream()
+                        .sorted(PermissionGroup.priorityComparatorHighestFirst)
+                        .forEachOrdered(x ->
+                                        {
+                                            sb.append(x.toSaveString()).append("\n\n");
+                                        });
+
+        return sb.toString();
+    }
+
+    public void save() throws IOException
+    {
+        saveUsers();
+        saveGroups();
+    }
+    //endregion
+
+    //region Loading
+    void loadUsers(BufferedReader reader) throws IOException
+    {
+        ID currentUser = null;
+
+        for(String line; (line = reader.readLine()) != null;)
+        {
+            if(line.startsWith(" "))
+            {
+                if(currentUser == null)
+                    continue;
+
+                line = line.trim();
+
+                if(line.startsWith("#"))
+                {
+                    assignGroupToUser(currentUser, line.substring(1).trim());
+                    continue;
+                }
+
+                assignUserPermission(currentUser, line);
+            }
+            else
+                currentUser = parseIdFromString.apply(createUserPermissionsFromSaveString(line).getName());
+        }
+    }
+
+    void loadGroups(BufferedReader reader) throws IOException
+    {
+        PermissionGroup currentGroup = null;
+
+        for(String line; (line = reader.readLine()) != null;)
+        {
+            if(line.startsWith(" "))
+            {
+                if(currentGroup == null)
+                    continue;
+
+                line = line.trim();
+
+                if(line.startsWith("#"))
+                {
+                    assignGroupToGroup(currentGroup.getName(), line.substring(1).trim());
+                    continue;
+                }
+
+                assignGroupPermission(currentGroup.getName(), line);
+            }
+            else
+                currentGroup = createGroupFromSaveString(line);
+        }
+    }
+
+    void loadUsers() throws IOException
+    {
+        if(usersFilePath == null)
+            return;
+
+        try(BufferedReader reader = Files.newBufferedReader(usersFilePath))
+        { loadUsers(reader); }
+    }
+
+    void loadGroups() throws IOException
+    {
+        if(groupsFilePath == null)
+            return;
+
+        try(BufferedReader reader = Files.newBufferedReader(groupsFilePath))
+        { loadGroups(reader); }
+    }
+
+    void loadUsersFromSaveString(String saveString) throws IOException
+    {
+        try(BufferedReader reader = new BufferedReader(new StringReader(saveString)))
+        { loadUsers(reader); }
+    }
+
+    void loadGroupsFromSaveString(String saveString) throws IOException
+    {
+        try(BufferedReader reader = new BufferedReader((new StringReader((saveString)))))
+        { loadGroups(reader); }
+    }
+
+    public void load() throws IOException
+    {
+        clear();
+        loadGroups();
+        loadUsers();
+    }
+    //endregion
+    //endregion
 }

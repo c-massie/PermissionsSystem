@@ -1,7 +1,8 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.collections.tree.Tree;
 import scot.massie.lib.collections.tree.RecursiveTree;
+import scot.massie.lib.collections.tree.Tree;
+
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +31,27 @@ public final class PermissionSet
 
     Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
     Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
+
+    static final Comparator<List<String>> pathComparator = (a, b) ->
+    {
+        for(int i = 0; i < a.size(); i++)
+        {
+            if(i >= b.size())
+                return 1;
+
+            String ia = a.get(i);
+            String ib = b.get(i);
+            int comparison = ia.compareTo(ib);
+
+            if(comparison != 0)
+                return comparison;
+        }
+
+        if(a.size() == b.size())
+            return 0;
+
+        return -1;
+    };
 
     protected String[] splitPath(String permissionPath)
     { return permissionPath.split("\\."); }
@@ -260,27 +282,6 @@ public final class PermissionSet
 
     public String toSaveString()
     {
-        Comparator<List<String>> pathComparator = (a, b) ->
-        {
-            for(int i = 0; i < a.size(); i++)
-            {
-                if(i >= b.size())
-                    return 1;
-
-                String ia = a.get(i);
-                String ib = b.get(i);
-                int comparison = ia.compareTo(ib);
-
-                if(comparison != 0)
-                    return comparison;
-            }
-
-            if(a.size() == b.size())
-                return 0;
-
-            return -1;
-        };
-
         StringBuilder sb = new StringBuilder();
         Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
         Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());

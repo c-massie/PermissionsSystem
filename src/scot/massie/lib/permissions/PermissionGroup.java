@@ -21,7 +21,7 @@ public class PermissionGroup
         this.name = name;
         this.priority = priority;
         this.priorityAsLong = ((Double)priority).longValue();
-        this.priorityIsLong = true;
+        this.priorityIsLong = false;
     }
 
     public static final Comparator<PermissionGroup> priorityComparatorLowestFirst
@@ -39,6 +39,18 @@ public class PermissionGroup
 
     PermissionSet permissionSet = new PermissionSet();
     SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparatorHighestFirst);
+
+    public String getName()
+    { return name; }
+
+    public double getPriority()
+    { return priority; }
+
+    public long getPriorityAsLong()
+    { return priorityAsLong; }
+
+    public String getPriorityAsString()
+    { return priorityIsLong ? Long.toString(priorityAsLong) : Double.toString(priority); }
 
     private PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
@@ -98,5 +110,19 @@ public class PermissionGroup
             return null;
 
         return mrp.getPermission().getArg();
+    }
+
+    public List<PermissionGroup> getPermissionGroups()
+    { return new ArrayList<>(referencedGroups); }
+
+    public String toSaveString()
+    {
+        String result = (priority == 0) ? (name) : (name + ": " + getPriorityAsString());
+        result += "\n";
+
+        for(PermissionGroup permGroup : referencedGroups)
+            result += "\n    #" + permGroup.getName();
+
+        return result + "\n" + permissionSet.toSaveString().replaceAll("^(?=.+)", "    ");
     }
 }
