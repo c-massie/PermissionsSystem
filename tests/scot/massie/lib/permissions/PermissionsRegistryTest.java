@@ -19,7 +19,7 @@ public class PermissionsRegistryTest
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
 
-        String expectedResult = "user1\n    some.permission.doot\n    some.other.permission";
+        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot";
 
         assertEquals(expectedResult, reg.usersToSaveString());
     }

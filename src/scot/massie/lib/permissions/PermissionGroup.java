@@ -117,12 +117,11 @@ public class PermissionGroup
 
     public String toSaveString()
     {
-        String result = (priority == 0) ? (name) : (name + ": " + getPriorityAsString());
-        result += "\n";
+        StringBuilder result = new StringBuilder((priority == 0) ? (name) : (name + ": " + getPriorityAsString()));
 
         for(PermissionGroup permGroup : referencedGroups)
-            result += "\n    #" + permGroup.getName();
+            result.append("\n    #").append(permGroup.getName());
 
-        return result + "\n" + permissionSet.toSaveString().replaceAll("^(?=.+)", "    ");
+        return result + "\n" + permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    ");
     }
 }
