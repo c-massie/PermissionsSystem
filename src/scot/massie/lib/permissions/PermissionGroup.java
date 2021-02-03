@@ -24,13 +24,16 @@ public class PermissionGroup
         this.priorityIsLong = false;
     }
 
-    public static final Comparator<PermissionGroup> priorityComparatorLowestFirst
-            = (a, b) -> a.priorityIsLong ? (Long.compare(a.priorityAsLong, b.priorityAsLong))
-                                         : (Double.compare(a.priority,       b.priority      ));
+    public static final Comparator<PermissionGroup> priorityComparatorHighestFirst = (a, b) ->
+    {
+        int result = a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
+                                      : (-Double.compare(a.priority,       b.priority      ));
 
-    public static final Comparator<PermissionGroup> priorityComparatorHighestFirst
-            = (a, b) -> a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
-                                         : (-Double.compare(a.priority,       b.priority      ));
+        if(result != 0)
+            return result;
+
+        return a.name.compareTo(b.name);
+    };
 
     String name;
     double priority;
@@ -38,7 +41,7 @@ public class PermissionGroup
     boolean priorityIsLong;
 
     PermissionSet permissionSet = new PermissionSet();
-    SortedSet<PermissionGroup> referencedGroups = new TreeSet<>(priorityComparatorHighestFirst);
+    List<PermissionGroup> referencedGroups = new ArrayList<>();
 
     public String getName()
     { return name; }
@@ -77,7 +80,15 @@ public class PermissionGroup
     { return permissionSet.remove(permissionPath); }
 
     public void addPermissionGroup(PermissionGroup permGroup)
-    { referencedGroups.add(permGroup); }
+    {
+        int index = Collections.binarySearch(referencedGroups, permGroup, priorityComparatorHighestFirst);
+
+        if(index >= 0)
+            return;
+
+        index = (index + 1) * -1;
+        referencedGroups.add(index, permGroup);
+    }
 
     public boolean removePermissionGroup(PermissionGroup permissionGroup)
     { return referencedGroups.remove(permissionGroup); }
