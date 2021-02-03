@@ -284,4 +284,25 @@ public class PermissionsRegistryTest
         assertTrue(reg.userHasPermission("user1", "some.permission.hoot"));
     }
     //endregion
+
+    //region assignGroups
+    @Test
+    public void assignGroupToUser()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignGroupToUser("user1", "turtles");
+        reg.assignGroupToUser("user1", "ducks");
+
+        String expectedResult =     "user1"
+                                + "\n    #ducks"
+                                + "\n    #turtles"
+                                + "\n    some.other.permission"
+                                + "\n    some.permission.doot"
+                                + "\n    some.permission.hoot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+    //endregion
 }
