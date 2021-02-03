@@ -260,10 +260,11 @@ public final class PermissionSet
     {
         Permission forExact = exactPermissionTree.getAtOrNull(permPath);
         Permission forDescendants = descendantPermissionTree.getAtOrNull(permPath);
-        String pathJoined = String.join(".", permPath);
 
         if(forExact == null && forDescendants == null)
             return "";
+
+        String pathJoined = (permPath.isEmpty()) ? ("*") : (String.join(".", permPath));
 
         if(forExact == null)
             return applyPermissionToPathString(pathJoined + ".*", forDescendants);
