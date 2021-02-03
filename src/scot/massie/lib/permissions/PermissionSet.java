@@ -70,6 +70,20 @@ public final class PermissionSet
             permWithoutArg = permWithoutArg.substring(1);
         }
 
+        Permission perm = isNegation ? Permission.NEGATING : Permission.PERMITTING;
+
+        if(permArg != null)
+            perm = perm.withArg(permArg);
+
+        if(permWithoutArg.equals("*"))
+        {
+            if(descendantPermissionTree.getRootItemSafely().matches((has, p) -> !has || p.isIndirect()))
+                descendantPermissionTree.setRootItem(perm.indirectly());
+
+            exactPermissionTree.setRootItem(perm);
+            return;
+        }
+
         if(permWithoutArg.endsWith(".*"))
         {
             isWildcard = true;
@@ -91,28 +105,16 @@ public final class PermissionSet
             );
 
         String[] path = splitPath(permWithoutArg);
-        Permission primaryPerm = isNegation ? Permission.NEGATING : Permission.PERMITTING;
-
-        if(permArg != null)
-            primaryPerm = primaryPerm.withArg(permArg);
 
         if(!isWildcard)
         {
-            if(descendantPermissionTree.getAtSafely().matches((has, perm) -> !has || perm.isIndirect()))
-            {
-                Permission secondaryPerm = isNegation ? Permission.NEGATING_INDIRECTLY
-                                                      : Permission.PERMITTING_INDIRECTLY;
+            if(descendantPermissionTree.getAtSafely(path).matches((has, p) -> !has || p.isIndirect()))
+                descendantPermissionTree.setAt(perm.indirectly(), path);
 
-                if(permArg != null)
-                    secondaryPerm = secondaryPerm.withArg(permArg);
-
-                descendantPermissionTree.setAt(secondaryPerm, path);
-            }
-
-            exactPermissionTree.setAt(primaryPerm, path);
+            exactPermissionTree.setAt(perm, path);
         }
         else // if isWildcard
-            descendantPermissionTree.setAt(primaryPerm, path);
+            descendantPermissionTree.setAt(perm, path);
     }
 
     public boolean remove(String permissionAsString)

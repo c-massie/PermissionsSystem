@@ -14,6 +14,9 @@ public final class Permission
     public Permission withArg(String argument)
     { return new Permission(permits, argument, isIndirect); }
 
+    public Permission indirectly()
+    { return new Permission(permits, argument, true); }
+
     public static final Permission PERMITTING = new Permission(true, null, false);
     public static final Permission PERMITTING_INDIRECTLY = new Permission(true, null, true);
     public static final Permission NEGATING = new Permission(false, null, false);
