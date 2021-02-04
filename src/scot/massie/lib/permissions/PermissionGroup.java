@@ -133,6 +133,9 @@ public class PermissionGroup
         for(PermissionGroup permGroup : referencedGroups)
             result.append("\n    #").append(permGroup.getName());
 
-        return result + "\n" + permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    ");
+        if(permissionSet.hasAny())
+            result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
+
+        return result.toString();
     }
 }

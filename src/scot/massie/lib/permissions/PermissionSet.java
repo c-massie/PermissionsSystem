@@ -155,6 +155,12 @@ public final class PermissionSet
             return descendantPermissionTree.clearAt(path).valueWasPresent();
     }
 
+    public boolean hasAny()
+    { return !isEmpty(); }
+
+    public boolean isEmpty()
+    { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
+
     public PermissionWithPath getMostRelevantPermission(String permissionPath)
     { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
 
