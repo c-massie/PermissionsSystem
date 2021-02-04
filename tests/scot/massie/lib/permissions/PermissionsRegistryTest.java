@@ -72,6 +72,18 @@ public class PermissionsRegistryTest
         String expectedResult = "user1\n    -*\n    some.other.permission\n    some.permission.doot";
         assertEquals(expectedResult, reg.usersToSaveString());
     }
+
+    @Test
+    public void assignPermissionToGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("group1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.other.permission");
+
+        String expectedResult = "group1\n    some.other.permission\n    some.permission.doot";
+        assertEquals("", reg.usersToSaveString());
+        assertEquals(expectedResult, reg.groupsToSaveString());
+    }
     //endregion
 
     @Test
@@ -303,6 +315,29 @@ public class PermissionsRegistryTest
                                 + "\n    some.permission.doot"
                                 + "\n    some.permission.hoot";
         assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignGroupToGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.permission.hoot");
+        reg.assignGroupPermission("group1", "some.other.permission");
+        reg.assignGroupToGroup("group1", "turtles");
+        reg.assignGroupToGroup("group1", "ducks");
+
+        String expectedUsers = "user1\n    some.permission.doot";
+        String expectedGroups =   "ducks\n\n"
+                                + "group1\n"
+                                + "    #ducks\n"
+                                + "    #turtles\n"
+                                + "    some.other.permission\n"
+                                + "    some.permission.hoot\n\n"
+                                + "turtles";
+
+        assertEquals(expectedUsers, reg.usersToSaveString());
+        assertEquals(expectedGroups, reg.groupsToSaveString());
     }
     //endregion
 }
