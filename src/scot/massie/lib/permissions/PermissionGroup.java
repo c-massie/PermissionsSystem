@@ -64,7 +64,7 @@ public class PermissionGroup
 
         for(PermissionGroup permGroup : referencedGroups)
         {
-            mrp = permGroup.permissionSet.getMostRelevantPermission(permissionAsString);
+            mrp = permGroup.getMostRelevantPermission(permissionAsString);
 
             if(mrp != null)
                 return mrp;
