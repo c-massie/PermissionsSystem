@@ -340,4 +340,693 @@ public class PermissionsRegistryTest
         assertEquals(expectedGroups, reg.groupsToSaveString());
     }
     //endregion
+
+    //region hasPermissionViaGroup
+    //region 2 level hierarchy
+    //region simple case
+    @Test
+    public void hasPermissionViaGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris");
+
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "-europe.france.paris");
+
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negated()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negated_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris");
+
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negated_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "-europe.france.paris");
+
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+    //endregion
+
+    //region user has sub-permission
+    @Test
+    public void hasPermissionViaGroup_hasSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris.eiffel");
+
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negatesSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "-europe.france.paris.eiffel");
+
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negated_hasSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("-group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris.eiffel");
+
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negated_negatesSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("-group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "-europe.france.paris.eiffel");
+
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+    }
+    //endregion
+
+    //region group has universal
+    @Test
+    public void hasPermissionViaGroup_universal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "*");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_universal_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "*");
+        reg.assignUserPermission("user1", "europe.france.paris");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_universal_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "*");
+        reg.assignUserPermission("user1", "-europe.france.paris");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negatedUniversal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "-*");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negatedUniversal_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "-*");
+
+        reg.assignUserPermission("user1", "europe.france.paris");
+        reg.assignUserPermission("user1", "africa.egypt.cairo");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroup_negatedUniversal_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group1", "-*");
+
+        reg.assignUserPermission("user1", "-europe.france.paris");
+        reg.assignUserPermission("user1", "-africa.egypt.cairo");
+
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
+        assertFalse(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+    }
+    //endregion
+    //endregion
+
+    //region 3 level hierarchy
+    //region simple case
+    @Test
+    public void hasPermissionViaGroupViaGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negated()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "-europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negated_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "-europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "europe.france.paris");
+
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negated_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "-europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+    //endregion
+
+    //region inheriting group has sub-permission
+    @Test
+    public void hasPermissionViaGroupViaGroup_hasSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "europe.france.paris.eiffel");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negatesSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris.eiffel");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negated_hasSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "-europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "europe.france.paris.eiffel");
+
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negated_negatesSubPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "-europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris.eiffel");
+
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.france.paris.eiffel"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris.eiffel"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris.eiffel"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+    }
+    //endregion
+
+    //region inherited group has universal
+    @Test
+    public void hasPermissionViaGroupViaGroup_universal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "*");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_universal_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "*");
+
+        reg.assignGroupPermission("group1", "europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_universal_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "*");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertTrue(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertTrue(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negatedUniversal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "-*");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negatedUniversal_independentlyHasPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "-*");
+
+        reg.assignGroupPermission("group1", "europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertTrue(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertTrue(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+
+    @Test
+    public void hasPermissionViaGroupViaGroup_negatedUniversal_negatesPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "europe.austria.vienna");
+        reg.assignGroupPermission("group1", "europe.germany.berlin");
+        reg.assignGroupPermission("group2", "europe.france.paris");
+        reg.assignGroupPermission("group2", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "-*");
+
+        reg.assignGroupPermission("group1", "-europe.france.paris");
+
+        assertTrue(reg.groupHasPermission("group2", "europe.france.paris"));
+        assertFalse(reg.groupHasPermission("group2", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group2", "africa.egypt.cairo"));
+        assertFalse(reg.groupHasPermission("group1", "europe.france.paris"));
+        assertTrue(reg.groupHasPermission("group1", "europe.germany.berlin"));
+        assertFalse(reg.groupHasPermission("group1", "africa.egypt.cairo"));
+        assertFalse(reg.userHasPermission("user1", "europe.france.paris"));
+        assertTrue(reg.userHasPermission("user1", "europe.germany.berlin"));
+        assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
+    }
+    //endregion
+    //endregion
+    //endregion
 }
