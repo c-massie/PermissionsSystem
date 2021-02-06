@@ -5,10 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
@@ -186,10 +183,32 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId)); }
 
     public PermissionGroup createGroup(String groupId, long priority)
-    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId, priority)); }
+    {
+        return assignableGroups.compute(groupId, (s, permissionGroup) ->
+        {
+            if(permissionGroup != null)
+            {
+                permissionGroup.reassignPriority(priority);
+                return permissionGroup;
+            }
+            else
+                return new PermissionGroup(groupId, priority);
+        });
+    }
 
     public PermissionGroup createGroup(String groupId, double priority)
-    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId, priority)); }
+    {
+        return assignableGroups.compute(groupId, (s, permissionGroup) ->
+        {
+            if(permissionGroup != null)
+            {
+                permissionGroup.reassignPriority(priority);
+                return permissionGroup;
+            }
+            else
+                return new PermissionGroup(groupId, priority);
+        });
+    }
 
     public PermissionGroup createGroup(String groupId, String priorityAsString)
     {
@@ -315,7 +334,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Loading
-    void loadPermsFile(BufferedReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
+    void loadPerms(BufferedReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
         PermissionGroup currentPermGroup = null;
 
@@ -345,10 +364,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     void loadUsers(BufferedReader reader) throws IOException
-    { loadPermsFile(reader, this::createUserPermissionsFromSaveString); }
+    { loadPerms(reader, this::createUserPermissionsFromSaveString); }
 
     void loadGroups(BufferedReader reader) throws IOException
-    { loadPermsFile(reader, this::createGroupFromSaveString); }
+    {
+        loadPerms(reader, this::createGroupFromSaveString);
+
+        for(PermissionGroup pg : assignableGroups.values())
+            pg.sortPermissionGroups();
+    }
 
     void loadUsers() throws IOException
     {

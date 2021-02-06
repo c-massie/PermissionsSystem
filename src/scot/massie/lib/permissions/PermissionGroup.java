@@ -104,6 +104,9 @@ public class PermissionGroup
         referencedGroups.add(index, permGroup);
     }
 
+    public void sortPermissionGroups()
+    { referencedGroups.sort(priorityComparatorHighestFirst); }
+
     public boolean removePermissionGroup(PermissionGroup permissionGroup)
     { return referencedGroups.remove(permissionGroup); }
 
