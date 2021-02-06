@@ -12,6 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PermissionsRegistryTest
 {
+    /*
+
+    Note: Tests that pass for users are expected to pass for groups as well, as they're both implemented using the same
+    class. Providing test coverage for both would be needless duplication.
+
+     */
+
     protected PermissionsRegistry<String> getNewPermissionsRegistry()
     { return new PermissionsRegistry<>(s -> s, s -> s); }
 
@@ -1027,6 +1034,459 @@ public class PermissionsRegistryTest
         assertFalse(reg.userHasPermission("user1", "africa.egypt.cairo"));
     }
     //endregion
+    //endregion
+    //endregion
+
+    //region getting permission args
+    //region simple cases
+    @Test
+    public void getUserPermissionArg()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin: doot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.germany.berlin"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_empty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin:");
+
+        assertEquals("", reg.getUserPermissionArg("user1", "europe.germany.berlin"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_noArg()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.germany.berlin"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_noPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.poland.warsaw"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_universal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignUserPermission("user1", "*: doot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.poland.warsaw"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.germany.berlin"));
+    }
+    //endregion
+
+    //region across hierarchy
+    @Test
+    public void getUserPermissionArg_acrossHierarchy()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        reg.assignUserPermission("user1", "europe.france: doot");
+        reg.assignUserPermission("user1", "europe.france.paris: hoot");
+        reg.assignUserPermission("user1", "europe.france.paris.eiffel: noot");
+
+        reg.assignUserPermission("user1", "europe.italy: poot");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.france"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris"));
+        assertEquals("noot", reg.getUserPermissionArg("user1", "europe.france.paris.eiffel"));
+        assertEquals("poot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("poot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertEquals("poot", reg.getUserPermissionArg("user1", "europe.italy.rome.vatican"));
+    }
+
+    @Test
+    public void getUserPermissionArg_acrossHierarchy_negatingMiddle()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        reg.assignUserPermission("user1", "europe.france: doot");
+        reg.assignUserPermission("user1", "-europe.france.paris");
+        reg.assignUserPermission("user1", "europe.france.paris.eiffel: noot");
+
+        reg.assignUserPermission("user1", "europe.italy: poot");
+        reg.assignUserPermission("user1", "-europe.italy.rome");
+        reg.assignUserPermission("user1", "europe.italy.rome.vatican");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.france"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.france.paris"));
+        assertEquals("noot", reg.getUserPermissionArg("user1", "europe.france.paris.eiffel"));
+        assertEquals("poot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome.vatican"));
+    }
+
+    @Test
+    public void getUserPermissionArg_acrossHierarchy_withUniversal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        reg.assignUserPermission("user1", "*: soot");
+
+        reg.assignUserPermission("user1", "europe.france: doot");
+        reg.assignUserPermission("user1", "europe.france.paris: hoot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", ""));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.france"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+    }
+
+    @Test
+    public void getUserPermissionArg_acrossHierarchy_withUniversalAndNegatingMiddle()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+
+        reg.assignUserPermission("user1", "*: soot");
+
+        reg.assignUserPermission("user1", "-europe.france");
+        reg.assignUserPermission("user1", "europe.france.paris: hoot");
+
+        reg.assignUserPermission("user1", "-europe.italy");
+        reg.assignUserPermission("user1", "europe.italy.rome");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", ""));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.france"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris.eiffel"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome.vatican"));
+    }
+    //endregion
+
+    //region overwriting
+    @Test
+    public void getUserPermissionArg_overwriting_notOverwritten()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris: doot");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.france.paris"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_notOverwrittenTwice()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_negated()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris: doot");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "-europe.france.paris");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.france.paris"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_negatedBySubGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group1", "-europe.italy.rome");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_different()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris: doot");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris: hoot");
+
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_subgroupNegatesUserDifferent()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group1", "-europe.italy.rome");
+        reg.assignUserPermission("user1", "europe.italy.rome: hoot");
+
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_noArg()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignUserPermission("user1", "europe.france.paris");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.france.paris"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwriting_subgroupNegatesUserNoArg()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+
+        reg.assignGroupPermission("group1", "-europe.italy.rome");
+        reg.assignUserPermission("user1", "europe.italy.rome");
+
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome"));
+    }
+    //endregion
+
+    //region overwriting across hierarchy
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userHighest()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group1", "europe.italy: hoot");
+        reg.assignUserPermission("user1", "europe: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userLowest()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe: doot");
+        reg.assignGroupPermission("group1", "europe.italy: hoot");
+        reg.assignUserPermission("user1", "europe.italy.rome: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithNegation()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group1", "-europe.italy");
+        reg.assignUserPermission("user1", "europe: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithNegation()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe: doot");
+        reg.assignGroupPermission("group1", "-europe.italy");
+        reg.assignUserPermission("user1", "europe.italy.rome: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
+        assertNull(reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", "europe"));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe.italy: doot");
+        reg.assignGroupPermission("group1", "europe: hoot");
+        reg.assignUserPermission("user1", "*: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", ""));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "*: doot");
+        reg.assignGroupPermission("group1", "europe: hoot");
+        reg.assignUserPermission("user1", "europe.italy: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("hoot", reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", ""));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversalAndNegation()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "europe.italy: doot");
+        reg.assignGroupPermission("group1", "-europe");
+        reg.assignUserPermission("user1", "*: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("soot", reg.getUserPermissionArg("user1", ""));
+    }
+    
+    @Test
+    public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversalAndNegation()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignUserPermission("user1", "europe.austria.vienna");
+        reg.assignUserPermission("user1", "europe.germany.berlin");
+        reg.assignGroupPermission("group1", "europe.france.paris");
+        reg.assignGroupPermission("group1", "europe.spain.madrid");
+        reg.assignGroupPermission("group2", "europe.italy.rome: doot");
+        reg.assignGroupPermission("group2", "europe.poland.warsaw");
+
+        reg.assignGroupPermission("group2", "*: doot");
+        reg.assignGroupPermission("group1", "-europe");
+        reg.assignUserPermission("user1", "europe.italy: soot");
+
+        assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
+        assertNull(reg.getUserPermissionArg("user1", "europe"));
+        assertEquals("doot", reg.getUserPermissionArg("user1", ""));
+    }
     //endregion
     //endregion
 }
