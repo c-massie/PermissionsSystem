@@ -1489,4 +1489,137 @@ public class PermissionsRegistryTest
     }
     //endregion
     //endregion
+
+    //region group priority
+    @Test
+    public void groupPriority_saving()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.createGroup("katara", 5);
+        reg.createGroup("iroh", -3.76);
+        reg.createGroup("azula", -3.4);
+        reg.createGroup("suki", -3.9);
+        reg.createGroup("appa", -3);
+        reg.createGroup("momo", -4);
+        reg.createGroup("jet", 4.2);
+        reg.createGroup("sozin", 2.5);
+
+        reg.assignGroupPermission("katara", "someperm: doot");
+        reg.assignGroupPermission("momo", "someperm: moot");
+        reg.assignGroupPermission("iroh", "someperm: foot");
+        reg.assignGroupPermission("suki", "someperm: poot");
+        reg.assignGroupPermission("sozin", "someperm: goot");
+        reg.assignGroupPermission("jet", "someperm: voot");
+        reg.assignGroupPermission("azula", "someperm: noot");
+        reg.assignGroupPermission("appa", "someperm: joot");
+
+        String expected = "appa: -3\n    someperm: joot\n\n"
+                        + "azula: -3.4\n    someperm: noot\n\n"
+                        + "iroh: -3.76\n    someperm: foot\n\n"
+                        + "jet: 4.2\n    someperm: voot\n\n"
+                        + "katara: 5\n    someperm: doot\n\n"
+                        + "momo: -4\n    someperm: moot\n\n"
+                        + "sozin: 2.5\n    someperm: goot\n\n"
+                        + "suki: -3.9\n    someperm: poot";
+
+        assertEquals(expected, reg.groupsToSaveString());
+    }
+
+    @Test
+    public void groupPriority_order()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.createGroup("katara", 5);
+        reg.createGroup("iroh", -3.76);
+        reg.createGroup("azula", -3.4);
+        reg.createGroup("suki", -3.9);
+        reg.createGroup("appa", -3);
+        reg.createGroup("momo", -4);
+        reg.createGroup("jet", 4.2);
+        reg.createGroup("sozin", 2.5);
+
+        reg.assignGroupToUser("user1", "katara");
+        reg.assignGroupToUser("user1", "iroh");
+        reg.assignGroupToUser("user1", "azula");
+        reg.assignGroupToUser("user1", "suki");
+        reg.assignGroupToUser("user1", "appa");
+        reg.assignGroupToUser("user1", "momo");
+        reg.assignGroupToUser("user1", "jet");
+        reg.assignGroupToUser("user1", "sozin");
+
+        reg.assignGroupPermission("momo", "someperm: moot");
+        reg.assignGroupPermission("suki", "someperm: poot");
+
+        assertEquals("poot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("azula", "someperm: noot");
+        reg.assignGroupPermission("iroh", "someperm: foot");
+
+        assertEquals("noot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("katara", "someperm: doot");
+        reg.assignGroupPermission("appa", "someperm: joot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("sozin", "someperm: goot");
+        reg.assignGroupPermission("jet", "someperm: voot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "someperm"));
+    }
+
+    @Test
+    public void groupPriority_inferredOrder()
+    {
+        // secondary priority inferred from alphabetical order.
+
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.createGroup("katara");
+        reg.createGroup("iroh");
+        reg.createGroup("azula");
+        reg.createGroup("suki");
+        reg.createGroup("appa");
+        reg.createGroup("momo");
+        reg.createGroup("jet");
+        reg.createGroup("sozin");
+        reg.createGroup("toph", 2);
+        reg.createGroup("boulder", 2);
+
+        reg.assignGroupToUser("user1", "katara");
+        reg.assignGroupToUser("user1", "iroh");
+        reg.assignGroupToUser("user1", "azula");
+        reg.assignGroupToUser("user1", "suki");
+        reg.assignGroupToUser("user1", "appa");
+        reg.assignGroupToUser("user1", "momo");
+        reg.assignGroupToUser("user1", "jet");
+        reg.assignGroupToUser("user1", "sozin");
+        reg.assignGroupToUser("user1", "toph");
+        reg.assignGroupToUser("user1", "boulder");
+
+        reg.assignGroupPermission("suki", "someperm: moot");
+        reg.assignGroupPermission("sozin", "someperm: poot");
+
+        assertEquals("poot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("katara", "someperm: noot");
+        reg.assignGroupPermission("momo", "someperm: foot");
+
+        assertEquals("noot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("appa", "someperm: doot");
+        reg.assignGroupPermission("azula", "someperm: joot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("iroh", "someperm: goot");
+        reg.assignGroupPermission("jet", "someperm: voot");
+
+        assertEquals("doot", reg.getUserPermissionArg("user1", "someperm"));
+
+        reg.assignGroupPermission("boulder", "someperm: zoot");
+        reg.assignGroupPermission("toph", "someperm: yoot");
+
+        assertEquals("zoot", reg.getUserPermissionArg("user1", "someperm"));
+    }
+    //endregion
 }
