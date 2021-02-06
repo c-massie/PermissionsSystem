@@ -244,8 +244,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if(prioritySeparatorPosition < 0)
             return createGroup(saveString.trim());
 
-        String groupId = saveString.substring(0, prioritySeparatorPosition);
-        String priority = saveString.substring(prioritySeparatorPosition + 1);
+        String groupId = saveString.substring(0, prioritySeparatorPosition).trim();
+        String priority = saveString.substring(prioritySeparatorPosition + 1).trim();
         return createGroup(groupId, priority);
     }
 
@@ -358,7 +358,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                 catch(ParseException e)
                 { throw new InvalidPermissionException(line, e); }
             }
-            else
+            else if(!(line.trim().isEmpty()))
                 currentPermGroup = createEntityFromHeader.apply(line);
         }
     }
