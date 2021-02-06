@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -313,57 +315,40 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Loading
-    void loadUsers(BufferedReader reader) throws IOException
+    void loadPermsFile(BufferedReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
-        ID currentUser = null;
+        PermissionGroup currentPermGroup = null;
 
         for(String line; (line = reader.readLine()) != null;)
         {
             if(line.startsWith(" "))
             {
-                if(currentUser == null)
+                if(currentPermGroup == null)
                     continue;
 
                 line = line.trim();
 
                 if(line.startsWith("#"))
                 {
-                    assignGroupToUser(currentUser, line.substring(1).trim());
+                    currentPermGroup.addPermissionGroup(getOrCreatePermGroup(line.substring(1).trim()));
                     continue;
                 }
 
-                assignUserPermission(currentUser, line);
+                try
+                { currentPermGroup.addPermission(line); }
+                catch(ParseException e)
+                { throw new InvalidPermissionException(line, e); }
             }
             else
-                currentUser = parseIdFromString.apply(createUserPermissionsFromSaveString(line).getName());
+                currentPermGroup = createEntityFromHeader.apply(line);
         }
     }
+
+    void loadUsers(BufferedReader reader) throws IOException
+    { loadPermsFile(reader, this::createUserPermissionsFromSaveString); }
 
     void loadGroups(BufferedReader reader) throws IOException
-    {
-        PermissionGroup currentGroup = null;
-
-        for(String line; (line = reader.readLine()) != null;)
-        {
-            if(line.startsWith(" "))
-            {
-                if(currentGroup == null)
-                    continue;
-
-                line = line.trim();
-
-                if(line.startsWith("#"))
-                {
-                    assignGroupToGroup(currentGroup.getName(), line.substring(1).trim());
-                    continue;
-                }
-
-                assignGroupPermission(currentGroup.getName(), line);
-            }
-            else
-                currentGroup = createGroupFromSaveString(line);
-        }
-    }
+    { loadPermsFile(reader, this::createGroupFromSaveString); }
 
     void loadUsers() throws IOException
     {

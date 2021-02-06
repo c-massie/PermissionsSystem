@@ -55,6 +55,20 @@ public class PermissionGroup
     public String getPriorityAsString()
     { return priorityIsLong ? Long.toString(priorityAsLong) : Double.toString(priority); }
 
+    public void reassignPriority(long newPriority)
+    {
+        priority = newPriority;
+        priorityAsLong = newPriority;
+        priorityIsLong = true;
+    }
+
+    public void reassignPriority(double newPriority)
+    {
+        this.priority = newPriority;
+        this.priorityAsLong = ((Double)newPriority).longValue();
+        this.priorityIsLong = false;
+    }
+
     private PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
         PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
