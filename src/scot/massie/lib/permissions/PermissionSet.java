@@ -77,10 +77,8 @@ public final class PermissionSet
 
         if(permWithoutArg.equals("*"))
         {
-            if(descendantPermissionTree.getRootItemSafely().matches((has, p) -> !has || p.isIndirect()))
-                descendantPermissionTree.setRootItem(perm.indirectly());
-
             exactPermissionTree.setRootItem(perm);
+            descendantPermissionTree.setRootItemIf(perm.indirectly(), (p, has) -> !has || p.isIndirect());
             return;
         }
 
@@ -108,10 +106,8 @@ public final class PermissionSet
 
         if(!isWildcard)
         {
-            if(descendantPermissionTree.getAtSafely(path).matches((has, p) -> !has || p.isIndirect()))
-                descendantPermissionTree.setAt(perm.indirectly(), path);
-
             exactPermissionTree.setAt(perm, path);
+            descendantPermissionTree.setAtIf(perm.indirectly(), path, (p, has) -> !has || p.isIndirect());
         }
         else // if isWildcard
             descendantPermissionTree.setAt(perm, path);
