@@ -2,6 +2,7 @@ package scot.massie.lib.permissions;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -1622,4 +1623,18 @@ public class PermissionsRegistryTest
         assertEquals("zoot", reg.getUserPermissionArg("user1", "someperm"));
     }
     //endregion
+
+    @Test
+    public void priorityRetainedForGroupsUsedBeforeDeclared()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        String saveString = "group1\n    #group2\n    some.other.permission\n\ngroup2: 3\n    some.permission.here";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        assertEquals(saveString, reg.groupsToSaveString());
+    }
 }
