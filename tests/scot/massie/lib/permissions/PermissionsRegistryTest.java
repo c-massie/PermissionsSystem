@@ -1637,4 +1637,69 @@ public class PermissionsRegistryTest
 
         assertEquals(saveString, reg.groupsToSaveString());
     }
+
+    @Test
+    public void multilinePermissionArgsLoaded()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        String saveString = "group1\n"
+                            + "    my.perm.first\n"
+                            + "    my.perm.second: this is\n"
+                            + "        some text\n"
+                            + "        that should be written\n"
+                            + "    my.perm.third";
+
+        String expectedPermissionArg = "this is\nsome text\nthat should be written";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
+
+        saveString = "group1\n"
+                     + "    my.perm.first\n"
+                     + "    my.perm.second:\n"
+                     + "        this is\n"
+                     + "        some text\n"
+                     + "        that should be written\n"
+                     + "    my.perm.third";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
+    }
+
+    @Test
+    public void multilinePermissionArgLoadAndSave()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        String saveString = "group1\n"
+                            + "    my.perm.first\n"
+                            + "    my.perm.second: this is\n"
+                            + "        some text\n"
+                            + "        that should be written\n"
+                            + "    my.perm.third";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        String expectedResult = "group1\n"
+                                + "    my.perm.first\n"
+                                + "    my.perm.second:\n"
+                                + "        this is\n"
+                                + "        some text\n"
+                                + "        that should be written\n"
+                                + "    my.perm.third";
+
+        assertEquals(expectedResult, reg.groupsToSaveString());
+    }
 }

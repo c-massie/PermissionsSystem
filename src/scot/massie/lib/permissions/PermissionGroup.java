@@ -90,6 +90,9 @@ public class PermissionGroup
     public void addPermission(String permissionAsString) throws ParseException
     { permissionSet.set(permissionAsString); }
 
+    public void addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
+    { permissionSet.setWhileDeIndenting(permissionAsString); }
+
     public boolean removePermission(String permissionPath)
     { return permissionSet.remove(permissionPath); }
 

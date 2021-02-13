@@ -63,6 +63,110 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { return invalidPriority; }
     }
 
+    private static class PermissionsLineReader extends Reader
+    {
+        public PermissionsLineReader(Reader source)
+        { this.source = source; }
+
+        private final Reader source;
+        private String heldOverLine = null;
+        private boolean lastLineReadDumblyHadStringArg = false;
+
+        private String readLineDumbly() throws IOException
+        {
+            StringBuilder sb = new StringBuilder();
+            boolean elligableForStringArg = false;
+            boolean foundNonWhitespaceChars = false;
+            boolean hasStringArg = false;
+
+            for(int ci = source.read(); ci != '\n'; ci = source.read())
+            {
+                if(ci == -1)
+                {
+                    if(sb.length() == 0)
+                        return null;
+
+                    String line = sb.toString();
+
+                    if(line.endsWith("\r"))
+                        line = line.substring(0, line.length() - 1);
+
+                    return line;
+                }
+
+                char c = (char)ci;
+                sb.append(c);
+
+                if(c != ' ')
+                    foundNonWhitespaceChars = true;
+
+                if(!foundNonWhitespaceChars)
+                    elligableForStringArg = true;
+
+                if((elligableForStringArg) && (c == ':'))
+                    hasStringArg = true;
+            }
+
+            String line = sb.toString();
+
+            if(line.endsWith("\r"))
+                line = line.substring(0, line.length() - 1);
+
+            lastLineReadDumblyHadStringArg = hasStringArg;
+            return line;
+        }
+
+        private static int getIndentLevel(String of)
+        {
+            // Assumes a single-line line
+            int stringLength = of.length();
+
+            for(int i = 0; i < stringLength; i++)
+                if(of.charAt(i) != ' ')
+                    return i;
+
+            return stringLength;
+        }
+
+        public String readLine() throws IOException
+        {
+            String line;
+
+            if(heldOverLine != null)
+            {
+                line = heldOverLine;
+                heldOverLine = null;
+            }
+            else
+            {
+                line = readLineDumbly();
+
+                if(line == null)
+                    return null;
+            }
+
+            if(!lastLineReadDumblyHadStringArg)
+                return line;
+
+            int lineIndentLevel = getIndentLevel(line);
+            String nextLine;
+
+            while(((nextLine = readLineDumbly()) != null) && ((lineIndentLevel + 4) <= getIndentLevel(nextLine)))
+                line += "\n" + nextLine.substring(lineIndentLevel);
+
+            heldOverLine = nextLine;
+            return line;
+        }
+
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException
+        { return source.read(cbuf, off, len); }
+
+        @Override
+        public void close() throws IOException
+        { source.close(); }
+    }
+
     public PermissionsRegistry(Function<ID, String> idToString,
                                Function<String, ID> idFromString,
                                Path usersFile,
@@ -334,7 +438,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Loading
-    void loadPerms(BufferedReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
+    void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
         PermissionGroup currentPermGroup = null;
 
@@ -354,7 +458,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                 }
 
                 try
-                { currentPermGroup.addPermission(line); }
+                { currentPermGroup.addPermissionWhileDeIndenting(line); }
                 catch(ParseException e)
                 { throw new InvalidPermissionException(line, e); }
             }
@@ -363,10 +467,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         }
     }
 
-    void loadUsers(BufferedReader reader) throws IOException
+    void loadUsers(PermissionsLineReader reader) throws IOException
     { loadPerms(reader, this::createUserPermissionsFromSaveString); }
 
-    void loadGroups(BufferedReader reader) throws IOException
+    void loadGroups(PermissionsLineReader reader) throws IOException
     {
         loadPerms(reader, this::createGroupFromSaveString);
 
@@ -379,7 +483,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if((usersFilePath == null) || (!Files.isReadable(usersFilePath)) || (Files.isDirectory(usersFilePath)))
             return;
 
-        try(BufferedReader reader = Files.newBufferedReader(usersFilePath))
+        try(PermissionsLineReader reader = new PermissionsLineReader(Files.newBufferedReader(usersFilePath)))
         { loadUsers(reader); }
     }
 
@@ -388,19 +492,19 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if((groupsFilePath == null) || (!Files.isReadable(groupsFilePath)) || (Files.isDirectory(groupsFilePath)))
             return;
 
-        try(BufferedReader reader = Files.newBufferedReader(groupsFilePath))
+        try(PermissionsLineReader reader = new PermissionsLineReader(Files.newBufferedReader(groupsFilePath)))
         { loadGroups(reader); }
     }
 
     void loadUsersFromSaveString(String saveString) throws IOException
     {
-        try(BufferedReader reader = new BufferedReader(new StringReader(saveString)))
+        try(PermissionsLineReader reader = new PermissionsLineReader(new BufferedReader(new StringReader(saveString))))
         { loadUsers(reader); }
     }
 
     void loadGroupsFromSaveString(String saveString) throws IOException
     {
-        try(BufferedReader reader = new BufferedReader((new StringReader((saveString)))))
+        try(PermissionsLineReader reader = new PermissionsLineReader(new BufferedReader(new StringReader(saveString))))
         { loadGroups(reader); }
     }
 

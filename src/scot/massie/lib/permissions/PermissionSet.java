@@ -113,6 +113,9 @@ public final class PermissionSet
             descendantPermissionTree.setAt(perm, path);
     }
 
+    public void setWhileDeIndenting(String permissionAsString) throws ParseException
+    { set(permissionAsString.replaceAll("(?m)^ {4}", "")); }
+
     public boolean remove(String permissionAsString)
     {
         permissionAsString = permissionAsString.trim();
@@ -253,7 +256,12 @@ public final class PermissionSet
             path = "-" + path;
 
         if(perm.hasArg())
-            path += ": " + perm.getArg();
+        {
+            String arg = perm.getArg();
+
+            path += (arg.contains("\n")) ? (":\n" + arg.replaceAll("(?m)^(?=.+)", "    "))
+                                         : (": " + perm.getArg());
+        }
 
         return path;
     }
