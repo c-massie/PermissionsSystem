@@ -376,7 +376,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     void loadUsers() throws IOException
     {
-        if(usersFilePath == null)
+        if((usersFilePath == null) || (!Files.isReadable(usersFilePath)) || (Files.isDirectory(usersFilePath)))
             return;
 
         try(BufferedReader reader = Files.newBufferedReader(usersFilePath))
@@ -385,7 +385,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     void loadGroups() throws IOException
     {
-        if(groupsFilePath == null)
+        if((groupsFilePath == null) || (!Files.isReadable(groupsFilePath)) || (Files.isDirectory(groupsFilePath)))
             return;
 
         try(BufferedReader reader = Files.newBufferedReader(groupsFilePath))
