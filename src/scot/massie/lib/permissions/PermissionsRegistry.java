@@ -1,5 +1,7 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.utils.wrappers.MutableWrapper;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -196,11 +198,31 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     final Path usersFilePath;
     final Path groupsFilePath;
 
+    boolean hasBeenModifiedSinceLoad = false;
+
+    private void markAsModified()
+    { hasBeenModifiedSinceLoad = true; }
+
+    public boolean hasBeenModifiedSinceBeingLoaded()
+    { return hasBeenModifiedSinceLoad; }
+
     private PermissionGroup getOrCreateUserPerms(ID userId)
-    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup(convertIdToString.apply(id))); }
+    {
+        return permissionsForUsers.computeIfAbsent(userId, id ->
+        {
+            markAsModified();
+            return new PermissionGroup(convertIdToString.apply(id));
+        });
+    }
 
     private PermissionGroup getOrCreatePermGroup(String groupId)
-    { return assignableGroups.computeIfAbsent(groupId, PermissionGroup::new); }
+    {
+        return assignableGroups.computeIfAbsent(groupId, name ->
+        {
+            markAsModified();
+            return new PermissionGroup(name);
+        });
+    }
 
     public void assignUserPermission(ID userId, String permission)
     { assignPermission(getOrCreateUserPerms(userId), permission); }
@@ -210,6 +232,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     private void assignPermission(PermissionGroup permGroup, String permission)
     {
+        markAsModified();
+
         try
         { permGroup.addPermission(permission); }
         catch(ParseException e)
@@ -227,8 +251,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if(permGroup == null)
             return false;
 
+        markAsModified();
         return permGroup.removePermission(permission);
     }
+
+    // CONTINUE IMPLEMENTING markAsModified() FROM HERE DOWN.
 
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
@@ -252,6 +279,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if(permGroupBeingRevoked == null)
             return false;
 
+        markAsModified();
         return permGroup.removePermissionGroup(permGroupBeingRevoked);
     }
 
@@ -284,12 +312,20 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     public PermissionGroup createGroup(String groupId)
-    { return assignableGroups.computeIfAbsent(groupId, s -> new PermissionGroup(groupId)); }
+    {
+        return assignableGroups.computeIfAbsent(groupId, s ->
+        {
+            markAsModified();
+            return new PermissionGroup(groupId);
+        });
+    }
 
     public PermissionGroup createGroup(String groupId, long priority)
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
+            markAsModified();
+
             if(permissionGroup != null)
             {
                 permissionGroup.reassignPriority(priority);
@@ -304,6 +340,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
+            markAsModified();
+
             if(permissionGroup != null)
             {
                 permissionGroup.reassignPriority(priority);
@@ -354,7 +392,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     public PermissionGroup createUserPermissions(ID userId)
-    { return permissionsForUsers.computeIfAbsent(userId, id -> new PermissionGroup(convertIdToString.apply(id))); }
+    {
+        return permissionsForUsers.computeIfAbsent(userId, id ->
+        {
+            markAsModified();
+            return new PermissionGroup(convertIdToString.apply(id));
+        });
+    }
 
     private PermissionGroup createUserPermissionsFromSaveString(String saveString)
     { return createUserPermissions(parseIdFromString.apply(saveString.trim())); }
@@ -441,6 +485,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
         PermissionGroup currentPermGroup = null;
+        markAsModified();
 
         for(String line; (line = reader.readLine()) != null;)
         {
@@ -513,6 +558,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         clear();
         loadGroups();
         loadUsers();
+        hasBeenModifiedSinceLoad = false;
     }
     //endregion
     //endregion
