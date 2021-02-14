@@ -1,7 +1,5 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.utils.wrappers.MutableWrapper;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -198,13 +196,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     final Path usersFilePath;
     final Path groupsFilePath;
 
-    boolean hasBeenModifiedSinceLoad = false;
+    boolean hasBeenDifferentiatedFromFiles = false;
 
-    private void markAsModified()
-    { hasBeenModifiedSinceLoad = true; }
+    protected void markAsModified()
+    { hasBeenDifferentiatedFromFiles = true; }
 
-    public boolean hasBeenModifiedSinceBeingLoaded()
-    { return hasBeenModifiedSinceLoad; }
+    public boolean hasBeenDifferentiatedFromFiles()
+    { return hasBeenDifferentiatedFromFiles; }
 
     private PermissionGroup getOrCreateUserPerms(ID userId)
     {
@@ -478,6 +476,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         saveUsers();
         saveGroups();
+        hasBeenDifferentiatedFromFiles = false;
     }
     //endregion
 
@@ -558,7 +557,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         clear();
         loadGroups();
         loadUsers();
-        hasBeenModifiedSinceLoad = false;
+        hasBeenDifferentiatedFromFiles = false;
     }
     //endregion
     //endregion
