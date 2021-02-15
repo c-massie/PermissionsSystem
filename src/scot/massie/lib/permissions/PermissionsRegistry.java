@@ -234,12 +234,31 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public List<String> getGroupPermissions(String groupdId)
     { return getPermissions(assignableGroups.getOrDefault(groupdId, null)); }
 
-    public List<String> getPermissions(PermissionGroup permGroup)
+    private List<String> getPermissions(PermissionGroup permGroup)
     {
         if(permGroup == null)
             return Collections.emptyList();
 
         return permGroup.getPermissionsAsStrings(false);
+    }
+
+    public List<String> getGroupsOfUser(ID userId)
+    { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
+
+    public List<String> getGroupsOfGroup(String groupId)
+    { return getGroupsOf(assignableGroups.getOrDefault(groupId, null)); }
+
+    private List<String> getGroupsOf(PermissionGroup permGroup)
+    {
+        if(permGroup == null)
+            return Collections.emptyList();
+
+        List<String> result = new ArrayList<>();
+
+        for(PermissionGroup pg : permGroup.getPermissionGroups())
+            result.add(pg.getName());
+
+        return result;
     }
 
     public void assignUserPermission(ID userId, String permission)
