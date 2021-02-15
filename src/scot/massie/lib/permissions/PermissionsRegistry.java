@@ -222,6 +222,26 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
+    public Collection<String> getGroupNames()
+    { return new HashSet<>(assignableGroups.keySet()); }
+
+    public Collection<ID> getUsers()
+    { return new HashSet<>(permissionsForUsers.keySet()); }
+
+    public List<String> getUserPermissions(ID userId)
+    { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
+
+    public List<String> getGroupPermissions(String groupdId)
+    { return getPermissions(assignableGroups.getOrDefault(groupdId, null)); }
+
+    public List<String> getPermissions(PermissionGroup permGroup)
+    {
+        if(permGroup == null)
+            return Collections.emptyList();
+
+        return permGroup.getPermissionsAsStrings(false);
+    }
+
     public void assignUserPermission(ID userId, String permission)
     { assignPermission(getOrCreateUserPerms(userId), permission); }
 
@@ -252,8 +272,6 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         markAsModified();
         return permGroup.removePermission(permission);
     }
-
-    // CONTINUE IMPLEMENTING markAsModified() FROM HERE DOWN.
 
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }

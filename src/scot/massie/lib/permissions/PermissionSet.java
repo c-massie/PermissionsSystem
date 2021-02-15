@@ -4,9 +4,7 @@ import scot.massie.lib.collections.tree.RecursiveTree;
 import scot.massie.lib.collections.tree.Tree;
 
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class PermissionSet
@@ -266,18 +264,36 @@ public final class PermissionSet
         return path;
     }
 
+    private static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
+    { return perm.negates() ? ("-" + path) : path; }
+
+    private static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
+    { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
+
     private String getSaveStringForPermission(List<String> permPath)
+    {
+        String[] lines = getSaveStringLinesForPermission(permPath);
+
+        return lines.length == 0 ? ""
+             : lines.length == 1 ? lines[0]
+             :                     lines[0] + "\n" + lines[1];
+    }
+
+    private String[] getSaveStringLinesForPermission(List<String> permPath)
+    { return getSaveStringLinesForPermission(permPath, true); }
+
+    private String[] getSaveStringLinesForPermission(List<String> permPath, boolean includeArg)
     {
         Permission forExact = exactPermissionTree.getAtOrNull(permPath);
         Permission forDescendants = descendantPermissionTree.getAtOrNull(permPath);
 
         if(forExact == null && forDescendants == null)
-            return "";
+            return new String[0];
 
         String pathJoined = (permPath.isEmpty()) ? ("*") : (String.join(".", permPath));
 
         if(forExact == null)
-            return applyPermissionToPathString(pathJoined + ".*", forDescendants);
+            return new String[] { applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg) };
 
         if(forDescendants == null)
         {
@@ -286,11 +302,40 @@ public final class PermissionSet
         }
 
         if(forDescendants.isIndirect())
-            return applyPermissionToPathString(pathJoined, forExact);
+            return new String[] { applyPermissionToPathString(pathJoined, forExact, includeArg) };
 
-        String resultLine1 = applyPermissionToPathString(pathJoined, forExact);
-        String resultLine2 = applyPermissionToPathString(pathJoined + ".*", forDescendants);
-        return resultLine1 + "\n" + resultLine2;
+        return new String[]
+        {
+            applyPermissionToPathString(pathJoined, forExact, includeArg),
+            applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg)
+        };
+    }
+
+    public List<String> getPermissionsAsStrings(boolean includeArgs)
+    {
+        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        List<String> result = new ArrayList<>();
+
+        Stream.concat(exactPaths, descendantPaths)
+              .distinct()
+              .sorted(pathComparator)
+              .forEachOrdered(path ->
+        {
+            String[] lines = getSaveStringLinesForPermission(path, includeArgs);
+
+            if(lines.length >= 2)
+            {
+                result.add(lines[0]);
+                result.add(lines[1]);
+            }
+            else if(lines.length >= 1)
+            {
+                result.add(lines[0]);
+            }
+        });
+
+        return result;
     }
 
     public String toSaveString()

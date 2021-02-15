@@ -4,12 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class PermissionsRegistryTest
 {
@@ -1621,6 +1618,101 @@ public class PermissionsRegistryTest
         reg.assignGroupPermission("toph", "someperm: yoot");
 
         assertEquals("zoot", reg.getUserPermissionArg("user1", "someperm"));
+    }
+    //endregion
+
+    //region get
+    @Test
+    public void getUsers_empty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getUsers()).isEmpty();
+    }
+
+    @Test
+    public void getUsers()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "my.first.perm");
+        reg.assignUserPermission("userhoot", "my.second.perm");
+        reg.assignUserPermission("usernoot", "my.third.perm");
+
+        assertThat(reg.getUsers())
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("userdoot", "userhoot", "usernoot"));
+    }
+
+    @Test
+    public void getGroupNames_empty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getGroupNames()).isEmpty();
+    }
+
+    @Test
+    public void getGroupNames()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("groupdoot", "my.first.perm");
+        reg.assignGroupPermission("grouphoot", "my.second.perm");
+        reg.assignGroupPermission("groupnoot", "my.third.perm");
+
+        assertThat(reg.getGroupNames())
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("groupdoot", "grouphoot", "groupnoot"));
+    }
+
+    @Test
+    public void getPermissions_noUser()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getUserPermissions("nonexistentuser")).isEmpty();
+    }
+
+    @Test
+    public void getPermissions()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "europe.greece.athens");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
+    }
+
+    @Test
+    public void getPermissions_withNegating()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "-europe.greece.athens");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "-europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
+    }
+
+    @Test
+    public void getPermissions_withArgs()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "europe.greece.athens: Where the parthenon is");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
     }
     //endregion
 

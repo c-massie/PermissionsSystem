@@ -146,6 +146,9 @@ public class PermissionGroup
     public List<PermissionGroup> getPermissionGroups()
     { return new ArrayList<>(referencedGroups); }
 
+    public List<String> getPermissionsAsStrings(boolean includeArgs)
+    { return permissionSet.getPermissionsAsStrings(includeArgs); }
+
     public String toSaveString()
     {
         StringBuilder result = new StringBuilder((priority == 0) ? (name) : (name + ": " + getPriorityAsString()));
