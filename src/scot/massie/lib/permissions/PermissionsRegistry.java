@@ -332,6 +332,20 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.hasPermission(permission);
     }
 
+    public boolean userHasGroup(ID userId, String groupId)
+    { return hasGroup(permissionsForUsers.get(userId), groupId); }
+
+    public boolean groupExtendsFromGroup(String groupId, String superGroupId)
+    { return hasGroup(assignableGroups.get(groupId), superGroupId); }
+
+    private boolean hasGroup(PermissionGroup permGroup, String groupId)
+    {
+        if(permGroup == null)
+            return false;
+
+        return permGroup.hasGroup(groupId);
+    }
+
     public String getUserPermissionArg(ID userId, String permission)
     { return getPermissionArg(permissionsForUsers.get(userId), permission); }
 

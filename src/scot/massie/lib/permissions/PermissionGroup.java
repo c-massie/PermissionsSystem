@@ -133,6 +133,15 @@ public class PermissionGroup
         return mrp.getPermission().negates();
     }
 
+    public boolean hasGroup(String groupId)
+    {
+        for(PermissionGroup pg : referencedGroups)
+            if(pg.name.equals(groupId))
+                return true;
+
+        return false;
+    }
+
     public String getPermissionArg(String permissionPath)
     {
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
