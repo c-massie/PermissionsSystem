@@ -6,19 +6,30 @@ import java.util.*;
 public class PermissionGroup
 {
     public PermissionGroup(String name)
-    { this(name, 0L); }
+    { this(name, emptyDefaultPermissions, 0L); }
 
     public PermissionGroup(String name, long priority)
+    { this(name, emptyDefaultPermissions, priority); }
+
+    public PermissionGroup(String name, double priority)
+    { this(name, emptyDefaultPermissions, priority); }
+
+    public PermissionGroup(String name, PermissionGroup defaultPermissions)
+    { this(name, defaultPermissions, 0L); }
+
+    public PermissionGroup(String name, PermissionGroup defaultPermissions, long priority)
     {
         this.name = name;
+        this.defaultPermissions = defaultPermissions;
         this.priority = priority;
         this.priorityAsLong = priority;
         this.priorityIsLong = true;
     }
 
-    public PermissionGroup(String name, double priority)
+    public PermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
     {
         this.name = name;
+        this.defaultPermissions = defaultPermissions;
         this.priority = priority;
         this.priorityAsLong = ((Double)priority).longValue();
         this.priorityIsLong = false;
@@ -35,6 +46,59 @@ public class PermissionGroup
         return a.name.compareTo(b.name);
     };
 
+    public static final PermissionGroup emptyDefaultPermissions = new PermissionGroup("*", null)
+    {
+        final String cannotMutateErrorMsg = "Cannot mutate the empty default permission group.";
+
+        @Override
+        public void reassignPriority(long newPriority)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public void reassignPriority(double newPriority)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public void addPermission(String permissionAsString)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public void addPermissionWhileDeIndenting(String permissionAsString)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public boolean removePermission(String permissionPath)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public void addPermissionGroup(PermissionGroup permGroup)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public boolean removePermissionGroup(PermissionGroup permissionGroup)
+        { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
+
+        @Override
+        public boolean hasPermission(String permissionPath)
+        { return false; }
+
+        @Override
+        public boolean negatesPermission(String permissionPath)
+        { return false; }
+
+        @Override
+        public String getPermissionArg(String permissionPath)
+        { return null; }
+
+        @Override
+        public boolean hasGroup(String groupId)
+        { return false; }
+
+        @Override
+        protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
+        { return null; }
+    };
+
     String name;
     double priority;
     long priorityAsLong;
@@ -42,6 +106,7 @@ public class PermissionGroup
 
     PermissionSet permissionSet = new PermissionSet();
     List<PermissionGroup> referencedGroups = new ArrayList<>();
+    PermissionGroup defaultPermissions;
 
     public String getName()
     { return name; }
@@ -69,7 +134,7 @@ public class PermissionGroup
         this.priorityIsLong = false;
     }
 
-    private PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
+    protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
         PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
 
@@ -84,7 +149,8 @@ public class PermissionGroup
                 return mrp;
         }
 
-        return null;
+        // Not an infinite recursive loop; eventually stops at a emptyDefaultPermissions where this method returns null.
+        return defaultPermissions.getMostRelevantPermission(permissionAsString);
     }
 
     public void addPermission(String permissionAsString) throws ParseException
@@ -144,6 +210,15 @@ public class PermissionGroup
 
     boolean containsOnlyAGroup()
     { return (permissionSet.isEmpty()) && (referencedGroups.size() == 1); }
+
+    public boolean isEmpty()
+    { return permissionSet.isEmpty() && referencedGroups.isEmpty(); }
+
+    public void clear()
+    {
+        permissionSet.clear();
+        referencedGroups.clear();
+    }
 
     public String getPermissionArg(String permissionPath)
     {

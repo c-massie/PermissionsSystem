@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
@@ -190,6 +192,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     final Map<ID, PermissionGroup> permissionsForUsers = new HashMap<>();
     final Map<String, PermissionGroup> assignableGroups = new HashMap<>();
 
+    PermissionGroup defaultPermissions = new PermissionGroup("*");
+
     final Function<ID, String> convertIdToString;
     final Function<String, ID> parseIdFromString;
 
@@ -209,7 +213,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permissionsForUsers.computeIfAbsent(userId, id ->
         {
             markAsModified();
-            return new PermissionGroup(convertIdToString.apply(id));
+            return new PermissionGroup(convertIdToString.apply(id), defaultPermissions);
         });
     }
 
@@ -232,7 +236,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
 
     public List<String> getGroupPermissions(String groupdId)
-    { return getPermissions(assignableGroups.getOrDefault(groupdId, null)); }
+    {
+        if("*".equals(groupdId))
+            return getDefaultPermissions();
+
+        return getPermissions(assignableGroups.getOrDefault(groupdId, null));
+    }
+
+    public List<String> getDefaultPermissions()
+    { return getPermissions(defaultPermissions); }
 
     private List<String> getPermissions(PermissionGroup permGroup)
     {
@@ -246,7 +258,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
 
     public List<String> getGroupsOfGroup(String groupId)
-    { return getGroupsOf(assignableGroups.getOrDefault(groupId, null)); }
+    {
+        if("*".equals(groupId))
+            return getDefaultGroups();
+
+        return getGroupsOf(assignableGroups.getOrDefault(groupId, null));
+    }
+
+    public List<String> getDefaultGroups()
+    { return getGroupsOf(defaultPermissions); }
 
     private List<String> getGroupsOf(PermissionGroup permGroup)
     {
@@ -265,7 +285,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { assignPermission(getOrCreateUserPerms(userId), permission); }
 
     public void assignGroupPermission(String groupId, String permission)
-    { assignPermission(getOrCreatePermGroup(groupId), permission); }
+    {
+        if("*".equals(groupId))
+            assignDefaultPermission(permission);
+        else
+            assignPermission(getOrCreatePermGroup(groupId), permission);
+    }
+
+    public void assignDefaultPermission(String permission)
+    { assignPermission(defaultPermissions, permission); }
 
     private void assignPermission(PermissionGroup permGroup, String permission)
     {
@@ -281,7 +309,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return revokePermission(permissionsForUsers.get(userId), permission); }
 
     public boolean revokeGroupPermission(String groupId, String permission)
-    { return revokePermission(assignableGroups.get(groupId), permission); }
+    {
+        if("*".equals(groupId))
+            return revokeDefaultPermission(permission);
+
+        return revokePermission(assignableGroups.get(groupId), permission);
+    }
+
+    public boolean revokeDefaultPermission(String permission)
+    { return revokePermission(defaultPermissions, permission); }
 
     private boolean revokePermission(PermissionGroup permGroup, String permission)
     {
@@ -296,13 +332,29 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    { getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
+    {
+        if("*".equals(groupId))
+            assignDefaultGroup(groupIdBeingAssigned);
+        else
+            getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned));
+    }
+
+    public void assignDefaultGroup(String groupIdBeingAssigned)
+    { defaultPermissions.addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
 
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
     { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
 
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    { return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked); }
+    {
+        if("*".equals(groupId))
+            return revokeDefaultGroup(groupIdBeingRevoked);
+
+        return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked);
+    }
+
+    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
+    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
 
     private boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
     {
@@ -322,7 +374,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasPermission(permissionsForUsers.get(userId), permission); }
 
     public boolean groupHasPermission(String groupId, String permission)
-    { return hasPermission(assignableGroups.get(groupId), permission); }
+    {
+        if("*".equals(groupId))
+            return hasDefaultPermission(permission);
+
+        return hasPermission(assignableGroups.get(groupId), permission);
+    }
+
+    public boolean hasDefaultPermission(String permission)
+    { return hasPermission(defaultPermissions, permission); }
 
     private boolean hasPermission(PermissionGroup permGroup, String permission)
     {
@@ -336,7 +396,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasGroup(permissionsForUsers.get(userId), groupId); }
 
     public boolean groupExtendsFromGroup(String groupId, String superGroupId)
-    { return hasGroup(assignableGroups.get(groupId), superGroupId); }
+    {
+        if("*".equals(groupId))
+            return isDefaultGroup(superGroupId);
+
+        return hasGroup(assignableGroups.get(groupId), superGroupId);
+    }
+
+    public boolean isDefaultGroup(String groupId)
+    { return hasGroup(defaultPermissions, groupId); }
 
     private boolean hasGroup(PermissionGroup permGroup, String groupId)
     {
@@ -350,7 +418,15 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissionArg(permissionsForUsers.get(userId), permission); }
 
     public String getGroupPermissionArg(String groupId, String permission)
-    { return getPermissionArg(assignableGroups.get(groupId), permission); }
+    {
+        if("*".equals(groupId))
+            return getDefaultPermissionArg(permission);
+
+        return getPermissionArg(assignableGroups.get(groupId), permission);
+    }
+
+    public String getDefaultPermissionArg(String permission)
+    { return getPermissionArg(defaultPermissions, permission); }
 
     private String getPermissionArg(PermissionGroup permGroup, String permission)
     {
@@ -360,7 +436,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.getPermissionArg(permission);
     }
 
-    public PermissionGroup createGroup(String groupId)
+    PermissionGroup createGroup(String groupId)
     {
         return assignableGroups.computeIfAbsent(groupId, s ->
         {
@@ -369,7 +445,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    public PermissionGroup createGroup(String groupId, long priority)
+    PermissionGroup createGroup(String groupId, long priority)
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
@@ -385,7 +461,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    public PermissionGroup createGroup(String groupId, double priority)
+    PermissionGroup createGroup(String groupId, double priority)
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
@@ -401,7 +477,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    public PermissionGroup createGroup(String groupId, String priorityAsString)
+    PermissionGroup createGroup(String groupId, String priorityAsString)
     {
         long priorityAsLong = 0;
         boolean priorityIsLong = true;
@@ -428,7 +504,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         throw new InvalidPriorityException(priorityAsString);
     }
 
-    private PermissionGroup createGroupFromSaveString(String saveString)
+    PermissionGroup createGroupFromSaveString(String saveString)
     {
         int prioritySeparatorPosition = saveString.lastIndexOf(':');
         int groupPrefixPosition = saveString.lastIndexOf('#');
@@ -452,8 +528,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if(priorityString != null && priorityString.isEmpty())
             priorityString = null;
 
-        PermissionGroup result = priorityString != null ? createGroup(groupName, priorityString)
-                                                        : createGroup(groupName);
+        PermissionGroup result = groupName.equals("*")  ? defaultPermissions
+                               : priorityString != null ? createGroup(groupName, priorityString)
+                               :                          createGroup(groupName);
 
         if(superGroupName != null)
             result.addPermissionGroup(getOrCreatePermGroup(groupName));
@@ -461,36 +538,36 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return result;
     }
 
-    public PermissionGroup createUserPermissions(ID userId)
+    PermissionGroup createUserPermissions(ID userId)
     {
         return permissionsForUsers.computeIfAbsent(userId, id ->
         {
             markAsModified();
-            return new PermissionGroup(convertIdToString.apply(id));
+            return new PermissionGroup(convertIdToString.apply(id), defaultPermissions);
         });
     }
 
-    private PermissionGroup createUserPermissionsFromSaveString(String saveString)
+    PermissionGroup createUserPermissionsFromSaveString(String saveString)
     {
         int groupPrefixPosition = saveString.lastIndexOf('#');
 
-        if(groupPrefixPosition >= 0)
-        {
-            String userSaveString = saveString.substring(0, groupPrefixPosition).trim();
-            String groupName = saveString.substring(groupPrefixPosition + 1).trim();
-            PermissionGroup perm = createUserPermissions(parseIdFromString.apply(userSaveString));
+        String groupName = groupPrefixPosition < 0 ? null : saveString.substring(groupPrefixPosition + 1).trim();
+        String userIdString = saveString.substring(0, groupPrefixPosition).trim();
+        ID userId = parseIdFromString.apply(userIdString);
 
-            if(!groupName.isEmpty())
-                perm.addPermissionGroup(getOrCreatePermGroup(groupName));
-        }
+        PermissionGroup pg = groupName.equals("*") ? defaultPermissions : createUserPermissions(userId);
 
-        return createUserPermissions(parseIdFromString.apply(saveString.trim()));
+        if(!groupName.isEmpty())
+            pg.addPermissionGroup(getOrCreatePermGroup(groupName));
+
+        return pg;
     }
 
     public void clear()
     {
         permissionsForUsers.clear();
         assignableGroups.clear();
+        defaultPermissions.clear();
     }
 
     //region Saving & Loading
@@ -514,7 +591,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { savePerms(writer, permissionsForUsers.values()); }
 
     void saveGroups(BufferedWriter writer) throws IOException
-    { savePerms(writer, assignableGroups.values()); }
+    {
+        if(defaultPermissions.isEmpty())
+        {
+            savePerms(writer, assignableGroups.values());
+        }
+        else
+        {
+            savePerms(writer, Stream.concat(Stream.of(defaultPermissions),
+                                            assignableGroups.values().stream())
+                                    .collect(Collectors.toList()));
+        }
+    }
 
     void saveUsers() throws IOException
     {
