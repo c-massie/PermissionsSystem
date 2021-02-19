@@ -91,6 +91,10 @@ public class PermissionGroup
         { return null; }
 
         @Override
+        public boolean hasGroupDirectly(String groupId)
+        { return false; }
+
+        @Override
         public boolean hasGroup(String groupId)
         { return false; }
 
@@ -200,6 +204,18 @@ public class PermissionGroup
     }
 
     public boolean hasGroup(String groupId)
+    {
+        for(PermissionGroup pg : referencedGroups)
+            if(pg.name.equals(groupId) || pg.hasGroup(groupId))
+                return true;
+
+        if(defaultPermissions.name.equals(groupId) || defaultPermissions.hasGroup(groupId))
+            return true;
+
+        return false;
+    }
+
+    public boolean hasGroupDirectly(String groupId)
     {
         for(PermissionGroup pg : referencedGroups)
             if(pg.name.equals(groupId))

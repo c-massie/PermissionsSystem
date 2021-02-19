@@ -387,7 +387,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     private boolean hasPermission(PermissionGroup permGroup, String permission)
     {
         if(permGroup == null)
-            return false;
+            return defaultPermissions.hasPermission(permission);
 
         return permGroup.hasPermission(permission);
     }
@@ -426,12 +426,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     public String getDefaultPermissionArg(String permission)
-    { return getPermissionArg(defaultPermissions, permission); }
+    { return defaultPermissions.getPermissionArg(permission); }
 
     private String getPermissionArg(PermissionGroup permGroup, String permission)
     {
         if(permGroup == null)
-            return null;
+            return defaultPermissions.getPermissionArg(permission);
 
         return permGroup.getPermissionArg(permission);
     }
@@ -533,7 +533,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                :                          createGroup(groupName);
 
         if(superGroupName != null)
-            result.addPermissionGroup(getOrCreatePermGroup(groupName));
+            result.addPermissionGroup(getOrCreatePermGroup(superGroupName));
 
         return result;
     }
@@ -578,10 +578,21 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                    .sorted(Comparator.comparing(PermissionGroup::getName))
                                                    .iterator();
 
-        for(PermissionGroup pgprevious = null, pg = iter.next(); iter.hasNext(); pgprevious = pg, pg = iter.next())
+        PermissionGroup pgprevious = null, pg = null;
+
+        while(iter.hasNext())
         {
+            pgprevious = pg;
+            pg = iter.next();
+
             if(pgprevious != null)
-                writer.write((pgprevious.containsOnlyAGroup() && pg.containsOnlyAGroup()) ? ("\n") : ("\n\n"));
+            {
+                boolean previousIsSingleLine = pgprevious.isEmpty() || pgprevious.containsOnlyAGroup();
+                boolean currentIsSingleLine = pg.isEmpty() || pg.containsOnlyAGroup();
+                boolean leaveBlankLine = !(previousIsSingleLine && currentIsSingleLine);
+
+                writer.write(leaveBlankLine ? "\n\n" : "\n");
+            }
 
             writer.write(pg.toSaveString());
         }

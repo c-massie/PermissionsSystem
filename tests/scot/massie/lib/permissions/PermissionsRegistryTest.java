@@ -302,6 +302,25 @@ public class PermissionsRegistryTest
     }
     //endregion
 
+    //region
+    @Test
+    public void hasGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("red", "blue");
+        reg.assignGroupToGroup("green", "red");
+        reg.assignGroupToGroup("cyan", "green");
+        reg.createGroup("yellow");
+        reg.assignGroupToUser("user1", "green");
+
+        assertFalse(reg.userHasGroup("user1", "cyan"));
+        assertTrue(reg.userHasGroup("user1", "green"));
+        assertTrue(reg.userHasGroup("user1", "red"));
+        assertTrue(reg.userHasGroup("user1", "blue"));
+        assertFalse(reg.userHasGroup("user1", "yellow"));
+    }
+    //endregion
+
     //region assignGroups
     @Test
     public void assignGroupToUser()
@@ -1793,5 +1812,94 @@ public class PermissionsRegistryTest
                                 + "    my.perm.third";
 
         assertEquals(expectedResult, reg.groupsToSaveString());
+    }
+
+    //region default permissions
+    @Test
+    public void defaultPermissions_loadingAndSaving()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("this.is.a.permission");
+        reg.assignDefaultPermission("this.is.another.permission: 5");
+        reg.assignDefaultGroup("somedefaultgroup");
+
+        String expectedGroupSavestring = "*"
+                                         + "\n    #somedefaultgroup"
+                                         + "\n    this.is.a.permission"
+                                         + "\n    this.is.another.permission: 5"
+                                         + "\n"
+                                         + "\nsomedefaultgroup";
+
+        assertEquals(expectedGroupSavestring, reg.groupsToSaveString());
+    }
+
+    @Test
+    public void defaultPermissions_fallingBack_otherwiseEmpty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("this.is.a.permission");
+        assertTrue(reg.userHasPermission("toodles", "this.is.a.permission.too"));
+    }
+
+    @Test
+    public void defaultPermissions_fallingBack_onExistingUser()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("this.is.a.permission: 5");
+        reg.assignDefaultPermission("this.is.another.permission: 6");
+        reg.assignUserPermission("toodles", "this.is.a: 7");
+        assertEquals("7", reg.getUserPermissionArg("toodles", "this.is.a.permission"));
+        assertEquals("6", reg.getUserPermissionArg("toodles", "this.is.another.permission"));
+    }
+
+    @Test
+    public void defaultPermissions_fallingBack_toDefaultGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultGroup("mygroup");
+        reg.assignGroupPermission("mygroup", "this.is.a: 5");
+        reg.assignGroupPermission("mygroup", "this.is.another.permission: 6");
+        reg.assignGroupPermission("mygroup", "third.permission: 7");
+        reg.assignDefaultPermission("this.is.another: 8");
+        reg.assignUserPermission("toodles", "this.is.a.permission: 9");
+
+        assertEquals("5", reg.getUserPermissionArg("toodles", "this.is.a"));
+        assertEquals("9", reg.getUserPermissionArg("toodles", "this.is.a.permission"));
+        assertEquals("8", reg.getUserPermissionArg("toodles", "this.is.another.permission"));
+        assertEquals("8", reg.getUserPermissionArg("toodles", "this.is.another"));
+        assertEquals("7", reg.getUserPermissionArg("toodles", "third.permission"));
+    }
+    //endregion
+
+    //region single-line permissions.
+    @Test
+    public void singleLine_saving()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("yellow", "permission.to.yellow");
+        reg.assignGroupToGroup("red", "yellow");
+        reg.assignGroupToGroup("blue", "red");
+
+        String expected = "blue #red\nred #yellow\n\nyellow\n    permission.to.yellow";
+        assertEquals(expected, reg.groupsToSaveString());
+    }
+
+    @Test
+    public void singleLine_loading() throws IOException
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        String saveString =   "blue #red"
+                          + "\nred: 5 #yellow"
+                          + "\n\nyellow"
+                          + "\n    permission.from.yellow";
+
+        reg.loadGroupsFromSaveString(saveString);
+
+        assertThat(reg.getGroupNames()).containsExactlyInAnyOrderElementsOf(Arrays.asList("blue", "red", "yellow"));
+        assertTrue(reg.groupHasPermission("yellow", "permission.from.yellow"));
+        assertTrue(reg.groupHasPermission("red", "permission.from.yellow"));
+        assertTrue(reg.groupHasPermission("blue", "permission.from.yellow"));
+
+        assertEquals(saveString, reg.groupsToSaveString());
     }
 }
