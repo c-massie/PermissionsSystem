@@ -430,14 +430,35 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     private PermissionGroup createGroupFromSaveString(String saveString)
     {
-        int prioritySeparatorPosition = saveString.lastIndexOf(":");
+        int prioritySeparatorPosition = saveString.lastIndexOf(':');
+        int groupPrefixPosition = saveString.lastIndexOf('#');
 
-        if(prioritySeparatorPosition < 0)
-            return createGroup(saveString.trim());
+        if(groupPrefixPosition < prioritySeparatorPosition)
+            groupPrefixPosition = -1;
 
-        String groupId = saveString.substring(0, prioritySeparatorPosition).trim();
-        String priority = saveString.substring(prioritySeparatorPosition + 1).trim();
-        return createGroup(groupId, priority);
+        String superGroupName = (groupPrefixPosition < 0) ? (null) : (saveString.substring(groupPrefixPosition + 1));
+
+        String priorityString = (prioritySeparatorPosition < 0) ? (null)
+                              : (groupPrefixPosition < 0) ? (saveString.substring(prioritySeparatorPosition + 1).trim())
+                              : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
+
+        String groupName = prioritySeparatorPosition > 0 ? saveString.substring(0, prioritySeparatorPosition).trim()
+                         : groupPrefixPosition       > 0 ? saveString.substring(0, groupPrefixPosition).trim()
+                         :                                 saveString.trim();
+
+        if(superGroupName != null && superGroupName.isEmpty())
+            superGroupName = null;
+
+        if(priorityString != null && priorityString.isEmpty())
+            priorityString = null;
+
+        PermissionGroup result = priorityString != null ? createGroup(groupName, priorityString)
+                                                        : createGroup(groupName);
+
+        if(superGroupName != null)
+            result.addPermissionGroup(getOrCreatePermGroup(groupName));
+
+        return result;
     }
 
     public PermissionGroup createUserPermissions(ID userId)
@@ -450,7 +471,21 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     private PermissionGroup createUserPermissionsFromSaveString(String saveString)
-    { return createUserPermissions(parseIdFromString.apply(saveString.trim())); }
+    {
+        int groupPrefixPosition = saveString.lastIndexOf('#');
+
+        if(groupPrefixPosition >= 0)
+        {
+            String userSaveString = saveString.substring(0, groupPrefixPosition).trim();
+            String groupName = saveString.substring(groupPrefixPosition + 1).trim();
+            PermissionGroup perm = createUserPermissions(parseIdFromString.apply(userSaveString));
+
+            if(!groupName.isEmpty())
+                perm.addPermissionGroup(getOrCreatePermGroup(groupName));
+        }
+
+        return createUserPermissions(parseIdFromString.apply(saveString.trim()));
+    }
 
     public void clear()
     {
@@ -466,12 +501,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                    .sorted(Comparator.comparing(PermissionGroup::getName))
                                                    .iterator();
 
-        while(iter.hasNext())
+        for(PermissionGroup pgprevious = null, pg = iter.next(); iter.hasNext(); pgprevious = pg, pg = iter.next())
         {
-            writer.write(iter.next().toSaveString());
+            if(pgprevious != null)
+                writer.write((pgprevious.containsOnlyAGroup() && pg.containsOnlyAGroup()) ? ("\n") : ("\n\n"));
 
-            if(iter.hasNext())
-                writer.write("\n\n");
+            writer.write(pg.toSaveString());
         }
     }
 

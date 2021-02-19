@@ -142,6 +142,9 @@ public class PermissionGroup
         return false;
     }
 
+    boolean containsOnlyAGroup()
+    { return (permissionSet.isEmpty()) && (referencedGroups.size() == 1); }
+
     public String getPermissionArg(String permissionPath)
     {
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
@@ -161,6 +164,9 @@ public class PermissionGroup
     public String toSaveString()
     {
         StringBuilder result = new StringBuilder((priority == 0) ? (name) : (name + ": " + getPriorityAsString()));
+
+        if(containsOnlyAGroup())
+            return result.append(" #").append(referencedGroups.get(0).getName()).toString();
 
         for(PermissionGroup permGroup : referencedGroups)
             result.append("\n    #").append(permGroup.getName());
