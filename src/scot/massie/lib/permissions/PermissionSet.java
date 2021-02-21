@@ -7,8 +7,13 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * A set of {@link Permission permissions} arranged in a string-keyed tree, where permissions are considered to "cover"
+ * (apply to) all permissions under them in the tree.
+ */
 public final class PermissionSet
 {
+    //region initialisation
     public static final class PermissionWithPath
     {
         public PermissionWithPath(List<String> path, Permission perm)
@@ -26,11 +31,10 @@ public final class PermissionSet
         public Permission getPermission()
         { return permission; }
     }
+    //endregion
 
-    Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
-    Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
-
-    static final Comparator<List<String>> pathComparator = (a, b) ->
+    //region Static final values
+    private static final Comparator<List<String>> PATH_COMPARATOR = (a, b) ->
     {
         for(int i = 0; i < a.size(); i++)
         {
@@ -50,10 +54,229 @@ public final class PermissionSet
 
         return -1;
     };
+    //endregion
 
-    protected String[] splitPath(String permissionPath)
+    //region fields
+    Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
+    Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
+    //endregion
+
+    //region static string manipulation methods
+    private static String[] splitPath(String permissionPath)
     { return permissionPath.split("\\."); }
 
+    private static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
+    { return perm.negates() ? ("-" + path) : path; }
+
+    private static String applyPermissionToPathString(String path, Permission perm)
+    {
+        if(perm.negates())
+            path = "-" + path;
+
+        if(perm.hasArg())
+        {
+            String arg = perm.getArg();
+
+            path += (arg.contains("\n")) ? (":\n" + arg.replaceAll("(?m)^(?=.+)", "    "))
+                            : (": " + perm.getArg());
+        }
+
+        return path;
+    }
+
+    private static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
+    { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
+    //endregion
+
+    //region Accessors
+    //region tests as a whole
+    public boolean hasAny()
+    { return !isEmpty(); }
+
+    public boolean isEmpty()
+    { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
+    //endregion
+    //region getters
+    public PermissionWithPath getMostRelevantPermission(String permissionPath)
+    { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
+    {
+        Permission relevantPerm = exactPermissionTree.getAtOrNull(permissionPath);
+
+        if(relevantPerm != null)
+            return new PermissionWithPath(permissionPath, relevantPerm);
+
+        List<Tree.Entry<String, Permission>> relevantEntries = descendantPermissionTree.getEntriesAlong(permissionPath);
+
+        if(relevantEntries.isEmpty())
+            return null;
+
+        int lastIndex = relevantEntries.size() - 1;
+        Tree.Entry<String, Permission> relevantEntry = relevantEntries.get(lastIndex);
+
+        if(relevantEntry.getPath().size() == permissionPath.size())
+        {
+            if(relevantEntries.size() <= 1)
+                return null;
+
+            relevantEntry = relevantEntries.get(lastIndex - 1);
+        }
+
+        return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
+    }
+
+    public PermissionWithPath getMostRelevantPermission(String... permissionPath)
+    { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
+
+    public Permission getPermission(String permissionPath)
+    { return getPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public Permission getPermission(List<String> permissionPath)
+    {
+        PermissionWithPath mostRelevant = getMostRelevantPermission(permissionPath);
+
+        if(mostRelevant == null)
+            return null;
+
+        return mostRelevant.getPermission();
+    }
+
+    public Permission getPermission(String... permissionPath)
+    { return getPermission(Arrays.asList(permissionPath)); }
+    //endregion
+    //region test permissions
+    public boolean hasPermission(String permissionPath)
+    { return hasPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public boolean hasPermission(List<String> permissionPath)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && (mrp.permission.permits());
+    }
+
+    public boolean hasPermission(String... permissionPath)
+    { return hasPermission(Arrays.asList(permissionPath)); }
+
+    public boolean hasPermissionExactly(String permissionPath)
+    { return hasPermissionExactly(splitPath(permissionPath)); }
+
+    public boolean hasPermissionExactly(List<String> permissionPath)
+    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
+
+    public boolean hasPermissionExactly(String... permissionPath)
+    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
+
+    public boolean negatesPermission(String permissionPath)
+    { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
+
+    public boolean negatesPermission(List<String> permissionPath)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        return (mrp != null) && (mrp.permission.negates());
+    }
+
+    public boolean negatesPermission(String... permissionPath)
+    { return negatesPermission(Arrays.asList(permissionPath)); }
+
+    public boolean negatesPermissionExactly(String permissionPath)
+    { return negatesPermissionExactly(splitPath(permissionPath)); }
+
+    public boolean negatesPermissionExactly(List<String> permissionPath)
+    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
+
+    public boolean negatesPermissionExactly(String... permissionPath)
+    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
+    //endregion
+    //region conversion to savestrings
+    private String getSaveStringForPermission(List<String> permPath)
+    {
+        String[] lines = getSaveStringLinesForPermission(permPath);
+
+        return lines.length == 0 ? ""
+                       : lines.length == 1 ? lines[0]
+                                 :                     lines[0] + "\n" + lines[1];
+    }
+
+    private String[] getSaveStringLinesForPermission(List<String> permPath)
+    { return getSaveStringLinesForPermission(permPath, true); }
+
+    private String[] getSaveStringLinesForPermission(List<String> permPath, boolean includeArg)
+    {
+        Permission forExact = exactPermissionTree.getAtOrNull(permPath);
+        Permission forDescendants = descendantPermissionTree.getAtOrNull(permPath);
+
+        if(forExact == null && forDescendants == null)
+            return new String[0];
+
+        String pathJoined = (permPath.isEmpty()) ? ("*") : (String.join(".", permPath));
+
+        if(forExact == null)
+            return new String[] { applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg) };
+
+        if(forDescendants == null)
+        {
+            throw new UnsupportedOperationException("Currently no syntax for permissions not including descendants."
+                                                    + "\nPath: " + pathJoined);
+        }
+
+        if(forDescendants.isIndirect())
+            return new String[] { applyPermissionToPathString(pathJoined, forExact, includeArg) };
+
+        return new String[]
+                       {
+                               applyPermissionToPathString(pathJoined, forExact, includeArg),
+                               applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg)
+                       };
+    }
+
+    public List<String> getPermissionsAsStrings(boolean includeArgs)
+    {
+        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        List<String> result = new ArrayList<>();
+
+        Stream.concat(exactPaths, descendantPaths)
+              .distinct()
+              .sorted(PATH_COMPARATOR)
+              .forEachOrdered(path ->
+                              {
+                                  String[] lines = getSaveStringLinesForPermission(path, includeArgs);
+
+                                  if(lines.length >= 2)
+                                  {
+                                      result.add(lines[0]);
+                                      result.add(lines[1]);
+                                  }
+                                  else if(lines.length >= 1)
+                                  {
+                                      result.add(lines[0]);
+                                  }
+                              });
+
+        return result;
+    }
+
+    public String toSaveString()
+    {
+        StringBuilder sb = new StringBuilder();
+        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
+
+        Stream.concat(exactPaths, descendantPaths)
+              .distinct()
+              .sorted(PATH_COMPARATOR)
+              .forEachOrdered(path ->
+                              {
+                                  sb.append(getSaveStringForPermission(path)).append("\n");
+                              });
+
+        return sb.length() == 0 ? sb.toString() : sb.substring(0, sb.length() - 1);
+    }
+    //endregion
+    //endregion
+
+    //region Mutators
     public void set(String permissionAsString) throws ParseException
     {
         boolean isNegation = false;
@@ -88,17 +311,17 @@ public final class PermissionSet
 
         if(permWithoutArg.contains("*"))
             throw new ParseException
-            (
-                "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
-                permissionAsString.indexOf("*")
-            );
+                          (
+                                  "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
+                                  permissionAsString.indexOf("*")
+                          );
 
         if(permWithoutArg.contains("-"))
             throw new ParseException
-            (
-                "Permission negations must be at the start of the permission: " + permissionAsString,
-                permissionAsString.indexOf("-", isNegation ? 1 : 0)
-            );
+                          (
+                                  "Permission negations must be at the start of the permission: " + permissionAsString,
+                                  permissionAsString.indexOf("-", isNegation ? 1 : 0)
+                          );
 
         String[] path = splitPath(permWithoutArg);
 
@@ -152,212 +375,10 @@ public final class PermissionSet
             return descendantPermissionTree.clearAt(path).valueWasPresent();
     }
 
-    public boolean hasAny()
-    { return !isEmpty(); }
-
-    public boolean isEmpty()
-    { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
-
     public void clear()
     {
         exactPermissionTree.clear();
         descendantPermissionTree.clear();
     }
-
-    public PermissionWithPath getMostRelevantPermission(String permissionPath)
-    { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
-
-    public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
-    {
-        Permission relevantPerm = exactPermissionTree.getAtOrNull(permissionPath);
-
-        if(relevantPerm != null)
-            return new PermissionWithPath(permissionPath, relevantPerm);
-
-        List<Tree.Entry<String, Permission>> relevantEntries = descendantPermissionTree.getEntriesAlong(permissionPath);
-
-        if(relevantEntries.isEmpty())
-            return null;
-
-        int lastIndex = relevantEntries.size() - 1;
-        Tree.Entry<String, Permission> relevantEntry = relevantEntries.get(lastIndex);
-
-        if(relevantEntry.getPath().size() == permissionPath.size())
-        {
-            if(relevantEntries.size() <= 1)
-                return null;
-
-            relevantEntry = relevantEntries.get(lastIndex - 1);
-        }
-
-        return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
-    }
-
-    public PermissionWithPath getMostRelevantPermission(String... permissionPath)
-    { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
-
-    public Permission getPermission(String permissionPath)
-    { return getPermission(Arrays.asList(splitPath(permissionPath))); }
-
-    public Permission getPermission(List<String> permissionPath)
-    {
-        PermissionWithPath mostRelevant = getMostRelevantPermission(permissionPath);
-
-        if(mostRelevant == null)
-            return null;
-
-        return mostRelevant.getPermission();
-    }
-
-    public Permission getPermission(String... permissionPath)
-    { return getPermission(Arrays.asList(permissionPath)); }
-
-    public boolean hasPermission(String permissionPath)
-    { return hasPermission(Arrays.asList(splitPath(permissionPath))); }
-
-    public boolean hasPermission(List<String> permissionPath)
-    {
-        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
-        return (mrp != null) && (mrp.permission.permits());
-    }
-
-    public boolean hasPermission(String... permissionPath)
-    { return hasPermission(Arrays.asList(permissionPath)); }
-
-    public boolean hasPermissionExactly(String permissionPath)
-    { return hasPermissionExactly(splitPath(permissionPath)); }
-
-    public boolean hasPermissionExactly(List<String> permissionPath)
-    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
-
-    public boolean hasPermissionExactly(String... permissionPath)
-    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
-
-    public boolean negatesPermission(String permissionPath)
-    { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
-
-    public boolean negatesPermission(List<String> permissionPath)
-    {
-        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
-        return (mrp != null) && (mrp.permission.negates());
-    }
-
-    public boolean negatesPermission(String... permissionPath)
-    { return negatesPermission(Arrays.asList(permissionPath)); }
-
-    public boolean negatesPermissionExactly(String permissionPath)
-    { return negatesPermissionExactly(splitPath(permissionPath)); }
-
-    public boolean negatesPermissionExactly(List<String> permissionPath)
-    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
-
-    public boolean negatesPermissionExactly(String... permissionPath)
-    { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
-
-    private static String applyPermissionToPathString(String path, Permission perm)
-    {
-        if(perm.negates())
-            path = "-" + path;
-
-        if(perm.hasArg())
-        {
-            String arg = perm.getArg();
-
-            path += (arg.contains("\n")) ? (":\n" + arg.replaceAll("(?m)^(?=.+)", "    "))
-                                         : (": " + perm.getArg());
-        }
-
-        return path;
-    }
-
-    private static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
-    { return perm.negates() ? ("-" + path) : path; }
-
-    private static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
-    { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
-
-    private String getSaveStringForPermission(List<String> permPath)
-    {
-        String[] lines = getSaveStringLinesForPermission(permPath);
-
-        return lines.length == 0 ? ""
-             : lines.length == 1 ? lines[0]
-             :                     lines[0] + "\n" + lines[1];
-    }
-
-    private String[] getSaveStringLinesForPermission(List<String> permPath)
-    { return getSaveStringLinesForPermission(permPath, true); }
-
-    private String[] getSaveStringLinesForPermission(List<String> permPath, boolean includeArg)
-    {
-        Permission forExact = exactPermissionTree.getAtOrNull(permPath);
-        Permission forDescendants = descendantPermissionTree.getAtOrNull(permPath);
-
-        if(forExact == null && forDescendants == null)
-            return new String[0];
-
-        String pathJoined = (permPath.isEmpty()) ? ("*") : (String.join(".", permPath));
-
-        if(forExact == null)
-            return new String[] { applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg) };
-
-        if(forDescendants == null)
-        {
-            throw new UnsupportedOperationException("Currently no syntax for permissions not including descendants."
-                                                    + "\nPath: " + pathJoined);
-        }
-
-        if(forDescendants.isIndirect())
-            return new String[] { applyPermissionToPathString(pathJoined, forExact, includeArg) };
-
-        return new String[]
-        {
-            applyPermissionToPathString(pathJoined, forExact, includeArg),
-            applyPermissionToPathString(pathJoined + ".*", forDescendants, includeArg)
-        };
-    }
-
-    public List<String> getPermissionsAsStrings(boolean includeArgs)
-    {
-        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
-        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
-        List<String> result = new ArrayList<>();
-
-        Stream.concat(exactPaths, descendantPaths)
-              .distinct()
-              .sorted(pathComparator)
-              .forEachOrdered(path ->
-        {
-            String[] lines = getSaveStringLinesForPermission(path, includeArgs);
-
-            if(lines.length >= 2)
-            {
-                result.add(lines[0]);
-                result.add(lines[1]);
-            }
-            else if(lines.length >= 1)
-            {
-                result.add(lines[0]);
-            }
-        });
-
-        return result;
-    }
-
-    public String toSaveString()
-    {
-        StringBuilder sb = new StringBuilder();
-        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
-        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
-
-        Stream.concat(exactPaths, descendantPaths)
-              .distinct()
-              .sorted(pathComparator)
-              .forEachOrdered(path ->
-        {
-            sb.append(getSaveStringForPermission(path)).append("\n");
-        });
-
-        return sb.length() == 0 ? sb.toString() : sb.substring(0, sb.length() - 1);
-    }
+    //endregion
 }
