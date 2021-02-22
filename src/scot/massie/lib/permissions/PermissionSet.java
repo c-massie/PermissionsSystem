@@ -90,16 +90,42 @@ public final class PermissionSet
 
     //region Accessors
     //region tests as a whole
+
+    /**
+     * Checks whether or not this permission set contains any permissions at all.
+     * @return True if this contains any permissions. Otherwise, false.
+     */
     public boolean hasAny()
     { return !isEmpty(); }
 
+    /**
+     * Checks whether or not this permission set is empty.
+     * @return True if this contains no permissions. Otherwise, false.
+     */
     public boolean isEmpty()
     { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
     //endregion
     //region getters
+
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path, paired with the path it's
+     * at.
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     */
     public PermissionWithPath getMostRelevantPermission(String permissionPath)
     { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
 
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path, paired with the path it's
+     * at.
+     * @param permissionPath The permission path, as a list of nodes, to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     */
     public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
     {
         Permission relevantPerm = exactPermissionTree.getAtOrNull(permissionPath);
@@ -126,12 +152,31 @@ public final class PermissionSet
         return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
     }
 
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path, paired with the path it's
+     * at.
+     * @param permissionPath The permission path, as an array of nodes, to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     */
     public PermissionWithPath getMostRelevantPermission(String... permissionPath)
     { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
 
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path.
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path.
+     */
     public Permission getPermission(String permissionPath)
     { return getPermission(Arrays.asList(splitPath(permissionPath))); }
 
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path.
+     * @param permissionPath The permission path, as a list of nodes, to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path.
+     */
     public Permission getPermission(List<String> permissionPath)
     {
         PermissionWithPath mostRelevant = getMostRelevantPermission(permissionPath);
@@ -142,49 +187,144 @@ public final class PermissionSet
         return mostRelevant.getPermission();
     }
 
+    /**
+     * Gets the {@link Permission} in this permission set that applies to the provided path.
+     * @param permissionPath The permission path, as an array of nodes, to get the permission that applies to it.
+     * @return The {@link Permission} that applies to the provided permission path.
+     */
     public Permission getPermission(String... permissionPath)
     { return getPermission(Arrays.asList(permissionPath)); }
     //endregion
     //region test permissions
+
+    /**
+     * Checks if the permissions in this permission set allow the provided permission.
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to test.
+     * @return True if the permission path is allowed. Otherwise, false.
+     */
     public boolean hasPermission(String permissionPath)
     { return hasPermission(Arrays.asList(splitPath(permissionPath))); }
 
+    /**
+     * Checks if the permissions in this permission set allow the provided permission.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @return True if the permission path is allowed. Otherwise, false.
+     */
     public boolean hasPermission(List<String> permissionPath)
     {
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
         return (mrp != null) && (mrp.permission.permits());
     }
 
+    /**
+     * Checks if the permissions in this permission set allow the provided permission.
+     * @param permissionPath The permission path to test, as an array of nodes.
+     * @return True if the permission path is allowed. Otherwise, false.
+     */
     public boolean hasPermission(String... permissionPath)
     { return hasPermission(Arrays.asList(permissionPath)); }
 
+    /**
+     * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
+     * is not simply allowed by inference of another permission that covers it.
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to test.
+     * @return True if the permission path is explicitly allowed. That is, if this specific path has been added as a
+     *         permission, and isn't simply allowed by inference from another permission that covers this one.
+     *         Otherwise, false.
+     */
     public boolean hasPermissionExactly(String permissionPath)
     { return hasPermissionExactly(splitPath(permissionPath)); }
 
+    /**
+     * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
+     * is not simply allowed by inference of another permission that covers it.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @return True if the permission path is explicitly allowed. That is, if this specific path has been added as a
+     *         permission, and isn't simply allowed by inference from another permission that covers this one.
+     *         Otherwise, false.
+     */
     public boolean hasPermissionExactly(List<String> permissionPath)
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
 
+    /**
+     * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
+     * is not simply allowed by inference of another permission that covers it.
+     * @param permissionPath The permission path to test, as an array of nodes.
+     * @return True if the permission path is explicitly allowed. That is, if this specific path has been added as a
+     *         permission, and isn't simply allowed by inference from another permission that covers this one.
+     *         Otherwise, false.
+     */
     public boolean hasPermissionExactly(String... permissionPath)
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.permits()); }
 
+    /**
+     * Checks if this permissions set negates the provided permission path. (and doesn't simply not cover it.)
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to test.
+     * @return True if the permission path is negated. Otherwise, (including if this permission set doesn't allow the
+     *         provided permission path by simple omission) false.
+     */
     public boolean negatesPermission(String permissionPath)
     { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
 
+    /**
+     * Checks if this permissions set negates the provided permission path. (and doesn't simply not cover it.)
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @return True if the permission path is negated. Otherwise, (including if this permission set doesn't allow the
+     *         provided permission path by simple omission) false.
+     */
     public boolean negatesPermission(List<String> permissionPath)
     {
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
         return (mrp != null) && (mrp.permission.negates());
     }
 
+    /**
+     * Checks if this permissions set negates the provided permission path. (and doesn't simply not cover it.)
+     * @param permissionPath The permission path to test, as an array of nodes.
+     * @return True if the permission path is negated. Otherwise, (including if this permission set doesn't allow the
+     *         provided permission path by simple omission) false.
+     */
     public boolean negatesPermission(String... permissionPath)
     { return negatesPermission(Arrays.asList(permissionPath)); }
 
+    /**
+     * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
+     * has been specifically added as one to negate.
+     * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
+     *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
+     * @param permissionPath The permission path to test.
+     * @return True if the permission path is explicitly negated. That is, if the path has been specifically added to
+     *         this permission set as one that should be negated, and its negation isn't simply inferred from other
+     *         permission that covers it. Otherwise, false.
+     */
     public boolean negatesPermissionExactly(String permissionPath)
     { return negatesPermissionExactly(splitPath(permissionPath)); }
 
+    /**
+     * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
+     * has been specifically added as one to negate.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @return True if the permission path is explicitly negated. That is, if the path has been specifically added to
+     *         this permission set as one that should be negated, and its negation isn't simply inferred from other
+     *         permission that covers it. Otherwise, false.
+     */
     public boolean negatesPermissionExactly(List<String> permissionPath)
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
 
+    /**
+     * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
+     * has been specifically added as one to negate.
+     * @param permissionPath The permission path to test, as an array of nodes.
+     * @return True if the permission path is explicitly negated. That is, if the path has been specifically added to
+     *         this permission set as one that should be negated, and its negation isn't simply inferred from other
+     *         permission that covers it. Otherwise, false.
+     */
     public boolean negatesPermissionExactly(String... permissionPath)
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
     //endregion
@@ -277,6 +417,23 @@ public final class PermissionSet
     //endregion
 
     //region Mutators
+
+    /**
+     * Parses the provided permission as a string and adds it to the permission set.
+     *
+     * Permissions must be in the form of: "first.second.third"
+     *
+     * Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with it),
+     * but not to itself.
+     *
+     * Permissions may be prefixed with "-" to indicate that it negates the permission and any it covers, rather than
+     * allowing them.
+     *
+     * Any text after the first colon ":" is considered to make up the string argument, and not be part of the formatted
+     * permission itself.
+     * @param permissionAsString The permission formatted as a string.
+     * @throws ParseException If the provided string is not parsable as a permission.
+     */
     public void set(String permissionAsString) throws ParseException
     {
         boolean isNegation = false;
@@ -334,9 +491,26 @@ public final class PermissionSet
             descendantPermissionTree.setAt(perm, path);
     }
 
+    /**
+     * Parses the provided permission as a string and adds it to the permission set, as described in
+     * {@link #set(String)}, after having deïndented the string.
+     *
+     * This is specifically useful where a permission argument spans multiple lines and the format requires that such
+     * arguments be indented 4 spades from the permission itself.
+     * @param permissionAsString The permission formatted as a string.
+     * @throws ParseException If the provided string is not parsable as a permission.
+     */
     public void setWhileDeIndenting(String permissionAsString) throws ParseException
     { set(permissionAsString.replaceAll("(?m)^ {4}", "")); }
 
+    /**
+     * Removes the provided permission from the permission set.
+     * @apiNote Negation and string arguments are not needed for removal, and are ignored.
+     * @apiNote "some.thing" and "some.thing.*" are different permissions and removing one does not remove the other.
+     * @apiNote This does not remove any permissions "lower than" (starting with) the provided permission.
+     * @param permissionAsString The permission formatted as a string.
+     * @return True if the permission set was changed as a result of this call. Otherwise, false.
+     */
     public boolean remove(String permissionAsString)
     {
         permissionAsString = permissionAsString.trim();
@@ -375,6 +549,9 @@ public final class PermissionSet
             return descendantPermissionTree.clearAt(path).valueWasPresent();
     }
 
+    /**
+     * Removes all permissions from this permission set.
+     */
     public void clear()
     {
         exactPermissionTree.clear();
