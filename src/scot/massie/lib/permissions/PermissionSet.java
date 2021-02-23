@@ -13,27 +13,64 @@ import java.util.stream.Stream;
  */
 public final class PermissionSet
 {
-    //region initialisation
+    //region Inner static classes
+
+    /**
+     * A pairing of a permission with the path leading to that permission.
+     *
+     * Exists primarily because Java doesn't support named tuples.
+     */
     public static final class PermissionWithPath
     {
+        /**
+         * Creates a new PermissionWtihPath by pairing the given path with the given permission.
+         * @param path The path to pair with the permission.
+         * @param perm The permission to pair with the path.
+         */
         public PermissionWithPath(List<String> path, Permission perm)
         {
             this.path = path;
             this.permission = perm;
         }
 
+        /**
+         * The path leading to the permission.
+         */
         private final List<String> path;
+
+        /**
+         * The permission.
+         */
         private final Permission permission;
 
+        /**
+         * Gets the path of this pairing.
+         * @return The path contained within this pairing.
+         */
         public List<String> getPath()
         { return path; }
 
+        /**
+         * Gets the permission of this pairing.
+         * @return The path contained within this pairing.
+         */
         public Permission getPermission()
         { return permission; }
     }
     //endregion
 
     //region Static final values
+    /**
+     * Comparator that compares paths.
+     *
+     * This comparator goes through each node in the paths in order until it finds one that's different in the two
+     * provided paths. It then returns the result of comparing those two nodes.
+     *
+     * Where all nodes are the same, the paths are considered the same.
+     *
+     * Where one path is shorter than another but paths are both the same up to that point, the shorter path is
+     * considered to come first.
+     */
     private static final Comparator<List<String>> PATH_COMPARATOR = (a, b) ->
     {
         for(int i = 0; i < a.size(); i++)
@@ -57,8 +94,19 @@ public final class PermissionSet
     //endregion
 
     //region fields
-    Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
-    Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
+    /**
+     * The tree of exact permissions. Permissions in this tree cover only themselves exactly.
+     *
+     * Permission paths are the paths to the permission in this tree or {@link #descendantPermissionTree}.
+     */
+    private final Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
+
+    /**
+     * The tree of descendant permissions. Permissions in this tree cover only permissions descending from them.
+     *
+     * Permission paths are the paths to the permission in this tree or {@link #exactPermissionTree}.
+     */
+    private final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
     //endregion
 
     //region static string manipulation methods
@@ -329,6 +377,15 @@ public final class PermissionSet
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
     //endregion
     //region conversion to savestrings
+
+    /**
+     * Gets a string representation of the permission at the given path.
+     *
+     * Whether the permission at the given path needs to be represented by multiple lines, these will be concatenated
+     * into the result.
+     * @param permPath The path to get a string representation of the permission at.
+     * @return A string representation of the permission at the given path.
+     */
     private String getSaveStringForPermission(List<String> permPath)
     {
         String[] lines = getSaveStringLinesForPermission(permPath);
@@ -338,9 +395,30 @@ public final class PermissionSet
                                  :                     lines[0] + "\n" + lines[1];
     }
 
+    /**
+     * Gets a string representation or string representations of the permission at a given path.
+     *
+     * Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
+     * permissions may result in multiple lines needing to be used to represent it, such as where a path is allowed,
+     * but anything underneath it (starting with it, but not equal to it) is negated.
+     * @param permPath The path of the permission to get a string representation or string representations of.
+     * @return An array containing one or two strings, which are string representations of the permission at the given
+     *         path.
+     */
     private String[] getSaveStringLinesForPermission(List<String> permPath)
     { return getSaveStringLinesForPermission(permPath, true); }
 
+    /**
+     * Gets a string representation or string representations of the permission at a given path.
+     *
+     * Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
+     * permissions may result in multiple lines needing to be used to represent it, such as where a path is allowed,
+     * but anything underneath it (starting with it, but not equal to it) is negated.
+     * @param permPath The path of the permission to get a string representation or string representations of.
+     * @param includeArg Whether or not to include the permission argument in the string representation(s).
+     * @return An array containing one or two strings, which are string representations of the permission at the given
+     *         path.
+     */
     private String[] getSaveStringLinesForPermission(List<String> permPath, boolean includeArg)
     {
         Permission forExact = exactPermissionTree.getAtOrNull(permPath);
@@ -370,6 +448,11 @@ public final class PermissionSet
                        };
     }
 
+    /**
+     * Gets string representations of all permissions in this permission set. See {@link #toSaveString()} for details.
+     * @param includeArgs Whether or not to include string arguments in the string representations of arguments.
+     * @return A list, ordered by permission path, of string representations of permissions in this permission set.
+     */
     public List<String> getPermissionsAsStrings(boolean includeArgs)
     {
         Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
@@ -397,6 +480,23 @@ public final class PermissionSet
         return result;
     }
 
+    /**
+     * Produces a possibly multi-line string representation of this permission set.
+     *
+     * Each line is a permission to be parsed, unless it's incremented with four spaces, in which case, it's a
+     * continuation of the permission argument of the previous line's permission.
+     *
+     * Each added permission is represented by a dot-notated path.
+     *  - This path may be suffixed with ".*" to indicate that it covers all permissions below it unless explicitly set
+     *    themselves.
+     *  - This path may be prefixed with "-" to indicate that it negates any permissions it covers rather than allowing
+     *    them.
+     *  - This path may be followed by a colon ":" - any text after the colon on the line, or indented four spaces on
+     *    following lines until a line note indented by four spaces is found, is considered path of the argument passed
+     *    to the permission, and is not part of the permission syntax itself.
+     *
+     * @return A string representation of this permission set.
+     */
     public String toSaveString()
     {
         StringBuilder sb = new StringBuilder();
