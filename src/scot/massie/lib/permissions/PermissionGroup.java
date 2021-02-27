@@ -5,6 +5,7 @@ import java.util.*;
 
 public class PermissionGroup
 {
+    //region initialisation
     public PermissionGroup(String name)
     { this(name, emptyDefaultPermissions, 0L); }
 
@@ -34,7 +35,9 @@ public class PermissionGroup
         this.priorityAsLong = ((Double)priority).longValue();
         this.priorityIsLong = false;
     }
+    //endregion
 
+    //region public static final fields
     public static final Comparator<PermissionGroup> priorityComparatorHighestFirst = (a, b) ->
     {
         int result = a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
@@ -102,7 +105,9 @@ public class PermissionGroup
         protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
         { return null; }
     };
+    //endregion
 
+    //region instance fields
     String name;
     double priority;
     long priorityAsLong;
@@ -111,7 +116,11 @@ public class PermissionGroup
     PermissionSet permissionSet = new PermissionSet();
     List<PermissionGroup> referencedGroups = new ArrayList<>();
     PermissionGroup defaultPermissions;
+    //endregion
 
+    //region methods
+    //region accessors
+    //region getters
     public String getName()
     { return name; }
 
@@ -123,20 +132,6 @@ public class PermissionGroup
 
     public String getPriorityAsString()
     { return priorityIsLong ? Long.toString(priorityAsLong) : Double.toString(priority); }
-
-    public void reassignPriority(long newPriority)
-    {
-        priority = newPriority;
-        priorityAsLong = newPriority;
-        priorityIsLong = true;
-    }
-
-    public void reassignPriority(double newPriority)
-    {
-        this.priority = newPriority;
-        this.priorityAsLong = ((Double)newPriority).longValue();
-        this.priorityIsLong = false;
-    }
 
     protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
@@ -157,32 +152,23 @@ public class PermissionGroup
         return defaultPermissions.getMostRelevantPermission(permissionAsString);
     }
 
-    public void addPermission(String permissionAsString) throws ParseException
-    { permissionSet.set(permissionAsString); }
-
-    public void addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
-    { permissionSet.setWhileDeIndenting(permissionAsString); }
-
-    public boolean removePermission(String permissionPath)
-    { return permissionSet.remove(permissionPath); }
-
-    public void addPermissionGroup(PermissionGroup permGroup)
+    public String getPermissionArg(String permissionPath)
     {
-        int index = Collections.binarySearch(referencedGroups, permGroup, priorityComparatorHighestFirst);
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
-        if(index >= 0)
-            return;
+        if(mrp == null)
+            return null;
 
-        index = (index + 1) * -1;
-        referencedGroups.add(index, permGroup);
+        return mrp.getPermission().getArg();
     }
 
-    public void sortPermissionGroups()
-    { referencedGroups.sort(priorityComparatorHighestFirst); }
+    public List<PermissionGroup> getPermissionGroups()
+    { return new ArrayList<>(referencedGroups); }
 
-    public boolean removePermissionGroup(PermissionGroup permissionGroup)
-    { return referencedGroups.remove(permissionGroup); }
-
+    public List<String> getPermissionsAsStrings(boolean includeArgs)
+    { return permissionSet.getPermissionsAsStrings(includeArgs); }
+    //endregion
+    //region state
     public boolean hasPermission(String permissionPath)
     {
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
@@ -229,28 +215,7 @@ public class PermissionGroup
 
     public boolean isEmpty()
     { return permissionSet.isEmpty() && referencedGroups.isEmpty(); }
-
-    public void clear()
-    {
-        permissionSet.clear();
-        referencedGroups.clear();
-    }
-
-    public String getPermissionArg(String permissionPath)
-    {
-        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
-
-        if(mrp == null)
-            return null;
-
-        return mrp.getPermission().getArg();
-    }
-
-    public List<PermissionGroup> getPermissionGroups()
-    { return new ArrayList<>(referencedGroups); }
-
-    public List<String> getPermissionsAsStrings(boolean includeArgs)
-    { return permissionSet.getPermissionsAsStrings(includeArgs); }
+    //endregion
 
     public String toSaveString()
     {
@@ -267,4 +232,56 @@ public class PermissionGroup
 
         return result.toString();
     }
+    //endregion
+    //region mutators
+    //region permissions
+    public void addPermission(String permissionAsString) throws ParseException
+    { permissionSet.set(permissionAsString); }
+
+    public void addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
+    { permissionSet.setWhileDeIndenting(permissionAsString); }
+
+    public boolean removePermission(String permissionPath)
+    { return permissionSet.remove(permissionPath); }
+    //endregion
+    //region permission groups
+    public void addPermissionGroup(PermissionGroup permGroup)
+    {
+        int index = Collections.binarySearch(referencedGroups, permGroup, priorityComparatorHighestFirst);
+
+        if(index >= 0)
+            return;
+
+        index = (index + 1) * -1;
+        referencedGroups.add(index, permGroup);
+    }
+
+    public void sortPermissionGroups()
+    { referencedGroups.sort(priorityComparatorHighestFirst); }
+
+    public boolean removePermissionGroup(PermissionGroup permissionGroup)
+    { return referencedGroups.remove(permissionGroup); }
+    //endregion
+    //region priority
+    public void reassignPriority(long newPriority)
+    {
+        priority = newPriority;
+        priorityAsLong = newPriority;
+        priorityIsLong = true;
+    }
+
+    public void reassignPriority(double newPriority)
+    {
+        this.priority = newPriority;
+        this.priorityAsLong = ((Double)newPriority).longValue();
+        this.priorityIsLong = false;
+    }
+    //endregion
+    public void clear()
+    {
+        permissionSet.clear();
+        referencedGroups.clear();
+    }
+    //endregion
+    //endregion
 }
