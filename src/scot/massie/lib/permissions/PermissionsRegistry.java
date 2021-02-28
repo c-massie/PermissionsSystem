@@ -700,12 +700,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { loadPerms(reader, this::createUserPermissionsFromSaveString); }
 
     void loadGroups(PermissionsLineReader reader) throws IOException
-    {
-        loadPerms(reader, this::createGroupFromSaveString);
-
-        for(PermissionGroup pg : assignableGroups.values())
-            pg.sortPermissionGroups();
-    }
+    { loadPerms(reader, this::createGroupFromSaveString); }
 
     void loadUsers() throws IOException
     {

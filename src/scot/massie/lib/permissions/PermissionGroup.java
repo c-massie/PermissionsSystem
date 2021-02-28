@@ -28,6 +28,16 @@ public class PermissionGroup
         Ensuring that the internal order of referenced permission groups is sorted should be an implementation detail.
      */
 
+    private static final class PriorityChangeCallback
+    {
+        public PriorityChangeCallback(PermissionGroup source)
+        { this.source = source; }
+
+        private final PermissionGroup source;
+
+        public void onPriorityChange() { source.sortPermissionGroups(); }
+    }
+
     //region initialisation
 
     /**
@@ -185,7 +195,7 @@ public class PermissionGroup
     /**
      * The name, possibly used as a unique identifier, of the permission group.
      */
-    String name;
+    protected String name;
 
     /**
      * The priority of this permission group, as a double.
@@ -193,7 +203,7 @@ public class PermissionGroup
      * Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
      * groups are queried before lower priority groups.
      */
-    double priority;
+    protected double priority;
 
     /**
      * The priority of this permission group, as a long.
@@ -201,18 +211,18 @@ public class PermissionGroup
      * Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
      * groups are queried before lower priority groups.
      */
-    long priorityAsLong;
+    protected long priorityAsLong;
 
     /**
      * Whether or not this permission group's priority was provided as, and should be read as, a long. If false, it
      * should be read as a double instead.
      */
-    boolean priorityIsLong;
+    protected boolean priorityIsLong;
 
     /**
      * The store of permissions for this group. Queries of the permission group's permission are directed to this.
      */
-    PermissionSet permissionSet = new PermissionSet();
+    protected final PermissionSet permissionSet = new PermissionSet();
 
     /**
      * Groups that should be referenced by this group.
@@ -222,7 +232,7 @@ public class PermissionGroup
      * one is found that *does* cover the specified permission. These groups are checked in order from higher priority
      * to lower priority.
      */
-    List<PermissionGroup> referencedGroups = new ArrayList<>();
+    protected final List<PermissionGroup> referencedGroups = new ArrayList<>();
 
     /**
      * The permission group to check if this one and all others referenced do not cover a given permission.
@@ -230,7 +240,19 @@ public class PermissionGroup
      * Queries defer to this only after this group's permission set and all other referenced groups have been queried,
      * and only if none of them have permissions covering the specified one.
      */
-    PermissionGroup defaultPermissions;
+    protected PermissionGroup defaultPermissions;
+
+    /**
+     * Callback that alerts this permission group when the priority of a permission group this group references changes
+     * its priority, which may require re-sorting the list of referenced groups.
+     */
+    private final PriorityChangeCallback priorityChangeCallback = new PriorityChangeCallback(this);
+
+    /**
+     * The callbacks to call when this permission group's priority is changed. These should be the callbacks provided
+     * by all permission groups that reference this one.
+     */
+    private final Collection<PriorityChangeCallback> callbacksToCallOnPriorityChange = new HashSet<>();
     //endregion
 
     //region methods
@@ -543,13 +565,14 @@ public class PermissionGroup
 
         index = (index + 1) * -1;
         referencedGroups.add(index, permGroup);
+        permGroup.registerPriorityChangeCallback(priorityChangeCallback);
     }
 
     /**
      * Ensures that the permissions in this permission group are sorted in order from higher priority to lowest
      * priority.
      */
-    public void sortPermissionGroups()
+    protected void sortPermissionGroups()
     { referencedGroups.sort(priorityComparatorHighestFirst); }
 
     /**
@@ -560,7 +583,15 @@ public class PermissionGroup
      * @return True if this permission group was modified as a result of this call. Otherwise, false.
      */
     public boolean removePermissionGroup(PermissionGroup permissionGroup)
-    { return referencedGroups.remove(permissionGroup); }
+    {
+        if(referencedGroups.remove(permissionGroup))
+        {
+            permissionGroup.deregisterPriorityChangeCallback(priorityChangeCallback);
+            return true;
+        }
+        else
+            return false;
+    }
     //endregion
     //region priority
 
@@ -577,6 +608,9 @@ public class PermissionGroup
         priority = newPriority;
         priorityAsLong = newPriority;
         priorityIsLong = true;
+
+        for(PriorityChangeCallback callback : callbacksToCallOnPriorityChange)
+            callback.onPriorityChange();
     }
 
     /**
@@ -592,7 +626,24 @@ public class PermissionGroup
         this.priority = newPriority;
         this.priorityAsLong = ((Double)newPriority).longValue();
         this.priorityIsLong = false;
+
+        for(PriorityChangeCallback callback : callbacksToCallOnPriorityChange)
+            callback.onPriorityChange();
     }
+
+    /**
+     * Adds a callback to call when this permission group's priority changes.
+     * @param callback The callback to call
+     */
+    private void registerPriorityChangeCallback(PriorityChangeCallback callback)
+    { callbacksToCallOnPriorityChange.add(callback); }
+
+    /**
+     * Removes a callback to call when this permission group's priority changes, it will no longer be called.
+     * @param callback The callback to no longer call.
+     */
+    private void deregisterPriorityChangeCallback(PriorityChangeCallback callback)
+    { callbacksToCallOnPriorityChange.remove(callback); }
     //endregion
 
     /**
