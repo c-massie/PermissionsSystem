@@ -359,7 +359,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region accessors with initialisation
 
-    PermissionGroup createGroup(String groupId)
+    PermissionGroup getGroupPermissionsGroup(String groupId)
     {
         return assignableGroups.computeIfAbsent(groupId, s ->
         {
@@ -368,7 +368,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    PermissionGroup createGroup(String groupId, long priority)
+    PermissionGroup getGroupPermissionsGroup(String groupId, long priority)
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
@@ -384,7 +384,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    PermissionGroup createGroup(String groupId, double priority)
+    PermissionGroup getGroupPermissionsGroup(String groupId, double priority)
     {
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
@@ -400,7 +400,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    PermissionGroup createGroup(String groupId, String priorityAsString)
+    PermissionGroup getGroupPermissionsGroup(String groupId, String priorityAsString)
     {
         long priorityAsLong = 0;
         boolean priorityIsLong = true;
@@ -411,7 +411,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsLong = false; }
 
         if(priorityIsLong)
-            return createGroup(groupId, priorityAsLong);
+            return getGroupPermissionsGroup(groupId, priorityAsLong);
 
         double priorityAsDouble = 0;
         boolean priorityIsDouble = true;
@@ -422,12 +422,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsDouble = false; }
 
         if(priorityIsDouble)
-            return createGroup(groupId, priorityAsDouble);
+            return getGroupPermissionsGroup(groupId, priorityAsDouble);
 
         throw new InvalidPriorityException(priorityAsString);
     }
 
-    PermissionGroup createGroupFromSaveString(String saveString)
+    PermissionGroup getGroupPermissionsGroupFromSaveString(String saveString)
     {
         int prioritySeparatorPosition = saveString.lastIndexOf(':');
         int groupPrefixPosition = saveString.lastIndexOf('#');
@@ -438,12 +438,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         String superGroupName = (groupPrefixPosition < 0) ? (null) : (saveString.substring(groupPrefixPosition + 1));
 
         String priorityString = (prioritySeparatorPosition < 0) ? (null)
-                                        : (groupPrefixPosition < 0) ? (saveString.substring(prioritySeparatorPosition + 1).trim())
-                                                  : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
+                              : (groupPrefixPosition < 0)       ? (saveString.substring(prioritySeparatorPosition + 1).trim())
+                              : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
 
         String groupName = prioritySeparatorPosition > 0 ? saveString.substring(0, prioritySeparatorPosition).trim()
-                                   : groupPrefixPosition       > 0 ? saveString.substring(0, groupPrefixPosition).trim()
-                                             :                                 saveString.trim();
+                         : groupPrefixPosition       > 0 ? saveString.substring(0, groupPrefixPosition).trim()
+                         :                                 saveString.trim();
 
         if(superGroupName != null && superGroupName.isEmpty())
             superGroupName = null;
@@ -452,16 +452,16 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             priorityString = null;
 
         PermissionGroup result = groupName.equals("*")  ? defaultPermissions
-                                         : priorityString != null ? createGroup(groupName, priorityString)
-                                                   :                          createGroup(groupName);
+                               : priorityString != null ? getGroupPermissionsGroup(groupName, priorityString)
+                               :                          getGroupPermissionsGroup(groupName);
 
         if(superGroupName != null)
-            result.addPermissionGroup(createGroup(superGroupName));
+            result.addPermissionGroup(getGroupPermissionsGroup(superGroupName));
 
         return result;
     }
 
-    PermissionGroup createUserPermissions(ID userId)
+    PermissionGroup getUserPermissionsGroup(ID userId)
     {
         return permissionsForUsers.computeIfAbsent(userId, id ->
         {
@@ -470,7 +470,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
-    PermissionGroup createUserPermissionsFromSaveString(String saveString)
+    PermissionGroup getUserPermissionsGroupFromSaveString(String saveString)
     {
         int groupPrefixPosition = saveString.lastIndexOf('#');
 
@@ -478,10 +478,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         String userIdString = saveString.substring(0, groupPrefixPosition).trim();
         ID userId = parseIdFromString.apply(userIdString);
 
-        PermissionGroup pg = groupName.equals("*") ? defaultPermissions : createUserPermissions(userId);
+        PermissionGroup pg = groupName.equals("*") ? defaultPermissions : getUserPermissionsGroup(userId);
 
         if(!groupName.isEmpty())
-            pg.addPermissionGroup(createGroup(groupName));
+            pg.addPermissionGroup(getGroupPermissionsGroup(groupName));
 
         return pg;
     }
@@ -491,14 +491,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region permissions
     //region assign
     public void assignUserPermission(ID userId, String permission)
-    { assignPermission(createUserPermissions(userId), permission); }
+    { assignPermission(getUserPermissionsGroup(userId), permission); }
 
     public void assignGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
             assignDefaultPermission(permission);
         else
-            assignPermission(createGroup(groupId), permission);
+            assignPermission(getGroupPermissionsGroup(groupId), permission);
     }
 
     public void assignDefaultPermission(String permission)
@@ -544,18 +544,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region groups
     //region assign
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { createUserPermissions(userId).addPermissionGroup(createGroup(groupIdBeingAssigned)); }
+    { getUserPermissionsGroup(userId).addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
 
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
         if("*".equals(groupId))
             assignDefaultGroup(groupIdBeingAssigned);
         else
-            createGroup(groupId).addPermissionGroup(createGroup(groupIdBeingAssigned));
+            getGroupPermissionsGroup(groupId).addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned));
     }
 
     public void assignDefaultGroup(String groupIdBeingAssigned)
-    { defaultPermissions.addPermissionGroup(createGroup(groupIdBeingAssigned)); }
+    { defaultPermissions.addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
     //endregion
 
     //region revoke
@@ -716,7 +716,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
                 if(line.startsWith("#"))
                 {
-                    currentPermGroup.addPermissionGroup(createGroup(line.substring(1).trim()));
+                    currentPermGroup.addPermissionGroup(getGroupPermissionsGroup(line.substring(1).trim()));
                     continue;
                 }
 
@@ -731,10 +731,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     void loadUsers(PermissionsLineReader reader) throws IOException
-    { loadPerms(reader, this::createUserPermissionsFromSaveString); }
+    { loadPerms(reader, this::getUserPermissionsGroupFromSaveString); }
 
     void loadGroups(PermissionsLineReader reader) throws IOException
-    { loadPerms(reader, this::createGroupFromSaveString); }
+    { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString); }
 
     void loadUsers() throws IOException
     {
