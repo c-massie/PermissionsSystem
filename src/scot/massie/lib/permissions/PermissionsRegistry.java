@@ -11,6 +11,8 @@ import java.util.stream.Stream;
 
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
+    //region inner static classes
+    //region exceptions
     public static class PermissionsRegistryException extends RuntimeException
     {
         public PermissionsRegistryException() { super(); }
@@ -64,7 +66,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         public String getInvalidPriority()
         { return invalidPriority; }
     }
+    //endregion
 
+    //region text parsing
     private static class PermissionsLineReader extends Reader
     {
         public PermissionsLineReader(Reader source)
@@ -168,7 +172,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         public void close() throws IOException
         { source.close(); }
     }
+    //endregion
+    //endregion
 
+    //region initialisation
     public PermissionsRegistry(Function<ID, String> idToString,
                                Function<String, ID> idFromString,
                                Path usersFile,
@@ -188,7 +195,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         this.usersFilePath = null;
         this.groupsFilePath = null;
     }
+    //endregion
 
+    //region instance variables
     final Map<ID, PermissionGroup> permissionsForUsers = new HashMap<>();
     final Map<String, PermissionGroup> assignableGroups = new HashMap<>();
 
@@ -201,37 +210,99 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     final Path groupsFilePath;
 
     boolean hasBeenDifferentiatedFromFiles = false;
+    //endregion
 
-    protected void markAsModified()
-    { hasBeenDifferentiatedFromFiles = true; }
+    //region methods
+    //region accessors
+    //region permission queries
+    //region has
+    public boolean userHasPermission(ID userId, String permission)
+    { return hasPermission(permissionsForUsers.get(userId), permission); }
 
+    public boolean groupHasPermission(String groupId, String permission)
+    {
+        if("*".equals(groupId))
+            return hasDefaultPermission(permission);
+
+        return hasPermission(assignableGroups.get(groupId), permission);
+    }
+
+    public boolean hasDefaultPermission(String permission)
+    { return hasPermission(defaultPermissions, permission); }
+
+    private boolean hasPermission(PermissionGroup permGroup, String permission)
+    {
+        if(permGroup == null)
+            return defaultPermissions.hasPermission(permission);
+
+        return permGroup.hasPermission(permission);
+    }
+    //endregion
+
+    //region args
+    public String getUserPermissionArg(ID userId, String permission)
+    { return getPermissionArg(permissionsForUsers.get(userId), permission); }
+
+    public String getGroupPermissionArg(String groupId, String permission)
+    {
+        if("*".equals(groupId))
+            return getDefaultPermissionArg(permission);
+
+        return getPermissionArg(assignableGroups.get(groupId), permission);
+    }
+
+    public String getDefaultPermissionArg(String permission)
+    { return defaultPermissions.getPermissionArg(permission); }
+
+    private String getPermissionArg(PermissionGroup permGroup, String permission)
+    {
+        if(permGroup == null)
+            return defaultPermissions.getPermissionArg(permission);
+
+        return permGroup.getPermissionArg(permission);
+    }
+    //endregion
+    //endregion
+
+    //region group queries
+    public boolean userHasGroup(ID userId, String groupId)
+    { return hasGroup(permissionsForUsers.get(userId), groupId); }
+
+    public boolean groupExtendsFromGroup(String groupId, String superGroupId)
+    {
+        if("*".equals(groupId))
+            return isDefaultGroup(superGroupId);
+
+        return hasGroup(assignableGroups.get(groupId), superGroupId);
+    }
+
+    public boolean isDefaultGroup(String groupId)
+    { return hasGroup(defaultPermissions, groupId); }
+
+    private boolean hasGroup(PermissionGroup permGroup, String groupId)
+    {
+        if(permGroup == null)
+            return false;
+
+        return permGroup.hasGroup(groupId);
+    }
+    //endregion
+
+    //region check general state
     public boolean hasBeenDifferentiatedFromFiles()
     { return hasBeenDifferentiatedFromFiles; }
+    //endregion
 
-    private PermissionGroup getOrCreateUserPerms(ID userId)
-    {
-        return permissionsForUsers.computeIfAbsent(userId, id ->
-        {
-            markAsModified();
-            return new PermissionGroup(convertIdToString.apply(id), defaultPermissions);
-        });
-    }
-
-    private PermissionGroup getOrCreatePermGroup(String groupId)
-    {
-        return assignableGroups.computeIfAbsent(groupId, name ->
-        {
-            markAsModified();
-            return new PermissionGroup(name);
-        });
-    }
-
+    //region getters
+    //region members
     public Collection<String> getGroupNames()
     { return new HashSet<>(assignableGroups.keySet()); }
 
     public Collection<ID> getUsers()
     { return new HashSet<>(permissionsForUsers.keySet()); }
+    //endregion
 
+    //region permissions
     public List<String> getUserPermissions(ID userId)
     { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
 
@@ -253,7 +324,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         return permGroup.getPermissionsAsStrings(false);
     }
+    //endregion
 
+    //region groups
     public List<String> getGroupsOfUser(ID userId)
     { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
 
@@ -280,160 +353,27 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         return result;
     }
+    //endregion
+    //endregion
+    //endregion
 
-    public void assignUserPermission(ID userId, String permission)
-    { assignPermission(getOrCreateUserPerms(userId), permission); }
-
-    public void assignGroupPermission(String groupId, String permission)
+    //region accessors with initialisation
+    private PermissionGroup getOrCreateUserPerms(ID userId)
     {
-        if("*".equals(groupId))
-            assignDefaultPermission(permission);
-        else
-            assignPermission(getOrCreatePermGroup(groupId), permission);
+        return permissionsForUsers.computeIfAbsent(userId, id ->
+        {
+            markAsModified();
+            return new PermissionGroup(convertIdToString.apply(id), defaultPermissions);
+        });
     }
 
-    public void assignDefaultPermission(String permission)
-    { assignPermission(defaultPermissions, permission); }
-
-    private void assignPermission(PermissionGroup permGroup, String permission)
+    private PermissionGroup getOrCreatePermGroup(String groupId)
     {
-        markAsModified();
-
-        try
-        { permGroup.addPermission(permission); }
-        catch(ParseException e)
-        { throw new InvalidPermissionException(permission, e); }
-    }
-
-    public boolean revokeUserPermission(ID userId, String permission)
-    { return revokePermission(permissionsForUsers.get(userId), permission); }
-
-    public boolean revokeGroupPermission(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return revokeDefaultPermission(permission);
-
-        return revokePermission(assignableGroups.get(groupId), permission);
-    }
-
-    public boolean revokeDefaultPermission(String permission)
-    { return revokePermission(defaultPermissions, permission); }
-
-    private boolean revokePermission(PermissionGroup permGroup, String permission)
-    {
-        if(permGroup == null)
-            return false;
-
-        markAsModified();
-        return permGroup.removePermission(permission);
-    }
-
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
-
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    {
-        if("*".equals(groupId))
-            assignDefaultGroup(groupIdBeingAssigned);
-        else
-            getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned));
-    }
-
-    public void assignDefaultGroup(String groupIdBeingAssigned)
-    { defaultPermissions.addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
-
-    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
-
-    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    {
-        if("*".equals(groupId))
-            return revokeDefaultGroup(groupIdBeingRevoked);
-
-        return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked);
-    }
-
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
-
-    private boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
-    {
-        if(permGroup == null)
-            return false;
-
-        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
-
-        if(permGroupBeingRevoked == null)
-            return false;
-
-        markAsModified();
-        return permGroup.removePermissionGroup(permGroupBeingRevoked);
-    }
-
-    public boolean userHasPermission(ID userId, String permission)
-    { return hasPermission(permissionsForUsers.get(userId), permission); }
-
-    public boolean groupHasPermission(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return hasDefaultPermission(permission);
-
-        return hasPermission(assignableGroups.get(groupId), permission);
-    }
-
-    public boolean hasDefaultPermission(String permission)
-    { return hasPermission(defaultPermissions, permission); }
-
-    private boolean hasPermission(PermissionGroup permGroup, String permission)
-    {
-        if(permGroup == null)
-            return defaultPermissions.hasPermission(permission);
-
-        return permGroup.hasPermission(permission);
-    }
-
-    public boolean userHasGroup(ID userId, String groupId)
-    { return hasGroup(permissionsForUsers.get(userId), groupId); }
-
-    public boolean groupExtendsFromGroup(String groupId, String superGroupId)
-    {
-        if("*".equals(groupId))
-            return isDefaultGroup(superGroupId);
-
-        return hasGroup(assignableGroups.get(groupId), superGroupId);
-    }
-
-    public boolean isDefaultGroup(String groupId)
-    { return hasGroup(defaultPermissions, groupId); }
-
-    private boolean hasGroup(PermissionGroup permGroup, String groupId)
-    {
-        if(permGroup == null)
-            return false;
-
-        return permGroup.hasGroup(groupId);
-    }
-
-    public String getUserPermissionArg(ID userId, String permission)
-    { return getPermissionArg(permissionsForUsers.get(userId), permission); }
-
-    public String getGroupPermissionArg(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return getDefaultPermissionArg(permission);
-
-        return getPermissionArg(assignableGroups.get(groupId), permission);
-    }
-
-    public String getDefaultPermissionArg(String permission)
-    { return defaultPermissions.getPermissionArg(permission); }
-
-    private String getPermissionArg(PermissionGroup permGroup, String permission)
-    {
-        if(permGroup == null)
-            return defaultPermissions.getPermissionArg(permission);
-
-        return permGroup.getPermissionArg(permission);
+        return assignableGroups.computeIfAbsent(groupId, name ->
+        {
+            markAsModified();
+            return new PermissionGroup(name);
+        });
     }
 
     PermissionGroup createGroup(String groupId)
@@ -515,12 +455,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         String superGroupName = (groupPrefixPosition < 0) ? (null) : (saveString.substring(groupPrefixPosition + 1));
 
         String priorityString = (prioritySeparatorPosition < 0) ? (null)
-                              : (groupPrefixPosition < 0) ? (saveString.substring(prioritySeparatorPosition + 1).trim())
-                              : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
+                                        : (groupPrefixPosition < 0) ? (saveString.substring(prioritySeparatorPosition + 1).trim())
+                                                  : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
 
         String groupName = prioritySeparatorPosition > 0 ? saveString.substring(0, prioritySeparatorPosition).trim()
-                         : groupPrefixPosition       > 0 ? saveString.substring(0, groupPrefixPosition).trim()
-                         :                                 saveString.trim();
+                                   : groupPrefixPosition       > 0 ? saveString.substring(0, groupPrefixPosition).trim()
+                                             :                                 saveString.trim();
 
         if(superGroupName != null && superGroupName.isEmpty())
             superGroupName = null;
@@ -529,8 +469,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             priorityString = null;
 
         PermissionGroup result = groupName.equals("*")  ? defaultPermissions
-                               : priorityString != null ? createGroup(groupName, priorityString)
-                               :                          createGroup(groupName);
+                                         : priorityString != null ? createGroup(groupName, priorityString)
+                                                   :                          createGroup(groupName);
 
         if(superGroupName != null)
             result.addPermissionGroup(getOrCreatePermGroup(superGroupName));
@@ -562,16 +502,127 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         return pg;
     }
+    //endregion
 
+    //region mutators
+    //region permissions
+    //region assign
+    public void assignUserPermission(ID userId, String permission)
+    { assignPermission(getOrCreateUserPerms(userId), permission); }
+
+    public void assignGroupPermission(String groupId, String permission)
+    {
+        if("*".equals(groupId))
+            assignDefaultPermission(permission);
+        else
+            assignPermission(getOrCreatePermGroup(groupId), permission);
+    }
+
+    public void assignDefaultPermission(String permission)
+    { assignPermission(defaultPermissions, permission); }
+
+    private void assignPermission(PermissionGroup permGroup, String permission)
+    {
+        markAsModified();
+
+        try
+        { permGroup.addPermission(permission); }
+        catch(ParseException e)
+        { throw new InvalidPermissionException(permission, e); }
+    }
+    //endregion
+
+    //region revoke
+    public boolean revokeUserPermission(ID userId, String permission)
+    { return revokePermission(permissionsForUsers.get(userId), permission); }
+
+    public boolean revokeGroupPermission(String groupId, String permission)
+    {
+        if("*".equals(groupId))
+            return revokeDefaultPermission(permission);
+
+        return revokePermission(assignableGroups.get(groupId), permission);
+    }
+
+    public boolean revokeDefaultPermission(String permission)
+    { return revokePermission(defaultPermissions, permission); }
+
+    private boolean revokePermission(PermissionGroup permGroup, String permission)
+    {
+        if(permGroup == null)
+            return false;
+
+        markAsModified();
+        return permGroup.removePermission(permission);
+    }
+    //endregion
+    //endregion
+
+    //region groups
+    //region assign
+    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
+    { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
+
+    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
+    {
+        if("*".equals(groupId))
+            assignDefaultGroup(groupIdBeingAssigned);
+        else
+            getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned));
+    }
+
+    public void assignDefaultGroup(String groupIdBeingAssigned)
+    { defaultPermissions.addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
+    //endregion
+
+    //region revoke
+    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
+    { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
+
+    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
+    {
+        if("*".equals(groupId))
+            return revokeDefaultGroup(groupIdBeingRevoked);
+
+        return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked);
+    }
+
+    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
+    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
+
+    private boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
+    {
+        if(permGroup == null)
+            return false;
+
+        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+
+        if(permGroupBeingRevoked == null)
+            return false;
+
+        markAsModified();
+        return permGroup.removePermissionGroup(permGroupBeingRevoked);
+    }
+    //endregion
+    //endregion
+
+    //region clear
     public void clear()
     {
         permissionsForUsers.clear();
         assignableGroups.clear();
         defaultPermissions.clear();
     }
+    //endregion
 
-    //region Saving & Loading
-    //region Saving
+    //region set flags
+    protected void markAsModified()
+    { hasBeenDifferentiatedFromFiles = true; }
+    //endregion
+    //endregion
+
+    //region saving & loading
+    //region saving
     void savePerms(BufferedWriter writer, Collection<PermissionGroup> permGroups) throws IOException
     {
         Iterator<PermissionGroup> iter = permGroups.stream()
@@ -665,7 +716,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region Loading
+    //region loading
     void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
         PermissionGroup currentPermGroup = null;
@@ -739,6 +790,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         loadUsers();
         hasBeenDifferentiatedFromFiles = false;
     }
+    //endregion
     //endregion
     //endregion
 }
