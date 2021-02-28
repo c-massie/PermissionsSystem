@@ -607,7 +607,8 @@ public final class PermissionSet
      * Removes the provided permission from the permission set.
      * @apiNote Negation and string arguments are not needed for removal, and are ignored.
      * @apiNote "some.thing" and "some.thing.*" are different permissions and removing one does not remove the other.
-     * @apiNote This does not remove any permissions "lower than" (starting with) the provided permission.
+     * @apiNote This does not remove any permissions "lower than" (starting with) or "higher than" (truncated from) the
+     *          provided permission.
      * @param permissionAsString The permission formatted as a string.
      * @return True if the permission set was changed as a result of this call. Otherwise, false.
      */
