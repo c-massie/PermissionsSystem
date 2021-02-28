@@ -358,23 +358,6 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region accessors with initialisation
-    private PermissionGroup getOrCreateUserPerms(ID userId)
-    {
-        return permissionsForUsers.computeIfAbsent(userId, id ->
-        {
-            markAsModified();
-            return new PermissionGroup(convertIdToString.apply(id), defaultPermissions);
-        });
-    }
-
-    private PermissionGroup getOrCreatePermGroup(String groupId)
-    {
-        return assignableGroups.computeIfAbsent(groupId, name ->
-        {
-            markAsModified();
-            return new PermissionGroup(name);
-        });
-    }
 
     PermissionGroup createGroup(String groupId)
     {
@@ -473,7 +456,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                    :                          createGroup(groupName);
 
         if(superGroupName != null)
-            result.addPermissionGroup(getOrCreatePermGroup(superGroupName));
+            result.addPermissionGroup(createGroup(superGroupName));
 
         return result;
     }
@@ -498,7 +481,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         PermissionGroup pg = groupName.equals("*") ? defaultPermissions : createUserPermissions(userId);
 
         if(!groupName.isEmpty())
-            pg.addPermissionGroup(getOrCreatePermGroup(groupName));
+            pg.addPermissionGroup(createGroup(groupName));
 
         return pg;
     }
@@ -508,14 +491,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region permissions
     //region assign
     public void assignUserPermission(ID userId, String permission)
-    { assignPermission(getOrCreateUserPerms(userId), permission); }
+    { assignPermission(createUserPermissions(userId), permission); }
 
     public void assignGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
             assignDefaultPermission(permission);
         else
-            assignPermission(getOrCreatePermGroup(groupId), permission);
+            assignPermission(createGroup(groupId), permission);
     }
 
     public void assignDefaultPermission(String permission)
@@ -561,18 +544,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region groups
     //region assign
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { getOrCreateUserPerms(userId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
+    { createUserPermissions(userId).addPermissionGroup(createGroup(groupIdBeingAssigned)); }
 
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
         if("*".equals(groupId))
             assignDefaultGroup(groupIdBeingAssigned);
         else
-            getOrCreatePermGroup(groupId).addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned));
+            createGroup(groupId).addPermissionGroup(createGroup(groupIdBeingAssigned));
     }
 
     public void assignDefaultGroup(String groupIdBeingAssigned)
-    { defaultPermissions.addPermissionGroup(getOrCreatePermGroup(groupIdBeingAssigned)); }
+    { defaultPermissions.addPermissionGroup(createGroup(groupIdBeingAssigned)); }
     //endregion
 
     //region revoke
@@ -733,7 +716,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
                 if(line.startsWith("#"))
                 {
-                    currentPermGroup.addPermissionGroup(getOrCreatePermGroup(line.substring(1).trim()));
+                    currentPermGroup.addPermissionGroup(createGroup(line.substring(1).trim()));
                     continue;
                 }
 
