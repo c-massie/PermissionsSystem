@@ -354,11 +354,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return result;
     }
     //endregion
-    //endregion
-    //endregion
 
-    //region accessors with initialisation
-
+    //region PermissionGroups
     PermissionGroup getGroupPermissionsGroup(String groupId)
     {
         return assignableGroups.computeIfAbsent(groupId, s ->
@@ -485,6 +482,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         return pg;
     }
+    //endregion
+    //endregion
     //endregion
 
     //region mutators
