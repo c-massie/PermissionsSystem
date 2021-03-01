@@ -296,23 +296,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region permission queries
     //region has
     public boolean userHasPermission(ID userId, String permission)
-    { return hasPermission(permissionsForUsers.get(userId), permission); }
+    { return hasPermission(permissionsForUsers.get(userId), permission, true); }
 
     public boolean groupHasPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
             return hasDefaultPermission(permission);
 
-        return hasPermission(assignableGroups.get(groupId), permission);
+        return hasPermission(assignableGroups.get(groupId), permission, false);
     }
 
     public boolean hasDefaultPermission(String permission)
-    { return hasPermission(defaultPermissions, permission); }
-    
-    private boolean hasPermission(PermissionGroup permGroup, String permission)
+    { return hasPermission(defaultPermissions, permission, false); }
+
+    private boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
-            return defaultPermissions.hasPermission(permission);
+            return deferToDefault ? defaultPermissions.hasPermission(permission) : false;
 
         return permGroup.hasPermission(permission);
     }
@@ -320,23 +320,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region args
     public String getUserPermissionArg(ID userId, String permission)
-    { return getPermissionArg(permissionsForUsers.get(userId), permission); }
+    { return getPermissionArg(permissionsForUsers.get(userId), permission, true); }
 
     public String getGroupPermissionArg(String groupId, String permission)
     {
         if("*".equals(groupId))
             return getDefaultPermissionArg(permission);
 
-        return getPermissionArg(assignableGroups.get(groupId), permission);
+        return getPermissionArg(assignableGroups.get(groupId), permission, false);
     }
 
     public String getDefaultPermissionArg(String permission)
     { return defaultPermissions.getPermissionArg(permission); }
 
-    private String getPermissionArg(PermissionGroup permGroup, String permission)
+    private String getPermissionArg(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
-            return defaultPermissions.getPermissionArg(permission);
+            return deferToDefault ? defaultPermissions.getPermissionArg(permission) : null;
 
         return permGroup.getPermissionArg(permission);
     }
@@ -345,20 +345,20 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region group queries
     public boolean userHasGroup(ID userId, String groupId)
-    { return hasGroup(permissionsForUsers.get(userId), groupId); }
+    { return hasGroup(permissionsForUsers.get(userId), groupId, true); }
 
     public boolean groupExtendsFromGroup(String groupId, String superGroupId)
     {
         if("*".equals(groupId))
             return isDefaultGroup(superGroupId);
 
-        return hasGroup(assignableGroups.get(groupId), superGroupId);
+        return hasGroup(assignableGroups.get(groupId), superGroupId, false);
     }
 
     public boolean isDefaultGroup(String groupId)
-    { return hasGroup(defaultPermissions, groupId); }
+    { return hasGroup(defaultPermissions, groupId, false); }
 
-    private boolean hasGroup(PermissionGroup permGroup, String groupId)
+    private boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
     {
         if(permGroup == null)
             return false;

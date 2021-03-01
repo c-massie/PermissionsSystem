@@ -1869,6 +1869,31 @@ public class PermissionsRegistryTest
         assertEquals("8", reg.getUserPermissionArg("toodles", "this.is.another"));
         assertEquals("7", reg.getUserPermissionArg("toodles", "third.permission"));
     }
+
+    @Test
+    public void defaultPermissions_group_nonexisting()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("first.second.third: doot");
+        reg.assignDefaultGroup("thedefaultgroup");
+
+        assertFalse(reg.groupHasPermission("testgroup", "first.second.third"));
+        assertNull(reg.getGroupPermissionArg("testgroup", "first.second.third"));
+        assertFalse(reg.groupExtendsFromGroup("testgroup", "thedefaultgroup"));
+    }
+
+    @Test
+    public void defaultPermissions_group_existing()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("first.second.third: doot");
+        reg.assignDefaultGroup("thedefaultgroup");
+        reg.assignGroupPermission("testgroup", "another.permission");
+
+        assertFalse(reg.groupHasPermission("testgroup", "first.second.third"));
+        assertNull(reg.getGroupPermissionArg("testgroup", "first.second.third"));
+        assertFalse(reg.groupExtendsFromGroup("testgroup", "thedefaultgroup"));
+    }
     //endregion
 
     //region single-line permissions.
