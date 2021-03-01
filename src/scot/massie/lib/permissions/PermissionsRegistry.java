@@ -9,6 +9,42 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A registry for assigning permissions to users in a system and checking them.
+ *
+ * Users may be assigned permissions to indicate allowance to do something, or to provide some level of per-user
+ * configurability.
+ *
+ * Permissions are provided as dot-separated alphanumeric strings. (e.g. "first.second.third") A permission is said to
+ * "cover" another permission where the other permission starts with the dot-separated sections ("nodes") of the first,
+ * in order. (e.g. "first.second.third" covers "first.second.third.fourth", but not "first.second.fourth" or
+ * "second.first.third.fourth") A permission does not cover another where the other starts with the first, but doesn't
+ * have the first's last node exactly. (e.g. "first.second.thi" does not cover "first.second.third" or
+ * "first.second.third.fourth")
+ *
+ * The "most relevant permission" a user has to a given permission is the permission the user has that covers the
+ * given permission with the most number of nodes.
+ *
+ * Users may be assigned "Groups", which are referred to by name, as strings. Groups may have their own permissions and
+ * may be assigned other groups. Groups may also have "priorities" (numbers) associated with them. Where a user or group
+ * does not have a given permission, it then checks the groups it is assigned, in order of priority from highest to
+ * lowest, to see if they cover the given permission.
+ *
+ * A default "*" group may be defined with permissions and/or groups, which all users are considered to have assigned to
+ * them. This may be thought of as a lowest priority group associated with all users.
+ *
+ * Permissions may be prefixed with a "-" to indicate that a user does *not* have the given permission, that that
+ * permission is negated. If the most relevant permission to a given permission a user or group has is negating, that
+ * user or group is considered not to have the given permission.
+ *
+ * Permissions may be suffixed with a ".*" to indicate that they cover permissions longer than it, but not the
+ * permission itself. ("first.second.*" covers "first.second.third", but not "first.second")
+ *
+ * Permissions may be followed by (after any suffixes) a colon (":") and any arbitrary string. This string is the
+ * "permission argument". When getting the permission argument of a given permission, it returns the argument of the
+ * most relevant permission. Permission arguments may be multiple lines.
+ * @param <ID> The type of the unique identifier used to represent users.
+ */
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
     //region inner static classes
@@ -176,6 +212,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region initialisation
+
+    /**
+     * Creates a new permissions registry with the ability to save and load to and from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     * @param usersFile The filepath of the users permissions save file.
+     * @param groupsFile The filepath of the groups permissions save file.
+     */
     public PermissionsRegistry(Function<ID, String> idToString,
                                Function<String, ID> idFromString,
                                Path usersFile,
@@ -187,6 +231,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         this.groupsFilePath = groupsFile;
     }
 
+    /**
+     * Creates a new permissions registry without the ability to save and load to and from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     */
     public PermissionsRegistry(Function<ID, String> idToString,
                                Function<String, ID> idFromString)
     {
@@ -198,18 +247,48 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region instance variables
-    final Map<ID, PermissionGroup> permissionsForUsers = new HashMap<>();
-    final Map<String, PermissionGroup> assignableGroups = new HashMap<>();
 
-    PermissionGroup defaultPermissions = new PermissionGroup("*");
+    /**
+     * The permission groups for users, mapped against the IDs of the users they're permissions for.
+     */
+    protected final Map<ID, PermissionGroup> permissionsForUsers = new HashMap<>();
 
-    final Function<ID, String> convertIdToString;
-    final Function<String, ID> parseIdFromString;
+    /**
+     * The permission groups for groups, mapped against the names of the groups.
+     */
+    protected final Map<String, PermissionGroup> assignableGroups = new HashMap<>();
 
-    final Path usersFilePath;
-    final Path groupsFilePath;
+    /**
+     * The default permission group.
+     */
+    protected final PermissionGroup defaultPermissions = new PermissionGroup("*");
 
-    boolean hasBeenDifferentiatedFromFiles = false;
+
+    /**
+     * Converter for converting user IDs into a string form.
+     */
+    protected final Function<ID, String> convertIdToString;
+
+    /**
+     * Converter for converting user IDs from their string form back into user IDs.
+     */
+    protected final Function<String, ID> parseIdFromString;
+
+
+    /**
+     * The filepath of the users permissions save file.
+     */
+    protected final Path usersFilePath;
+
+    /**
+     * The filepath of the groups permissions save file.
+     */
+    protected final Path groupsFilePath;
+
+    /**
+     * Flag indicating whether or not the permissions registry has been modified since it was last saved or loaded.
+     */
+    protected boolean hasBeenDifferentiatedFromFiles = false;
     //endregion
 
     //region methods
@@ -229,7 +308,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     public boolean hasDefaultPermission(String permission)
     { return hasPermission(defaultPermissions, permission); }
-
+    
     private boolean hasPermission(PermissionGroup permGroup, String permission)
     {
         if(permGroup == null)
