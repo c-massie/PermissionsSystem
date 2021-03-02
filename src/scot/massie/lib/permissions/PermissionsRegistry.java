@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,6 +63,45 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
+     * Exception for attempting to create a group with an invalid name.
+     */
+    public static class InvalidGroupNameException extends PermissionsRegistryException
+    {
+        public InvalidGroupNameException(String groupNameString)
+        {
+            super();
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, String message)
+        {
+            super(message);
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, Throwable cause)
+        {
+            super(cause);
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, String message, Throwable cause)
+        {
+            super(message, cause);
+            this.groupNameString = groupNameString;
+        }
+
+        protected final String groupNameString;
+
+        /**
+         * Gets the invalid group name string that caused this exception.
+         * @return The invalid group name string that caused this exception.
+         */
+        public String getGroupNameString()
+        { return groupNameString; }
+    }
+
+    /**
      * Exception for attempting to parse a permission string that is not parsable as a permission.
      */
     public static class InvalidPermissionException extends PermissionsRegistryException
@@ -90,7 +130,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             this.permissionString = permission;
         }
 
-        protected String permissionString;
+        protected final String permissionString;
 
         /**
          * Gets the unparsable permission string that caused this exception.
@@ -111,7 +151,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             this.invalidPriority = invalidPriority;
         }
 
-        final String invalidPriority;
+        protected final String invalidPriority;
 
         /**
          * Gets the string that cannot be read as a number, which caused this exception.
@@ -340,6 +380,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region methods
+    //region static utils
+
+    /**
+     * Asserts that a string is a valid name for a group.
+     * @param groupName The string to assert is a valid group name.
+     * @throws InvalidGroupNameException If the given group name is not a valid name.
+     */
+    private static void assertGroupNameValid(String groupName)
+    {
+        groupName.codePoints().forEach(codePoint ->
+        {
+            if(!Character.isLetterOrDigit(codePoint))
+                throw new InvalidGroupNameException(groupName);
+        });
+    }
+    //endregion
+
     //region accessors
     //region permission queries
     //region has
@@ -639,7 +696,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if("*".equals(groupdId))
             return getDefaultPermissions();
 
-        return getPermissions(assignableGroups.getOrDefault(groupdId, null));
+        return getPermissions(assignableGroups.get(groupdId));
     }
 
     /**
@@ -698,7 +755,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if("*".equals(groupId))
             return getDefaultGroups();
 
-        return getGroupsOf(assignableGroups.getOrDefault(groupId, null));
+        return getGroupsOf(assignableGroups.get(groupId));
     }
 
     /**
@@ -735,9 +792,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * registry, creates it.
      * @param groupId The name of the group to get the permission group object of.
      * @return The permission group object of the group of the given name.
+     * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
     PermissionGroup getGroupPermissionsGroup(String groupId)
     {
+        assertGroupNameValid(groupId);
+
         return assignableGroups.computeIfAbsent(groupId, s ->
         {
             markAsModified();
@@ -751,9 +811,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupId The name of the group to get the permission group object of.
      * @param priority The priority to ensure the specified group has.
      * @return The permission group object of the group of the given name.
+     * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
     PermissionGroup getGroupPermissionsGroup(String groupId, long priority)
     {
+        assertGroupNameValid(groupId);
+
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
             markAsModified();
@@ -774,9 +837,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupId The name of the group to get the permission group object of.
      * @param priority The priority to ensure the specified group has.
      * @return The permission group object of the group of the given name.
+     * @throws InvalidGroupNameException if the group name provided is not a valid group name.
      */
     PermissionGroup getGroupPermissionsGroup(String groupId, double priority)
     {
+        assertGroupNameValid(groupId);
+
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
         {
             markAsModified();
@@ -798,6 +864,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param priorityAsString The priority to ensure the specified group has, as a string.
      * @return The permission group object of the group of the given name.
      * @throws InvalidPriorityException If the provided priority was not parsable as a number.
+     * @throws InvalidGroupNameException If the provided group name was not a valid group name.
      */
     PermissionGroup getGroupPermissionsGroup(String groupId, String priorityAsString) throws InvalidPriorityException
     {
@@ -835,6 +902,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * name.</p>
      * @param saveString The string representation of the group being gotten.
      * @return The permission group object of the group represented by the given save string.
+     * @throws InvalidPriorityException If the provided priority was not parsable as a number.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     PermissionGroup getGroupPermissionsGroupFromSaveString(String saveString)
     {
@@ -894,6 +963,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * the group of the given name.</p>
      * @param saveString The string representation of the user being gotten.
      * @return The permission group object of the user represented by the given save string.
+     * @throws InvalidGroupNameException If any of the groups assigned to the user has an invalid group name.
      */
     PermissionGroup getUserPermissionsGroupFromSaveString(String saveString)
     {
@@ -930,6 +1000,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a permission to a group.
      * @param groupId The name of the group to assign a permission to.
      * @param permission The permission to assign.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignGroupPermission(String groupId, String permission)
     {
@@ -1019,6 +1090,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a group to a user.
      * @param userId The ID of the user to assign a group to.
      * @param groupIdBeingAssigned The name of the group being assigned.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     { getUserPermissionsGroup(userId).addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
@@ -1027,6 +1099,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a group to another group.
      * @param groupId The name of the group to assign another group to.
      * @param groupIdBeingAssigned The name of the group being assigned.
+     * @throws InvalidGroupNameException If either of the group names was not a valid group name.
      */
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
@@ -1039,6 +1112,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     /**
      * Assigns a group to the default permissions.
      * @param groupIdBeingAssigned The name of the group being assigned.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignDefaultGroup(String groupIdBeingAssigned)
     { defaultPermissions.addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
@@ -1266,12 +1340,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region loading
 
     /**
-     * Reads lines from the reader provided, parses them into permission groups or permissions for those groups, and
-     * records the information parsed.
+     * Reads lines from the reader provided, parses them into permission group objects or permissions for those groups,
+     * and records the information parsed.
      * @param reader The reader being read from.
      * @param createEntityFromHeader Function to create a permission group object from any particular permission
      *                               header. (e.g. group name or user ID, possibly with priority)
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
+     * @throws InvalidGroupNameException If any of the groups to be assigned to a permission group objects has an
+     *                                   invalid name.
      */
     private void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
     {
@@ -1309,6 +1385,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered users first.</p>
      * @param reader The reader to read from.
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
+     * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
     protected void loadUsers(PermissionsLineReader reader) throws IOException
     { loadPerms(reader, this::getUserPermissionsGroupFromSaveString); }
@@ -1319,6 +1396,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered groups first.</p>
      * @param reader The reader to read from.
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
+     * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
     protected void loadGroups(PermissionsLineReader reader) throws IOException
     { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString); }
@@ -1330,6 +1408,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>Does not clear registered users first.</p>
      * @throws IOException If an IO exception was thrown while reading the users file.
+     * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
     protected void loadUsers() throws IOException
     {
@@ -1347,6 +1426,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>Does not clear registered groups first.</p>
      * @throws IOException If an IO exception was thrown while reading the groups file.
+     * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
     protected void loadGroups() throws IOException
     {
@@ -1366,6 +1446,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered users first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
+     * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
     protected void loadUsersFromSaveString(String saveString) throws IOException
     {
@@ -1382,6 +1463,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered groups first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
+     * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
     protected void loadGroupsFromSaveString(String saveString) throws IOException
     {
@@ -1394,6 +1476,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>Does nothing if the users and groups files have not been specified or cannot be read from.</p>
      * @throws IOException If an IO exception was thrown while reading from the users or groups files.
+     * @throws InvalidGroupNameException If any of the groups loaded or assigned to any group or user have invalid
+     *                                   names.
      */
     public void load() throws IOException
     {

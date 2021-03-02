@@ -522,7 +522,7 @@ public class PermissionsRegistryTest
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
-        reg.assignGroupPermission("-group1", "europe.france.paris");
+        reg.assignGroupPermission("Group1", "europe.france.paris");
         reg.assignGroupPermission("group1", "europe.spain.madrid");
 
         reg.assignUserPermission("user1", "europe.france.paris.eiffel");
@@ -542,7 +542,7 @@ public class PermissionsRegistryTest
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
-        reg.assignGroupPermission("-group1", "europe.france.paris");
+        reg.assignGroupPermission("Group1", "europe.france.paris");
         reg.assignGroupPermission("group1", "europe.spain.madrid");
 
         reg.assignUserPermission("user1", "-europe.france.paris.eiffel");
