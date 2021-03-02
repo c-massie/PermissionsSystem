@@ -9,25 +9,6 @@ import java.util.*;
  */
 public class PermissionGroup
 {
-    /*
-        To do:
-
-        Add a list of callbacks to call when the priority of this permission group is changed.
-
-        When a permission group adds a referenced permission group, it should add a callback to call its own
-        .sortPermissionGroups() method when the priority is changed.
-
-        When a permission group removes a referenced permission group, it should remove its callback from the now
-        removed referenced permission group.
-
-        These callbacks should not be considered when checked for emptiness.
-
-        When I do this, I should make .sortPermissionGroups() not part of the public API. Registering these callbacks
-        should also not be part of the public API.
-
-        Ensuring that the internal order of referenced permission groups is sorted should be an implementation detail.
-     */
-
     private static final class PriorityChangeCallback
     {
         public PriorityChangeCallback(PermissionGroup source)
@@ -41,9 +22,9 @@ public class PermissionGroup
     //region initialisation
 
     /**
-     * Creates a new permission group.
+     * <p>Creates a new permission group.</p>
      *
-     * When no priority is provided, it is 0 by default.
+     * <p>When no priority is provided, it is 0 by default.</p>
      * @param name The name of the permission group. This may be used as a unique identifier.
      */
     public PermissionGroup(String name)
@@ -66,9 +47,9 @@ public class PermissionGroup
     { this(name, emptyDefaultPermissions, priority); }
 
     /**
-     * Creates a new permission group.
+     * <p>Creates a new permission group.</p>
      *
-     * When no priority is provided, it is 0 by default.
+     * <p>When no priority is provided, it is 0 by default.</p>
      * @param name The name of the permission group. This may be used as a unique identifier.
      * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
      *                           permission.
@@ -112,9 +93,9 @@ public class PermissionGroup
     //region public static final fields
 
     /**
-     * Comparator that sorts permission groups in order of priority, in order from highest to lowest.
+     * <p>Comparator that sorts permission groups in order of priority, in order from highest to lowest.</p>
      *
-     * Where two permission groups share the same priority, order is indeterminate.
+     * <p>Where two permission groups share the same priority, order is indeterminate.</p>
      */
     public static final Comparator<PermissionGroup> priorityComparatorHighestFirst = (a, b) ->
     {
@@ -128,10 +109,10 @@ public class PermissionGroup
     };
 
     /**
-     * A permission group to be provided as a default permission group for other permission groups.
+     * <p>A permission group to be provided as a default permission group for other permission groups.</p>
      *
-     * May not have a priority, contain any permissions, or reference any other permission groups, and never has nor
-     * negates any permissions.
+     * <p>May not have a priority, contain any permissions, or reference any other permission groups, and never has nor
+     * negates any permissions.</p>
      */
     public static final PermissionGroup emptyDefaultPermissions = new PermissionGroup("*", null)
     {
@@ -198,18 +179,18 @@ public class PermissionGroup
     protected String name;
 
     /**
-     * The priority of this permission group, as a double.
+     * <p>The priority of this permission group, as a double.</p>
      *
-     * Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
-     * groups are queried before lower priority groups.
+     * <p>Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
+     * groups are queried before lower priority groups.</p>
      */
     protected double priority;
 
     /**
-     * The priority of this permission group, as a long.
+     * <p>The priority of this permission group, as a long.</p>
      *
-     * Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
-     * groups are queried before lower priority groups.
+     * <p>Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
+     * groups are queried before lower priority groups.</p>
      */
     protected long priorityAsLong;
 
@@ -225,20 +206,20 @@ public class PermissionGroup
     protected final PermissionSet permissionSet = new PermissionSet();
 
     /**
-     * Groups that should be referenced by this group.
+     * <p>Groups that should be referenced by this group.</p>
      *
-     * When this group is queried, permissions queries are checked against the stored permission set. If the permission
-     * set doesn't cover the permission, (allowing *or* negating) the query is run against the referenced groups until
-     * one is found that *does* cover the specified permission. These groups are checked in order from higher priority
-     * to lower priority.
+     * <p>When this group is queried, permissions queries are checked against the stored permission set. If the
+     * permission set doesn't cover the permission, (allowing *or* negating) the query is run against the referenced
+     * groups until one is found that *does* cover the specified permission. These groups are checked in order from
+     * higher priority to lower priority.</p>
      */
     protected final List<PermissionGroup> referencedGroups = new ArrayList<>();
 
     /**
-     * The permission group to check if this one and all others referenced do not cover a given permission.
+     * <p>The permission group to check if this one and all others referenced do not cover a given permission.</p>
      *
-     * Queries defer to this only after this group's permission set and all other referenced groups have been queried,
-     * and only if none of them have permissions covering the specified one.
+     * <p>Queries defer to this only after this group's permission set and all other referenced groups have been
+     * queried, and only if none of them have permissions covering the specified one.</p>
      */
     protected PermissionGroup defaultPermissions;
 
@@ -267,20 +248,20 @@ public class PermissionGroup
     { return name; }
 
     /**
-     * Gets the priority of this permission group, as a double.
+     * <p>Gets the priority of this permission group, as a double.</p>
      *
-     * The priority of a permission group defines its place in the order of permission groups referenced by other
+     * <p>The priority of a permission group defines its place in the order of permission groups referenced by other
      * permission groups, where a check for the allowance of a given permission, should the group not cover it, defers
      * to its referenced permission groups of higher priority before lower priority.
-     * @return This permission group's priority as a double.
+     * @return This permission group's priority as a double.</p>
      */
     public double getPriority()
     { return priority; }
 
     /**
-     * Gets the priority of this permission group, as a long.
+     * <p>Gets the priority of this permission group, as a long.
      *
-     * The priority of a permission group defines its place in the order of permission groups referenced by other
+     * <p>The priority of a permission group defines its place in the order of permission groups referenced by other
      * permission groups, where a check for the allowance of a given permission, should the group not cover it, defers
      * to its referenced permission groups of higher priority before lower priority.
      * @return This permission group's priority as a long. Where this permission group's priority is given as a double,
@@ -298,18 +279,18 @@ public class PermissionGroup
     { return priorityIsLong ? Long.toString(priorityAsLong) : Double.toString(priority); }
 
     /**
-     * Gets the {@link Permission} object contained within permission group's {@link PermissionSet} corresponding to
-     * the given permission.
+     * <p>Gets the {@link Permission} object contained within permission group's {@link PermissionSet} corresponding to
+     * the given permission.</p>
      *
-     * Where this group's permission set contains no such permission, checks for this permission iteratively in each
-     * permission group referenced by this permission, starting with highest priority and going to lowest.
+     * <p>Where this group's permission set contains no such permission, checks for this permission iteratively in each
+     * permission group referenced by this permission, starting with highest priority and going to lowest.</p>
      *
-     * Where this group's permission set and referenced permission groups contain no such permission, checks for this
-     * permission in the default permission group.
+     * <p>Where this group's permission set and referenced permission groups contain no such permission, checks for this
+     * permission in the default permission group.</p>
      *
-     * Where the given permission is not covered by this permission group's permission set, any referenced permission
+     * <p>Where the given permission is not covered by this permission group's permission set, any referenced permission
      * group, or the default permission group, returns null, to indicate that there is no permission relevant to the
-     * given permission.
+     * given permission.</p>
      * @param permissionAsString The permission as a string to get the most relevant permission to.
      * @return The most relevant permission found among this permission group's permission set, the referenced
      *         permission groups, or the default group. If no relevant permission is found, returns null.
@@ -334,22 +315,22 @@ public class PermissionGroup
     }
 
     /**
-     * Gets the permission argument of the permission covering the given permission.
+     * <p>Gets the permission argument of the permission covering the given permission.</p>
      *
-     * The permission argument is given in the save string after the permission path, after all other suffixed, prefixed
-     * with a colon. (':')
+     * <p>The permission argument is given in the save string after the permission path, after all other suffixed,
+     * prefixed with a colon. (':')</p>
      *
-     * Where the given permission is not covered by any permission of this permission group's {@link PermissionSet}, any
-     * referenced permission group, or the given default permission group, or where the permission covering it does not
-     * have a permission argument provided, returns null instead.
+     * <p>Where the given permission is not covered by any permission of this permission group's {@link PermissionSet},
+     * any referenced permission group, or the given default permission group, or where the permission covering it does
+     * not have a permission argument provided, returns null instead.</p>
      *
-     * A permission is considered to cover another for the purposes of this where the other starts with the
+     * <p>A permission is considered to cover another for the purposes of this where the other starts with the
      * dot-separated nodes of the first one, where the first one contains no additional dot-separated nodes not
-     * contained in the other.
+     * contained in the other.</p>
      *
-     * This permission group is considered to cover a given permission for the purposes of this, where this permission
-     * group's permission set, any of the referenced permission groups, or the given default permission group, contains
-     * any permissions covering it, as defined above.
+     * <p>This permission group is considered to cover a given permission for the purposes of this, where this
+     * permission group's permission set, any of the referenced permission groups, or the given default permission
+     * group, contains any permissions covering it, as defined above.</p>
      * @param permissionPath The permission to get the permission argument of.
      * @return The permission argument of the most relevant permission to the given one. Where there is no relevant
      *         permission, or where that permission does not have a string arg, returns null instead.
@@ -372,11 +353,11 @@ public class PermissionGroup
     { return new ArrayList<>(referencedGroups); }
 
     /**
-     * Gets string representations of all permissions covered directly by this permission group.
+     * <p>Gets string representations of all permissions covered directly by this permission group.</p>
      *
-     * This ignored permissions in referenced permission groups or the default permission group.
+     * <p>This ignored permissions in referenced permission groups or the default permission group.</p>
      *
-     * See {@link PermissionSet#getPermissionsAsStrings(boolean)}.
+     * <p>See {@link PermissionSet#getPermissionsAsStrings(boolean)}.</p>
      * @param includeArgs Whether or not to include the permission arguments in the string representations.
      * @return A list of string representations of the directly included permissions in this permission group, ordered
      *         by the alphabetical order of the nodes.
@@ -388,15 +369,15 @@ public class PermissionGroup
     //region state
 
     /**
-     * Checks whether this group has the given permission.
+     * <p>Checks whether this group has the given permission.</p>
      *
-     * A permission is considered to cover another for the purposes of this where the other starts with the
+     * <p>A permission is considered to cover another for the purposes of this where the other starts with the
      * dot-separated nodes of the first one, where the first one contains no additional dot-separated nodes not
-     * contained in the other.
+     * contained in the other.</p>
      *
-     * This permission group is considered to cover a given permission for the purposes of this, where this permission
-     * group's permission set, any of the referenced permission groups, or the given default permission group, contains
-     * any permissions covering it, as defined above.
+     * <p>This permission group is considered to cover a given permission for the purposes of this, where this
+     * permission group's permission set, any of the referenced permission groups, or the given default permission
+     * group, contains any permissions covering it, as defined above.</p>
      * @param permissionPath The permission path to check for the coverage and allowance of.
      * @return True if the given permission path is allowed by this permission group. Otherwise, false.
      */
@@ -411,15 +392,15 @@ public class PermissionGroup
     }
 
     /**
-     * Checks whether this group specifically negates the given permission.
+     * <p>Checks whether this group specifically negates the given permission.</p>
      *
-     * A permission is considered to cover another for the purposes of this where the other starts with the
+     * <p>A permission is considered to cover another for the purposes of this where the other starts with the
      * dot-separated nodes of the first one, where the first one contains no additional dot-separated nodes not
-     * contained in the other.
+     * contained in the other.</p>
      *
-     * This permission group is considered to cover a given permission for the purposes of this, where this permission
-     * group's permission set, any of the referenced permission groups, or the given default permission group, contains
-     * any permissions covering it, as defined above.
+     * <p>This permission group is considered to cover a given permission for the purposes of this, where this
+     * permission group's permission set, any of the referenced permission groups, or the given default permission
+     * group, contains any permissions covering it, as defined above.</p>
      * @param permissionPath The permission path to check for the coverage and negation of.
      * @return True if the given permission path is specifically negated (and not simply not covered by) this permission
      *         group. Otherwise, false.
@@ -435,9 +416,9 @@ public class PermissionGroup
     }
 
     /**
-     * Whether or not this group directly or indirectly references a group with the given name.
+     * <p>Whether or not this group directly or indirectly references a group with the given name.</p>
      *
-     * This takes into account groups references by groups references by this one, and so on.
+     * <p>This takes into account groups references by groups references by this one, and so on.</p>
      * @param groupId The name of the group to check to see if this references.
      * @return True if this group or any group referenced by this group directly or indirectly references a group by the
      *         given name. Otherwise, false.
@@ -455,9 +436,9 @@ public class PermissionGroup
     }
 
     /**
-     * Whether or not this group directly references a group with the given name.
+     * <p>Whether or not this group directly references a group with the given name.</p>
      *
-     * This ignores the groups referenced by the groups referenced by this one.
+     * <p>This ignores the groups referenced by the groups referenced by this one.</p>
      * @param groupId The name of the group to check to see if this references.
      * @return True if this group references a group by the given name. Otherwise, false.
      */
@@ -490,17 +471,17 @@ public class PermissionGroup
     //endregion
 
     /**
-     * Gets a multi-line string representation of this permission group.
+     * <p>Gets a multi-line string representation of this permission group.</p>
      *
-     * The returned string's first line is the permission group's header, made up of the name given to the permission
-     * group, and, if non-default, the priority of this group.
+     * <p>The returned string's first line is the permission group's header, made up of the name given to the permission
+     * group, and, if non-default, the priority of this group.</p>
      *
-     * This is followed by the names of each referenced group's name, one-per-line, indented four spaces.
+     * <p>This is followed by the names of each referenced group's name, one-per-line, indented four spaces.</p>
      *
-     * This is followed by the string representation of the contained {@link PermissionSet}, as given by its own
-     * {@link PermissionSet#toSaveString() toSaveString method}.
+     * <p>This is followed by the string representation of the contained {@link PermissionSet}, as given by its own
+     * {@link PermissionSet#toSaveString() toSaveString method}.</p>
      *
-     * The default permission group is not represented in the save string.
+     * <p>The default permission group is not represented in the save string.</p>
      * @return A multi-lined string representation of this permission group.
      */
     public String toSaveString()
@@ -531,9 +512,9 @@ public class PermissionGroup
     { permissionSet.set(permissionAsString); }
 
     /**
-     * Adds a permission to this permission group, after having deïndented the string by 4 spaces.
+     * <p>Adds a permission to this permission group, after having deïndented the string by 4 spaces.</p>
      *
-     * See {@link PermissionSet#setWhileDeIndenting(String)}.
+     * <p>See {@link PermissionSet#setWhileDeIndenting(String)}.</p>
      * @param permissionAsString The permission to add.
      * @throws ParseException If the provided permission was not parsable as a string.
      */
@@ -541,9 +522,9 @@ public class PermissionGroup
     { permissionSet.setWhileDeIndenting(permissionAsString); }
 
     /**
-     * Removes the given permission from the permission group.
+     * <p>Removes the given permission from the permission group.</p>
      *
-     * See {@link PermissionSet#remove(String)}.
+     * <p>See {@link PermissionSet#remove(String)}.</p>
      * @param permissionPath The permission to remove from this group.
      * @return True if this group was modified as a result of this call. Otherwise, false.
      */
@@ -598,10 +579,6 @@ public class PermissionGroup
 
     /**
      * Changes the priority of this permission group to the given priority.
-     *
-     * Note that you should {@link #sortPermissionGroups() sort} any permission groups referencing this one after
-     * changing the priority, as this may result in this permission group being out of order in another group's
-     * referenced groups.
      * @param newPriority The value to set this permission group's priority to.
      */
     public void reassignPriority(long newPriority)
@@ -616,10 +593,6 @@ public class PermissionGroup
 
     /**
      * Changes the priority of this permission group to the given priority.
-     *
-     * Note that you should {@link #sortPermissionGroups() sort} any permission groups referencing this one after
-     * changing the priority, as this may result in this permission group being out of order in another group's
-     * referenced groups.
      * @param newPriority The value to set this permission group's priority to.
      */
     public void reassignPriority(double newPriority)

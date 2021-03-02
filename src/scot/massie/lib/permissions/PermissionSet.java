@@ -16,9 +16,9 @@ public final class PermissionSet
     //region Inner static classes
 
     /**
-     * A pairing of a permission with the path leading to that permission.
+     * <p>A pairing of a permission with the path leading to that permission.</p>
      *
-     * Exists primarily because Java doesn't support named tuples.
+     * <p>Exists primarily because Java doesn't support named tuples.</p>
      */
     public static final class PermissionWithPath
     {
@@ -61,15 +61,15 @@ public final class PermissionSet
 
     //region Static final values
     /**
-     * Comparator that compares paths.
+     * <p>Comparator that compares paths.</p>
      *
-     * This comparator goes through each node in the paths in order until it finds one that's different in the two
-     * provided paths. It then returns the result of comparing those two nodes.
+     * <p>This comparator goes through each node in the paths in order until it finds one that's different in the two
+     * provided paths. It then returns the result of comparing those two nodes.</p>
      *
-     * Where all nodes are the same, the paths are considered the same.
+     * <p>Where all nodes are the same, the paths are considered the same.</p>
      *
-     * Where one path is shorter than another but paths are both the same up to that point, the shorter path is
-     * considered to come first.
+     * <p>Where one path is shorter than another but paths are both the same up to that point, the shorter path is
+     * considered to come first.</p>
      */
     private static final Comparator<List<String>> PATH_COMPARATOR = (a, b) ->
     {
@@ -95,16 +95,16 @@ public final class PermissionSet
 
     //region fields
     /**
-     * The tree of exact permissions. Permissions in this tree cover only themselves exactly.
+     * <p>The tree of exact permissions. Permissions in this tree cover only themselves exactly.</p>
      *
-     * Permission paths are the paths to the permission in this tree or {@link #descendantPermissionTree}.
+     * <p>Permission paths are the paths to the permission in this tree or {@link #descendantPermissionTree}.</p>
      */
     private final Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
 
     /**
-     * The tree of descendant permissions. Permissions in this tree cover only permissions descending from them.
+     * <p>The tree of descendant permissions. Permissions in this tree cover only permissions descending from them.</p>
      *
-     * Permission paths are the paths to the permission in this tree or {@link #exactPermissionTree}.
+     * <p>Permission paths are the paths to the permission in this tree or {@link #exactPermissionTree}.</p>
      */
     private final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
     //endregion
@@ -379,10 +379,10 @@ public final class PermissionSet
     //region conversion to savestrings
 
     /**
-     * Gets a string representation of the permission at the given path.
+     * <p>Gets a string representation of the permission at the given path.</p>
      *
-     * Whether the permission at the given path needs to be represented by multiple lines, these will be concatenated
-     * into the result.
+     * <p>Whether the permission at the given path needs to be represented by multiple lines, these will be concatenated
+     * into the result.</p>
      * @param permPath The path to get a string representation of the permission at.
      * @return A string representation of the permission at the given path.
      */
@@ -396,11 +396,11 @@ public final class PermissionSet
     }
 
     /**
-     * Gets a string representation or string representations of the permission at a given path.
+     * <p>Gets a string representation or string representations of the permission at a given path.</p>
      *
-     * Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
+     * <p>Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
      * permissions may result in multiple lines needing to be used to represent it, such as where a path is allowed,
-     * but anything underneath it (starting with it, but not equal to it) is negated.
+     * but anything underneath it (starting with it, but not equal to it) is negated.</p>
      * @param permPath The path of the permission to get a string representation or string representations of.
      * @return An array containing one or two strings, which are string representations of the permission at the given
      *         path.
@@ -409,11 +409,11 @@ public final class PermissionSet
     { return getSaveStringLinesForPermission(permPath, true); }
 
     /**
-     * Gets a string representation or string representations of the permission at a given path.
+     * <p>Gets a string representation or string representations of the permission at a given path.</p>
      *
-     * Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
+     * <p>Each member of the returned array is a savestring line. (ignoring the multi-line permission arguments.) Some
      * permissions may result in multiple lines needing to be used to represent it, such as where a path is allowed,
-     * but anything underneath it (starting with it, but not equal to it) is negated.
+     * but anything underneath it (starting with it, but not equal to it) is negated.</p>
      * @param permPath The path of the permission to get a string representation or string representations of.
      * @param includeArg Whether or not to include the permission argument in the string representation(s).
      * @return An array containing one or two strings, which are string representations of the permission at the given
@@ -481,19 +481,21 @@ public final class PermissionSet
     }
 
     /**
-     * Produces a possibly multi-line string representation of this permission set.
+     * <p>Produces a possibly multi-line string representation of this permission set.</p>
      *
-     * Each line is a permission to be parsed, unless it's incremented with four spaces, in which case, it's a
-     * continuation of the permission argument of the previous line's permission.
+     * <p>Each line is a permission to be parsed, unless it's incremented with four spaces, in which case, it's a
+     * continuation of the permission argument of the previous line's permission.</p>
      *
-     * Each added permission is represented by a dot-notated path.
-     *  - This path may be suffixed with ".*" to indicate that it covers all permissions below it unless explicitly set
-     *    themselves.
-     *  - This path may be prefixed with "-" to indicate that it negates any permissions it covers rather than allowing
-     *    them.
-     *  - This path may be followed by a colon ":" - any text after the colon on the line, or indented four spaces on
-     *    following lines until a line note indented by four spaces is found, is considered path of the argument passed
-     *    to the permission, and is not part of the permission syntax itself.
+     * <p>Each added permission is represented by a dot-notated path.</p>
+     * <ul>
+     *     <il><p>This path may be suffixed with ".*" to indicate that it covers all permissions below it unless explicitly set
+     *     themselves.</p></il>
+     *     <il><p>This path may be prefixed with "-" to indicate that it negates any permissions it covers rather than allowing
+     *     them.</p></il>
+     *     <il><p>This path may be followed by a colon ":" - any text after the colon on the line, or indented four spaces on
+     *     following lines until a line note indented by four spaces is found, is considered path of the argument passed
+     *     to the permission, and is not part of the permission syntax itself.</p></il>
+     * </ul>
      *
      * @return A string representation of this permission set.
      */
@@ -519,18 +521,18 @@ public final class PermissionSet
     //region Mutators
 
     /**
-     * Parses the provided permission as a string and adds it to the permission set.
+     * <p>Parses the provided permission as a string and adds it to the permission set.</p>
      *
-     * Permissions must be in the form of: "first.second.third"
+     * <p>Permissions must be in the form of: "first.second.third"</p>
      *
-     * Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with it),
-     * but not to itself.
+     * <p>Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with it),
+     * but not to itself.</p>
      *
-     * Permissions may be prefixed with "-" to indicate that it negates the permission and any it covers, rather than
-     * allowing them.
+     * <p>Permissions may be prefixed with "-" to indicate that it negates the permission and any it covers, rather than
+     * allowing them.</p>
      *
-     * Any text after the first colon ":" is considered to make up the string argument, and not be part of the formatted
-     * permission itself.
+     * <p>Any text after the first colon ":" is considered to make up the string argument, and not be part of the formatted
+     * permission itself.</p>
      * @param permissionAsString The permission formatted as a string.
      * @throws ParseException If the provided string is not parsable as a permission.
      */
@@ -592,11 +594,11 @@ public final class PermissionSet
     }
 
     /**
-     * Parses the provided permission as a string and adds it to the permission set, as described in
-     * {@link #set(String)}, after having deïndented the string.
+     * <p>Parses the provided permission as a string and adds it to the permission set, as described in
+     * {@link #set(String)}, after having deïndented the string.</p>
      *
-     * This is specifically useful where a permission argument spans multiple lines and the format requires that such
-     * arguments be indented 4 spades from the permission itself.
+     * <p>This is specifically useful where a permission argument spans multiple lines and the format requires that such
+     * arguments be indented 4 spades from the permission itself.</p>
      * @param permissionAsString The permission formatted as a string.
      * @throws ParseException If the provided string is not parsable as a permission.
      */

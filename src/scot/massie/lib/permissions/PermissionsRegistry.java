@@ -10,39 +10,39 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A registry for assigning permissions to users in a system and checking them.
+ * <p>A registry for assigning permissions to users in a system and checking them.</p>
  *
- * Users may be assigned permissions to indicate allowance to do something, or to provide some level of per-user
- * configurability.
+ * <p>Users may be assigned permissions to indicate allowance to do something, or to provide some level of per-user
+ * configurability.</p>
  *
- * Permissions are provided as dot-separated alphanumeric strings. (e.g. "first.second.third") A permission is said to
- * "cover" another permission where the other permission starts with the dot-separated sections ("nodes") of the first,
- * in order. (e.g. "first.second.third" covers "first.second.third.fourth", but not "first.second.fourth" or
+ * <p>Permissions are provided as dot-separated alphanumeric strings. (e.g. "first.second.third") A permission is said
+ * to "cover" another permission where the other permission starts with the dot-separated sections ("nodes") of the
+ * first, in order. (e.g. "first.second.third" covers "first.second.third.fourth", but not "first.second.fourth" or
  * "second.first.third.fourth") A permission does not cover another where the other starts with the first, but doesn't
  * have the first's last node exactly. (e.g. "first.second.thi" does not cover "first.second.third" or
- * "first.second.third.fourth")
+ * "first.second.third.fourth")</p>
  *
- * The "most relevant permission" a user has to a given permission is the permission the user has that covers the
- * given permission with the most number of nodes.
+ * <p>The "most relevant permission" a user has to a given permission is the permission the user has that covers the
+ * given permission with the most number of nodes.</p>
  *
- * Users may be assigned "Groups", which are referred to by name, as strings. Groups may have their own permissions and
- * may be assigned other groups. Groups may also have "priorities" (numbers) associated with them. Where a user or group
- * does not have a given permission, it then checks the groups it is assigned, in order of priority from highest to
- * lowest, to see if they cover the given permission.
+ * <p>Users may be assigned "Groups", which are referred to by name, as strings. Groups may have their own permissions
+ * and may be assigned other groups. Groups may also have "priorities" (numbers) associated with them. Where a user or
+ * group does not have a given permission, it then checks the groups it is assigned, in order of priority from highest
+ * to lowest, to see if they cover the given permission.</p>
  *
- * A default "*" group may be defined with permissions and/or groups, which all users are considered to have assigned to
- * them. This may be thought of as a lowest priority group associated with all users.
+ * <p>A default "*" group may be defined with permissions and/or groups, which all users are considered to have assigned
+ * to them. This may be thought of as a lowest priority group associated with all users.</p>
  *
- * Permissions may be prefixed with a "-" to indicate that a user does *not* have the given permission, that that
+ * <p>Permissions may be prefixed with a "-" to indicate that a user does *not* have the given permission, that that
  * permission is negated. If the most relevant permission to a given permission a user or group has is negating, that
- * user or group is considered not to have the given permission.
+ * user or group is considered not to have the given permission.</p>
  *
- * Permissions may be suffixed with a ".*" to indicate that they cover permissions longer than it, but not the
- * permission itself. ("first.second.*" covers "first.second.third", but not "first.second")
+ * <p>Permissions may be suffixed with a ".*" to indicate that they cover permissions longer than it, but not the
+ * permission itself. ("first.second.*" covers "first.second.third", but not "first.second")</p>
  *
- * Permissions may be followed by (after any suffixes) a colon (":") and any arbitrary string. This string is the
+ * <p>Permissions may be followed by (after any suffixes) a colon (":") and any arbitrary string. This string is the
  * "permission argument". When getting the permission argument of a given permission, it returns the argument of the
- * most relevant permission. Permission arguments may be multiple lines.
+ * most relevant permission. Permission arguments may be multiple lines.</p>
  * @param <ID> The type of the unique identifier used to represent users.
  */
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
@@ -125,13 +125,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region text parsing
 
     /**
-     * Reader for parsing text in the registry's save string format.
+     * <p>Reader for parsing text in the registry's save string format.</p>
      *
-     * Primarily exists to merge multiple lines that make up on logical line in a save string into single lines
-     * possibly containing newline characters.
+     * <p>Primarily exists to merge multiple lines that make up on logical line in a save string into single lines
+     * possibly containing newline characters.</p>
      *
-     * A line in this sense may make up multiple actual lines where a permission is spread across multiple lines - e.g.
-     * where a permission has a multi-line permission argument.
+     * <p>A line in this sense may make up multiple actual lines where a permission is spread across multiple lines - e.g.
+     * where a permission has a multi-line permission argument.</p>
      */
     private static class PermissionsLineReader extends Reader
     {
@@ -147,12 +147,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         private boolean lastLineReadDumblyHadStringArg = false;
 
         /**
-         * Reads lines from the contained reader without considering logical lines that may span across multiple actual
-         * lines.
+         * <p>Reads lines from the contained reader without considering logical lines that may span across multiple actual
+         * lines.</p>
          *
-         * Has the side effect of setting {@link #lastLineReadDumblyHadStringArg} when reading a line containing a
+         * <p>Has the side effect of setting {@link #lastLineReadDumblyHadStringArg} when reading a line containing a
          * permission argument, so that it can be determined by {@link #readLine()} whether the multiple actual lines
-         * are part of the same logical line.
+         * are part of the same logical line.</p>
          * @return The next line, or null if there are no more lines.
          * @throws IOException If an IO exception is thrown by the contained reader in the process of reading from it.
          */
@@ -345,12 +345,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region has
 
     /**
-     * Checks whether or not a given user "has" a given permission.
+     * <p>Checks whether or not a given user "has" a given permission.</p>
      *
-     * That is, checks whether the given user's permissions contains (directly, via a group it's assigned, or via the
+     * <p>That is, checks whether the given user's permissions contains (directly, via a group it's assigned, or via the
      * default permissions) at least one permission that covers the given permission, and whether the most relevant
      * permission of the given user to the given permission is an allowing permission. (as opposed to a negating
-     * permission.)
+     * permission.)</p>
      * @param userId The user to check whether or not they have the given permission.
      * @param permission The permission to check for.
      * @return True if the user has the given permission as defined above. Otherwise, false.
@@ -359,12 +359,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasPermission(permissionsForUsers.get(userId), permission, true); }
 
     /**
-     * Checks whether or not a given group "has" a given permission.
+     * <p>Checks whether or not a given group "has" a given permission.</p>
      *
-     * That is, checks whether the given group's permissions contains (directly or via a group it extends from, but not
-     * via the default permissions) at least one permission that covers the given permission, and whether the most
+     * <p>That is, checks whether the given group's permissions contains (directly or via a group it extends from, but
+     * not via the default permissions) at least one permission that covers the given permission, and whether the most
      * relevant permission of the given group to the given permission is an allowing permission. (as opposed to a
-     * negating permission.)
+     * negating permission.)</p>
      * @param groupId The name of the group to check whether or not they have the given permission.
      * @param permission The permission to check for.
      * @return True if the group has the given permission as defined above. Otherwise, false.
@@ -378,11 +378,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Checks whether or not the default permissions "has" a given permission.
+     * <p>Checks whether or not the default permissions "has" a given permission.</p>
      *
-     * That is, checks whether the default permissions contains (directly or via a group assigned as a default group) at
-     * least one permission that covers the given permission, and whether the most relevant permission of the default
-     * permissions is an allowing permission. (as opposed to a negating permission.)
+     * <p>That is, checks whether the default permissions contains (directly or via a group assigned as a default group)
+     * at least one permission that covers the given permission, and whether the most relevant permission of the default
+     * permissions is an allowing permission. (as opposed to a negating permission.)</p>
      * @param permission The permission to check for.
      * @return True if the default permissions has the given permission as defined above. Otherwise, false.
      */
@@ -390,31 +390,33 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasPermission(defaultPermissions, permission, false); }
 
     /**
-     * Checks whether or not a given permission group object "has" a given permission.
+     * <p>Checks whether or not a given permission group object "has" a given permission.</p>
      *
-     * That is, checks whether the given permission group object contains (directly or via another referenced permission
-     * group object) a permission that covers the given permission, and if so, whether the most relevant permission to
-     * the given one is allowing.
+     * <p>That is, checks whether the given permission group object contains (directly or via another referenced
+     * permission group object) a permission that covers the given permission, and if so, whether the most relevant
+     * permission to the given one is allowing.</p>
      * @param permGroup The permission group object to check for the allowance of the given permission.
      * @param permission The permission to check for.
      * @param deferToDefault Whether or not to defer to the default permission group object where the given permision
      *                       group object is null.
-     * @return True if any of the following are true:
+     * @return <p>True if any of the following are true:</p>
      *
      *         <ul>
      *             <il>
-     *                 All of the following are true:
+     *                 <p>All of the following are true:</p>
      *                 <ul>
-     *                     <il>The given permission group object is non-null.</il>
+     *                     <il><p>The given permission group object is non-null.</p></il>
      *                     <il>
-     *                         It, or any other permission group objects it references, (which may or may not include
+     *                         <p>It, or any other permission group objects it references, (which may or may not include
      *                         the default permission group object) contains a permission that covers the given
-     *                         permission.
+     *                         permission.</p>
      *                     </il>
-     *                     <il>The most relevant permission within the given permission group is an allowing one.</il>
+     *                     <il>
+     *                         <p>The most relevant permission within the given permission group is an allowing one.</p>
+     *                     </il>
      *                 </ul>
      *             </il>
-     *             <il>The given permission group object is null and deferToDefault is true.</il>
+     *             <il><p>The given permission group object is null and deferToDefault is true.</p></il>
      *         </ul>
      */
     private boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
@@ -429,11 +431,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region args
 
     /**
-     * Gets the argument associated with the given permission for the given user.
+     * <p>Gets the argument associated with the given permission for the given user.</p>
      *
-     * That is, where a given user has a permission as described in {@link #userHasPermission(Comparable, String)} and
-     * where the most relevant permission a user has to the given permission has a permission argument associated,
-     * returns that argument. Otherwise, returns null.
+     * <p>That is, where a given user has a permission as described in {@link #userHasPermission(Comparable, String)}
+     * and where the most relevant permission a user has to the given permission has a permission argument associated,
+     * returns that argument. Otherwise, returns null.</p>
      * @param userId The user to get the permission argument from.
      * @param permission The permission to get the permission argument of.
      * @return If the user has the given permission and the most relevant permission the user has to the given
@@ -443,11 +445,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissionArg(permissionsForUsers.get(userId), permission, true); }
 
     /**
-     * Gets the argument associated with the given permission for the given group.
+     * <p>Gets the argument associated with the given permission for the given group.</p>
      *
-     * That is, where a given group has a permission as described in {@link #groupHasPermission(String, String)} and
+     * <p>That is, where a given group has a permission as described in {@link #groupHasPermission(String, String)} and
      * where the most relevant permission a group has to the given permission has a permission argument associated,
-     * returns that argument. Otherwise, returns null.
+     * returns that argument. Otherwise, returns null.</p>
      * @param groupId The name of the group to get the permission argument from.
      * @param permission The permission to get the permission argument of.
      * @return If the group has the given permission and the most relevant permission the group has to the given
@@ -462,11 +464,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets the argument associated with the given permission in the default permissions.
+     * <p>Gets the argument associated with the given permission in the default permissions.</p>
      *
-     * That is, where the default permissions has a permission as described in {@link #hasDefaultPermission(String)} and
-     * where the most relevant default permission to the given permissions has a permission argument associated, returns
-     * that argument. Otherwise, returns null.
+     * <p>That is, where the default permissions has a permission as described in {@link #hasDefaultPermission(String)}
+     * and where the most relevant default permission to the given permissions has a permission argument associated,
+     * returns that argument. Otherwise, returns null.</p>
      * @param permission The permission to get the permission argument of.
      * @return If the default permissions has the given permission and the most relevant default permission to the given
      *         permission has a permission argument associated, that permission argument. Otherwise, null.
@@ -475,14 +477,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return defaultPermissions.getPermissionArg(permission); }
 
     /**
-     * Gets the permission argument associated with the given permission for the given permission group object, or null
-     * if there is none.
+     * <p>Gets the permission argument associated with the given permission for the given permission group object, or
+     * null if there is none.</p>
      *
-     * That is, where a user has a given permission as described in
+     * <p>That is, where a user has a given permission as described in
      * {@link #hasPermission(PermissionGroup, String, boolean)} and where the most relevant permission has a permission
      * argument associated, returns that permission argument. Otherwise, returns null. Returns null if the most relevant
      * permission to the given permission a permission group object has has no permission argument associated with it,
-     * even where another permission that covers it does.
+     * even where another permission that covers it does.</p>
      * @param permGroup The permission group object to get a permission argument from.
      * @param permission The permission to get the permission argument of.
      * @param deferToDefault Whether or not to defer to the default permissions where the given permission group object
@@ -549,21 +551,21 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupId The name of group to check for being referenced by the given permission group object.
      * @param deferToDefault Whether or not to check if the default permission group object references the specified
      *                       group where the given permission group object is null.
-     * @return True if any of the following are true:
+     * @return <p>True if any of the following are true:</p>
      *
      *         <ul>
      *             <il>
-     *                 The given permission group object is non-null and it or any of the groups it references directly
+     *                 <p>The given permission group object is non-null and it or any of the groups it references directly
      *                 or indirectly (which may or may not include the default permission group object) references the
-     *                 a permission group by the specified name.
+     *                 a permission group by the specified name.</p>
      *             </il>
      *             <il>
-     *                 The given permission group object is null, deferToDefault is true, and the default permission
-     *                 group object, directly or indirectly, extends from a group with the specified name.
+     *                 <p>The given permission group object is null, deferToDefault is true, and the default permission
+     *                 group object, directly or indirectly, extends from a group with the specified name.</p>
      *             </il>
      *         </ul>
      *
-     *         Otherwise, false.
+     *         <p>Otherwise, false.</p>
      */
     private boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
     {
@@ -608,12 +610,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region permissions
 
     /**
-     * Gets a list of the permissions directly assigned to the specified user.
+     * <p>Gets a list of the permissions directly assigned to the specified user.</p>
      *
-     * The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
-     * assigned to the user.
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the user.</p>
      *
-     * The string representations of the permissions of the user returned do not include permission arguments.
+     * <p>The string representations of the permissions of the user returned do not include permission arguments.</p>
      * @param userId The ID of the user to get the permissions of.
      * @return A sorted list of all permissions of the specified user, not including assigned groups, and not including
      *         permission arguments.
@@ -622,12 +624,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
 
     /**
-     * Gets a list of the permissions directly assigned to the specified group.
+     * <p>Gets a list of the permissions directly assigned to the specified group.</p>
      *
-     * The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
-     * assigned to the user.
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the user.</p>
      *
-     * The string representations of the permissions of the group returned do not include permission arguments.
+     * <p>The string representations of the permissions of the group returned do not include permission arguments.</p>
      * @param groupdId The name of the group to get the permissions of.
      * @return A sorted list of all the permissions of the specified group, not including assigned groups, and not
      *         including permission arguments.
@@ -641,12 +643,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets a list of the default permissions.
+     * <p>Gets a list of the default permissions.</p>
      *
-     * The resulting list is ordered by the nodes of the permissions alphabetically, and does not include default
-     * groups.
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include default
+     * groups.</p>
      *
-     * The string representations of the default permissions returned do not include permission arguments.
+     * <p>The string representations of the default permissions returned do not include permission arguments.</p>
      * @return A sorted list of all the default permissions, not including default groups, and not including permission
      *         arguments.
      */
@@ -654,12 +656,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissions(defaultPermissions); }
 
     /**
-     * Gets a list of string representations of all permissions directly assigned to the given permission group object.
+     * <p>Gets a list of string representations of all permissions directly assigned to the given permission group
+     * object.</p>
      *
-     * The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
-     * assigned to the given permission group object.
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the given permission group object.</p>
      *
-     * The string representations returned do not include permission arguments.
+     * <p>The string representations returned do not include permission arguments.</p>
      * @param permGroup The permission group object to get the permissions of.
      * @return A sorted list of all permissions of the given permissions group object, not including assigned groups,
      *         and not including permission arguments.
@@ -824,12 +827,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets the permission group object of the specified group, making any modifications to it to bring it in line with
-     * the provided save string. If the group does not currently exist in the registry, creates it.
+     * <p>Gets the permission group object of the specified group, making any modifications to it to bring it in line
+     * with the provided save string. If the group does not currently exist in the registry, creates it.</p>
      *
-     * Where the provided save string includes a referenced permission group, which would have been given in the same
+     * <p>Where the provided save string includes a referenced permission group, which would have been given in the same
      * line as the name of the group being gotten, the referenced permission group is assigned to the group of the given
-     * name.
+     * name.</p>
      * @param saveString The string representation of the group being gotten.
      * @return The permission group object of the group represented by the given save string.
      */
@@ -883,12 +886,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets the permission group object of the specified user, making any modifications to it to bring it in line with
-     * the provided save string. If the user is not currently registered, registers them.
+     * <p>Gets the permission group object of the specified user, making any modifications to it to bring it in line with
+     * the provided save string. If the user is not currently registered, registers them.</p>
      *
-     * Where the provided save string includes a referenced permission group, which would have been given in the same
+     * <p>Where the provided save string includes a referenced permission group, which would have been given in the same
      * line as the string representation of the user being gotten's ID, the referenced permission group is assigned to
-     * the group of the given name.
+     * the group of the given name.</p>
      * @param saveString The string representation of the user being gotten.
      * @return The permission group object of the user represented by the given save string.
      */
@@ -1212,9 +1215,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets a reversible string representation of the permissions of all users in this registry.
+     * <p>Gets a reversible string representation of the permissions of all users in this registry.</p>
      *
-     * This provides the same text as would be written to the users file upon calling {@link #saveUsers()}.
+     * <p>This provides the same text as would be written to the users file upon calling {@link #saveUsers()}.</p>
      * @return A reversible string representation of the permissions of all users in this registry.
      */
     public String usersToSaveString()
@@ -1230,9 +1233,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets a reversible string representation of the permissions of all groups in this registry.
+     * <p>Gets a reversible string representation of the permissions of all groups in this registry.</p>
      *
-     * This provides the same text as would be written to the groups file upon calling {@link #saveGroups()}.
+     * <p>This provides the same text as would be written to the groups file upon calling {@link #saveGroups()}.</p>
      * @return A reversible string representation of the permissions of all groups in this registry.
      */
     public String groupsToSaveString()
@@ -1301,9 +1304,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Reads users and their permissions from the provided reader.
+     * <p>Reads users and their permissions from the provided reader.</p>
      *
-     * Does not clear registered users first.
+     * <p>Does not clear registered users first.</p>
      * @param reader The reader to read from.
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
      */
@@ -1311,9 +1314,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { loadPerms(reader, this::getUserPermissionsGroupFromSaveString); }
 
     /**
-     * Reads groups and their permissions from the provided reader.
+     * <p>Reads groups and their permissions from the provided reader.</p>
      *
-     * Does not clear registered groups first.
+     * <p>Does not clear registered groups first.</p>
      * @param reader The reader to read from.
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
      */
@@ -1321,11 +1324,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString); }
 
     /**
-     * Reads the users file, and loads read user records and permissions into the registry.
+     * <p>Reads the users file, and loads read user records and permissions into the registry.</p>
      *
-     * Does nothing if there is no users file specified or if the users file cannot be read.
+     * <p>Does nothing if there is no users file specified or if the users file cannot be read.</p>
      *
-     * Does not clear registered users first.
+     * <p>Does not clear registered users first.</p>
      * @throws IOException If an IO exception was thrown while reading the users file.
      */
     protected void loadUsers() throws IOException
@@ -1338,11 +1341,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Reads the groups file, and loads read group records and permissions into the registry.
+     * <p>Reads the groups file, and loads read group records and permissions into the registry.</p>
      *
-     * Does nothing if there is no groups file specified or if the groups file cannot be read.
+     * <p>Does nothing if there is no groups file specified or if the groups file cannot be read.</p>
      *
-     * Does not clear registered groups first.
+     * <p>Does not clear registered groups first.</p>
      * @throws IOException If an IO exception was thrown while reading the groups file.
      */
     protected void loadGroups() throws IOException
@@ -1355,12 +1358,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Reads the provided save string, and loads read user records and permissions into the registry.
+     * <p>Reads the provided save string, and loads read user records and permissions into the registry.</p>
      *
-     * The string provided should contain information in the same format as would be produced by
-     * {@link #usersToSaveString()}.
+     * <p>The string provided should contain information in the same format as would be produced by
+     * {@link #usersToSaveString()}.</p>
      *
-     * Does not clear registered users first.
+     * <p>Does not clear registered users first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
      */
@@ -1371,12 +1374,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Reads the provided save string, and loads read group records and permissions into the registry.
+     * <p>Reads the provided save string, and loads read group records and permissions into the registry.</p>
      *
-     * The string provided should contain information in the same format as would be produced by
-     * {@link #groupsToSaveString()}.
+     * <p>The string provided should contain information in the same format as would be produced by
+     * {@link #groupsToSaveString()}.</p>
      *
-     * Does not clear registered groups first.
+     * <p>Does not clear registered groups first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
      */
@@ -1387,9 +1390,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Clears the registry and loads information from the users and groups files.
+     * <p>Clears the registry and loads information from the users and groups files.</p>
      *
-     * Does nothing if the users and groups files have not been specified or cannot be read from.
+     * <p>Does nothing if the users and groups files have not been specified or cannot be read from.</p>
      * @throws IOException If an IO exception was thrown while reading from the users or groups files.
      */
     public void load() throws IOException

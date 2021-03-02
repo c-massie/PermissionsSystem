@@ -142,14 +142,16 @@ public final class Permission
 
     //region Overloads
     /**
-     * Gets whether this permission is equal to the provided object.
+     * <p>Gets whether this permission is equal to the provided object.</p>
      *
-     * Permissions are only considered equal to other permissions.
+     * <p>Permissions are only considered equal to other permissions.</p>
      *
-     * Two permissions are considered equal where all are true:
-     *  - They have the same associated string argument, or both lack them.
-     *  - They are both directly declared, or both indirect consequences of the presence of other permissions.
-     *  - They both permit something, or they both negate other permissions.
+     * <p>Two permissions are considered equal where all of the following are true:</p>
+     * <ul>
+     *     <il><p>They have the same associated string argument, or both lack them.</p></il>
+     *     <il><p>They are both directly declared, or both indirect consequences of the presence of other permissions.</p></il>
+     *     <il><p>They both permit something, or they both negate other permissions.</p></il>
+     * </ul>
      * @param o The object to test for equality with this permission.
      * @return True if the two objects are both permissions and are equal as defined above. Otherwise, false.
      */
@@ -163,12 +165,14 @@ public final class Permission
     }
 
     /**
-     * Gets whether this permission is equal to the provided permission.
+     * <p>Gets whether this permission is equal to the provided permission.</p>
      *
-     * Two permissions are considered equal where all are true:
-     *  - They have the same associated string argument, or both lack them.
-     *  - They are both directly declared, or both indirect consequences of the presence of other permissions.
-     *  - They both permit something, or they both negate other permissions.
+     * <p>Two permissions are considered equal where all are true:</p>
+     * <ul>
+     *     <il><p>They have the same associated string argument, or both lack them.</p></il>
+     *     <il><p>They are both directly declared, or both indirect consequences of the presence of other permissions.</p></il>
+     *     <il><p>They both permit something, or they both negate other permissions.</p></il>
+     * </ul>
      * @param o The other permission to test for equality with this permission.
      * @return True if the two objects are equal as defined above. Otherwise, false.
      */
