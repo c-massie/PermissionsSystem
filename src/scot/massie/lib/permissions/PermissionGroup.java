@@ -384,6 +384,7 @@ public class PermissionGroup
     public List<String> getPermissionsAsStrings(boolean includeArgs)
     { return permissionSet.getPermissionsAsStrings(includeArgs); }
     //endregion
+
     //region state
 
     /**
