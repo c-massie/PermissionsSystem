@@ -570,17 +570,17 @@ public final class PermissionSet
 
         if(permWithoutArg.contains("*"))
             throw new ParseException
-                          (
-                                  "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
-                                  permissionAsString.indexOf("*")
-                          );
+            (
+                "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
+                permissionAsString.indexOf("*")
+            );
 
         if(permWithoutArg.contains("-"))
             throw new ParseException
-                          (
-                                  "Permission negations must be at the start of the permission: " + permissionAsString,
-                                  permissionAsString.indexOf("-", isNegation ? 1 : 0)
-                          );
+            (
+                "Permission negations must be at the start of the permission: " + permissionAsString,
+                permissionAsString.indexOf("-", isNegation ? 1 : 0)
+            );
 
         String[] path = splitPath(permWithoutArg);
 

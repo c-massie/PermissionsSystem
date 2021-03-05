@@ -1,12 +1,24 @@
 package scot.massie.lib.permissions;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
-import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -159,6 +171,66 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
          */
         public String getInvalidPriority()
         { return invalidPriority; }
+    }
+
+    /**
+     * Exception for attempting to assign a group to another group when the assignment would cause both groups to
+     * extend from each-other.
+     */
+    public static class CircularGroupHierarchyException extends PermissionsRegistryException
+    {
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName)
+        {
+            super();
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               String msg)
+        {
+            super();
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               Throwable cause)
+        {
+            super();
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               String message,
+                                               Throwable cause)
+        {
+            super();
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        protected final String currentAncestorGroupName;
+        protected final String currentDescendantGroupName;
+
+        /**
+         * Gets the name of the group that, before the exception was thrown, was extended by the other.
+         * @return The name of the ancestor group.
+         */
+        public String getCurrentAncestorGroupName()
+        { return currentAncestorGroupName; }
+
+        /**
+         * Gets the name of the group that, before the exception was thrown, descended from the other.
+         * @return The name of the descendant group.
+         */
+        public String getCurrentDescendantGroupName()
+        { return currentDescendantGroupName; }
     }
     //endregion
 
@@ -394,6 +466,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             if(!Character.isLetterOrDigit(codePoint))
                 throw new InvalidGroupNameException(groupName);
         });
+    }
+
+    private static void assertNotCircular(PermissionGroup subgroup, PermissionGroup supergroup)
+    {
+        if((subgroup == supergroup) || (supergroup.hasGroup(supergroup.getName())))
+            throw new CircularGroupHierarchyException(subgroup.getName(), supergroup.getName());
     }
     //endregion
 
@@ -934,7 +1012,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                :                          getGroupPermissionsGroup(groupName);
 
         if(superGroupName != null)
-            result.addPermissionGroup(getGroupPermissionsGroup(superGroupName));
+        {
+            PermissionGroup superGroup = getGroupPermissionsGroup(superGroupName);
+            assertNotCircular(result, superGroup);
+            result.addPermissionGroup(superGroup);
+        }
 
         return result;
     }
@@ -1093,10 +1175,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { getUserPermissionsGroup(userId).addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
+    { assignGroupTo(getUserPermissionsGroup(userId), groupIdBeingAssigned, false); }
 
     /**
-     * Assigns a group to another group.
+     * Assigns a group to another group. A group can not extend from itself or a group that extends from it.
      * @param groupId The name of the group to assign another group to.
      * @param groupIdBeingAssigned The name of the group being assigned.
      * @throws InvalidGroupNameException If either of the group names was not a valid group name.
@@ -1105,8 +1187,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         if("*".equals(groupId))
             assignDefaultGroup(groupIdBeingAssigned);
-        else
-            getGroupPermissionsGroup(groupId).addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned));
+
+        assignGroupTo(getGroupPermissionsGroup(groupId), groupIdBeingAssigned, true);
     }
 
     /**
@@ -1115,7 +1197,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignDefaultGroup(String groupIdBeingAssigned)
-    { defaultPermissions.addPermissionGroup(getGroupPermissionsGroup(groupIdBeingAssigned)); }
+    {  assignGroupTo(defaultPermissions, groupIdBeingAssigned, true); }
+
+    /**
+     * Assigns a group to a permission group object.
+     * @param permGroup The permission group to be assigned a group.
+     * @param groupIdBeingAssigned The name of the group to assign.
+     * @param checkForCircular Whether or not to check for circular hierarchies.
+     */
+    private void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
+    {
+        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroup(groupIdBeingAssigned);
+
+        if(checkForCircular)
+            assertNotCircular(permGroup, permGroupBeingAssigned);
+
+        permGroup.addPermissionGroup(permGroupBeingAssigned);
+    }
     //endregion
 
     //region revoke
@@ -1349,7 +1447,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups to be assigned to a permission group objects has an
      *                                   invalid name.
      */
-    private void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader) throws IOException
+    private void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader, boolean isForGroups) throws IOException
     {
         PermissionGroup currentPermGroup = null;
         markAsModified();
@@ -1365,7 +1463,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
                 if(line.startsWith("#"))
                 {
-                    currentPermGroup.addPermissionGroup(getGroupPermissionsGroup(line.substring(1).trim()));
+                    PermissionGroup groupToAssign = getGroupPermissionsGroup(line.substring(1).trim());
+
+                    if(isForGroups)
+                        assertNotCircular(currentPermGroup, groupToAssign);
+
+                    currentPermGroup.addPermissionGroup(groupToAssign);
                     continue;
                 }
 
@@ -1388,7 +1491,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
     protected void loadUsers(PermissionsLineReader reader) throws IOException
-    { loadPerms(reader, this::getUserPermissionsGroupFromSaveString); }
+    { loadPerms(reader, this::getUserPermissionsGroupFromSaveString, false); }
 
     /**
      * <p>Reads groups and their permissions from the provided reader.</p>
@@ -1399,7 +1502,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
     protected void loadGroups(PermissionsLineReader reader) throws IOException
-    { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString); }
+    { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString, false); }
 
     /**
      * <p>Reads the users file, and loads read user records and permissions into the registry.</p>

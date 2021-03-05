@@ -500,6 +500,7 @@ public class PermissionGroup
         return result.toString();
     }
     //endregion
+
     //region mutators
     //region permissions
 
@@ -531,6 +532,7 @@ public class PermissionGroup
     public boolean removePermission(String permissionPath)
     { return permissionSet.remove(permissionPath); }
     //endregion
+
     //region permission groups
 
     /**
@@ -575,6 +577,7 @@ public class PermissionGroup
             return false;
     }
     //endregion
+
     //region priority
 
     /**
