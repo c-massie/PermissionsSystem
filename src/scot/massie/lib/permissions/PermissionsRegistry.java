@@ -468,6 +468,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         });
     }
 
+    /**
+     * Assets that assigning a group another group wouldn't result in a circular hierarchy.
+     * @param subgroup The proposed subgroup.
+     * @param supergroup The proposed supergroup.
+     */
     private static void assertNotCircular(PermissionGroup subgroup, PermissionGroup supergroup)
     {
         if((subgroup == supergroup) || (supergroup.hasGroup(supergroup.getName())))
