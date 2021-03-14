@@ -1057,7 +1057,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         int groupPrefixPosition = saveString.lastIndexOf('#');
 
         String groupName = groupPrefixPosition < 0 ? null : saveString.substring(groupPrefixPosition + 1).trim();
-        String userIdString = saveString.substring(0, groupPrefixPosition).trim();
+        String userIdString = groupPrefixPosition < 0
+                                      ? saveString.trim()
+                                      : saveString.substring(0, groupPrefixPosition).trim();
         ID userId = parseIdFromString.apply(userIdString);
 
         PermissionGroup pg = groupName.equals("*") ? defaultPermissions : getUserPermissionsGroup(userId);
