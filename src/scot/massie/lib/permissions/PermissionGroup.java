@@ -346,6 +346,32 @@ public class PermissionGroup
     }
 
     /**
+     * Gets all the relevant status information of the given permission pertaining to this permission group.
+     * @param permissionPath The permission to get the status information of.
+     * @return A PermissionStatus instance, detailing the path queried, whether or not this group had the given
+     *         permission, and the permission arg if applicable.
+     */
+    public PermissionStatus getPermissionStatus(String permissionPath)
+    {
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+        boolean hasPermission;
+        String permArg;
+
+        if(mrp == null)
+        {
+            hasPermission = false;
+            permArg = null;
+        }
+        else
+        {
+            hasPermission = mrp.getPermission().permits();
+            permArg = mrp.getPermission().getArg();
+        }
+
+        return new PermissionStatus(permissionPath, hasPermission, permArg);
+    }
+
+    /**
      * Gets the permission groups referenced by this permission.
      * @return A list of the permission groups referenced by this permission, in order from highest priority to lowest.
      */

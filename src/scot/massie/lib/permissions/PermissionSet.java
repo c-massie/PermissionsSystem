@@ -153,6 +153,7 @@ public final class PermissionSet
     public boolean isEmpty()
     { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
     //endregion
+
     //region getters
 
     /**
@@ -243,6 +244,7 @@ public final class PermissionSet
     public Permission getPermission(String... permissionPath)
     { return getPermission(Arrays.asList(permissionPath)); }
     //endregion
+
     //region test permissions
 
     /**
@@ -376,6 +378,7 @@ public final class PermissionSet
     public boolean negatesPermissionExactly(String... permissionPath)
     { return exactPermissionTree.getAtSafely(permissionPath).matches((has, perm) -> has && perm.negates()); }
     //endregion
+
     //region conversion to savestrings
 
     /**

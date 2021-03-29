@@ -271,7 +271,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         private String readLineDumbly() throws IOException
         {
             StringBuilder sb = new StringBuilder();
-            boolean elligableForStringArg = false;
+            boolean eligibleForStringArg = false;
             boolean foundNonWhitespaceChars = false;
             boolean hasStringArg = false;
 
@@ -297,9 +297,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                     foundNonWhitespaceChars = true;
 
                 if(!foundNonWhitespaceChars)
-                    elligableForStringArg = true;
+                    eligibleForStringArg = true;
 
-                if((elligableForStringArg) && (c == ':'))
+                if((eligibleForStringArg) && (c == ':'))
                     hasStringArg = true;
             }
 
@@ -482,6 +482,60 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region accessors
     //region permission queries
+    //region get status
+
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified user and the given
+     * permission.
+     * @param userId The ID of the user to get the status information of the given permission.
+     * @param permission The permission to get the status of relating to the specified user.
+     * @return A PermissionStatus object containing the permission queried, whether or not the user "has" it, and the
+     *         permission argument if applicable.
+     */
+    public PermissionStatus getUserPermissionStatus(ID userId, String permission)
+    { return getPermissionStatus(permissionsForUsers.get(userId), permission, true); }
+
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified group and the given
+     * permission.
+     * @param groupId The ID of the group to get the status information of the given permission.
+     * @param permission The permission to get the status of relating to the specified group.
+     * @return A PermissionStatus object containing the permission queried, whether or not the group "has" it, and the
+     *         permission argument if applicable.
+     */
+    public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
+    { return getPermissionStatus(assignableGroups.get(groupId), permission, false); }
+
+    /**
+     * Gets all the status information pertaining to the direct relationship between the default permissions and the
+     * given permission.
+     * @param permission The permission to get the status of relating to the default permissions.
+     * @return A permissionStatus object containing the permission queried, whether or not the permission is included
+     *         in the default permissions, and the permission argument if applicable.
+     */
+    public PermissionStatus getDefaultPermissionStatus(String permission)
+    { return getPermissionStatus(defaultPermissions, permission, false); }
+
+    /**
+     * Gets all the status information pertaining to the direct relationship between the given permission group object
+     * and the given permission.
+     * @param permGroup The permission group object to get the status information of the given permission.
+     * @param permission The permission to get the status information of relating to the given permission group object.
+     * @param deferToDefault Whether or not to defer to the default permission group object where the given permission
+     *                       group object is null.
+     * @return A PermissionStatus object containing the permission queried, whether or not the permission group "has"
+     *         it, and the permission argument if applicable.
+     */
+    private PermissionStatus getPermissionStatus(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    {
+        if(permGroup == null)
+            return deferToDefault ? defaultPermissions.getPermissionStatus(permission)
+                                  : new PermissionStatus(permission, false, null);
+
+        return permGroup.getPermissionStatus(permission);
+    }
+    //endregion
+
     //region has
 
     /**
@@ -537,7 +591,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * permission to the given one is allowing.</p>
      * @param permGroup The permission group object to check for the allowance of the given permission.
      * @param permission The permission to check for.
-     * @param deferToDefault Whether or not to defer to the default permission group object where the given permision
+     * @param deferToDefault Whether or not to defer to the default permission group object where the given permission
      *                       group object is null.
      * @return <p>True if any of the following are true:</p>
      *
