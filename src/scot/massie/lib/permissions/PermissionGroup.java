@@ -2,6 +2,7 @@ package scot.massie.lib.permissions;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * A collection of permissions (see {@link PermissionSet}) that may also reference other Permission groups, querying
@@ -148,6 +149,14 @@ public class PermissionGroup
 
         @Override
         public boolean hasPermission(String permissionPath)
+        { return false; }
+
+        @Override
+        public boolean hasPermissionOrAnyUnder(String permissionPath)
+        { return false; }
+
+        @Override
+        public boolean hasPermissionOrAnyUnder(String permissionPath, Predicate<PermissionSet.PermissionWithPath> test)
         { return false; }
 
         @Override
@@ -315,6 +324,42 @@ public class PermissionGroup
     }
 
     /**
+     * <p>Gets the {@link Permission} object contained within permission group's {@link PermissionSet} corresponding to
+     * the given permission.</p>
+     *
+     * <p>Where this group's permission set contains no such permission, checks for this permission iteratively in each
+     * permission group referenced by this permission, starting with highest priority and going to lowest.</p>
+     *
+     * <p>Where this group's permission set and referenced permission groups contain no such permission, checks for this
+     * permission in the default permission group.</p>
+     *
+     * <p>Where the given permission is not covered by this permission group's permission set, any referenced permission
+     * group, or the default permission group, returns null, to indicate that there is no permission relevant to the
+     * given permission.</p>
+     * @param permissionAsString The permission as a list of nodes to get the most relevant permission to.
+     * @return The most relevant permission found among this permission group's permission set, the referenced
+     *         permission groups, or the default group. If no relevant permission is found, returns null.
+     */
+    protected PermissionSet.PermissionWithPath getMostRelevantPermission(List<String> permissionAsString)
+    {
+        PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
+
+        if(mrp != null)
+            return mrp;
+
+        for(PermissionGroup permGroup : referencedGroups)
+        {
+            mrp = permGroup.getMostRelevantPermission(permissionAsString);
+
+            if(mrp != null)
+                return mrp;
+        }
+
+        // Not an infinite recursive loop; eventually stops at a emptyDefaultPermissions where this method returns null.
+        return defaultPermissions.getMostRelevantPermission(permissionAsString);
+    }
+
+    /**
      * <p>Gets the permission argument of the permission covering the given permission.</p>
      *
      * <p>The permission argument is given in the save string after the permission path, after all other suffixed,
@@ -418,6 +463,66 @@ public class PermissionGroup
     }
 
     /**
+     * Checks whether this group has the given permission or any subpermission thereof.
+     * @see #hasPermission(String)
+     * @param permissionPath The permission path to check.
+     * @return True if the given path or any covered permission is allowed by this permission group. Otherwise, false.
+     */
+    public boolean hasPermissionOrAnyUnder(String permissionPath)
+    { return hasPermissionOrAnyUnder(permissionPath, x -> true); }
+
+    /**
+     * Checks whether this group has the given permission or any subpermission thereof, that satisfy the given
+     * condition.
+     * @see #hasPermission(String)
+     * @param permissionPath The permission path to check.
+     * @param check The condition for permissions to satisfy in order to be considered.
+     * @return True if the given path or any covered permission is allowed and satisfies the given condition. Otherwise,
+     *         false.
+     */
+    protected boolean hasPermissionOrAnyUnder(String permissionPath, Predicate<PermissionSet.PermissionWithPath> check)
+    {
+        // Add check for where all permissions under the path are included because it's covered by something that covers it
+        // Add optimisation where everything's negated.
+
+        if(permissionSet.hasPermissionOrAnyUnderWhere(permissionPath, check))
+            return true;
+
+        if(permissionSet.negatesPermission(permissionPath))
+            return false;
+
+        Collection<PermissionGroup> pgroupsAlreadyChecked = new ArrayList<>();
+
+        Predicate<PermissionSet.PermissionWithPath> pgroupsAlreadyCheckedCheck = pwp ->
+        {
+            if(!check.test(pwp))
+                return false;
+
+            if(permissionSet.negatesPermission(pwp.getPath()))
+                return false;
+
+            for(PermissionGroup pgroup : pgroupsAlreadyChecked)
+                if(pgroup.negatesPermission(pwp.getPath()))
+                    return false;
+
+            return true;
+        };
+
+        for(PermissionGroup permGroup : referencedGroups)
+        {
+            if(permGroup.hasPermissionOrAnyUnder(permissionPath, pgroupsAlreadyCheckedCheck))
+                return true;
+
+            pgroupsAlreadyChecked.add(permGroup);
+        }
+
+        if(defaultPermissions.hasPermissionOrAnyUnder(permissionPath, pgroupsAlreadyCheckedCheck))
+            return true;
+
+        return false;
+    }
+
+    /**
      * <p>Checks whether this group specifically negates the given permission.</p>
      *
      * <p>A permission is considered to cover another for the purposes of this where the other starts with the
@@ -432,6 +537,30 @@ public class PermissionGroup
      *         group. Otherwise, false.
      */
     public boolean negatesPermission(String permissionPath)
+    {
+        PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(mrp == null)
+            return false;
+
+        return mrp.getPermission().negates();
+    }
+
+    /**
+     * <p>Checks whether this group specifically negates the given permission.</p>
+     *
+     * <p>A permission is considered to cover another for the purposes of this where the other starts with the
+     * dot-separated nodes of the first one, where the first one contains no additional dot-separated nodes not
+     * contained in the other.</p>
+     *
+     * <p>This permission group is considered to cover a given permission for the purposes of this, where this
+     * permission group's permission set, any of the referenced permission groups, or the given default permission
+     * group, contains any permissions covering it, as defined above.</p>
+     * @param permissionPath The permission path as a list of nodes to check for the coverage and negation of.
+     * @return True if the given permission path is specifically negated (and not simply not covered by) this permission
+     *         group. Otherwise, false.
+     */
+    private boolean negatesPermission(List<String> permissionPath)
     {
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 

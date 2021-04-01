@@ -5,6 +5,7 @@ import scot.massie.lib.collections.tree.Tree;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -275,6 +276,94 @@ public final class PermissionSet
      */
     public boolean hasPermission(String... permissionPath)
     { return hasPermission(Arrays.asList(permissionPath)); }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it.
+     * @param permissionPath The permission path to test.
+     * @return True if this permission set has any permissions starting with the provided path. (by nodes) Otherwise,
+     *         false.
+     */
+    public boolean hasPermissionOrAnyUnder(String permissionPath)
+    { return hasPermissionOrAnyUnder(Arrays.asList(splitPath(permissionPath))); }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @return True if this permission set has any permissions starting with the provided path. (by nodes) Otherwise,
+     *         false.
+     */
+    public boolean hasPermissionOrAnyUnder(List<String> permissionPath)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(mrp != null && mrp.getPermission().permits())
+            return true;
+
+        for(Permission p : exactPermissionTree.getItemsAtAndUnder(permissionPath))
+            if(p.permits())
+                return true;
+
+        for(Permission p : descendantPermissionTree.getItemsAtAndUnder(permissionPath))
+            if(p.permits())
+                return true;
+
+        return false;
+    }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it.
+     * @param permissionPath The permission path to test, as an array of nodes.
+     * @return True if this permission set has any permissions starting with the provided path. (by nodes) Otherwise,
+     *         false.
+     */
+    public boolean hasPermissionOrAnyUnder(String... permissionPath)
+    { return hasPermissionOrAnyUnder(Arrays.asList(permissionPath)); }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it that satisfies a given condition.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @param condition The condition for permissions to satisfy to be considered.
+     * @return True if this permission set has any permissions starting with the provided path (by nodes) that satisfy
+     *         the given condition. Otherwise, false.
+     */
+    public boolean hasPermissionOrAnyUnderWhere(String permissionPath, Predicate<PermissionWithPath> condition)
+    { return hasPermissionOrAnyUnderWhere(Arrays.asList(splitPath(permissionPath)), condition); }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it that satisfies a given condition.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @param condition The condition for permissions to satisfy to be considered.
+     * @return True if this permission set has any permissions starting with the provided path (by nodes) that satisfy
+     *         the given condition. Otherwise, false.
+     */
+    public boolean hasPermissionOrAnyUnderWhere(List<String> permissionPath, Predicate<PermissionWithPath> condition)
+    {
+        PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(mrp != null && mrp.getPermission().permits())
+            if(condition.test(mrp))
+                return true;
+
+        for(Tree.Entry<String, Permission> p : exactPermissionTree.getEntriesAtAndUnder(permissionPath))
+            if(p.getItem().permits() && condition.test(new PermissionWithPath(p.getKey().getNodes(), p.getItem())))
+                return true;
+
+        for(Tree.Entry<String, Permission> p : descendantPermissionTree.getEntriesAtAndUnder(permissionPath))
+            if(p.getItem().permits() && condition.test(new PermissionWithPath(p.getKey().getNodes(), p.getItem())))
+                return true;
+
+        return false;
+    }
+
+    /**
+     * Checks if this permission set has a permission or any subpermissions of it that satisfies a given condition.
+     * @param permissionPath The permission path to test, as a list of nodes.
+     * @param condition The condition for permissions to satisfy to be considered.
+     * @return True if this permission set has any permissions starting with the provided path (by nodes) that satisfy
+     *         the given condition. Otherwise, false.
+     */
+    public boolean hasPermissionOrAnyUnderWhere(String[] permissionPath, Predicate<PermissionWithPath> condition)
+    { return hasPermissionOrAnyUnderWhere(Arrays.asList(permissionPath), condition); }
 
     /**
      * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path

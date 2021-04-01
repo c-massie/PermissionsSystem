@@ -566,7 +566,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public boolean groupHasPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
-            return hasDefaultPermission(permission);
+            return isDefaultPermission(permission);
 
         return hasPermission(assignableGroups.get(groupId), permission, false);
     }
@@ -580,7 +580,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permission The permission to check for.
      * @return True if the default permissions has the given permission as defined above. Otherwise, false.
      */
-    public boolean hasDefaultPermission(String permission)
+    public boolean isDefaultPermission(String permission)
     { return hasPermission(defaultPermissions, permission, false); }
 
     /**
@@ -622,6 +622,57 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
+    //region has any subpermission of
+
+    /**
+     * Checks whether or not a given user "has" a given permission or any subpermission thereof.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The user to check whether or not they have the given permission.
+     * @param permission The permission to check for.
+     * @return True if the user has the given permission or any subpermission thereof as defined by
+     *         {@link #userHasPermission(Comparable, String)}. Otherwise, false.
+     */
+    public boolean userHasAnySubPermissionOf(ID userId, String permission)
+    { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
+
+    /**
+     * Checks whether or not a specified group "has" a given permission or any subpermission thereof.
+     * @see #groupHasPermission(String, String)
+     * @param groupId The id of the group to check whether or not they have the given permission.
+     * @param permission The permission to check for.
+     * @return True if the group has the given permission or any subpermission thereof as defined by
+     *         {@link #groupHasPermission(String, String)}. Otherwise, false.
+     */
+    public boolean groupHasAnySubPermissionOf(String groupId, String permission)
+    { return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false); }
+
+    /**
+     * Checks whether or not the default permissions "has" a given permission or any subpermission thereof.
+     * @see #isDefaultPermission(String)
+     * @param permission The permission to check for.
+     * @return True if the default permissions has the given permission or any subpermission there as defined by
+     *         {@link #isDefaultPermission(String)}.
+     */
+    public boolean isOrAnySubPermissionOfIsDefault(String permission)
+    { return hasAnySubPermissionOf(defaultPermissions, permission, false); }
+
+    /**
+     * Checks whether or not a given PermissionGroup object "has" a given permission or any subpermission thereof.
+     * @see #hasPermission(PermissionGroup, String, boolean)
+     * @param permGroup The permisison group that may have the given permission or any subpermission thereof.
+     * @param permission The permission or check.
+     * @param deferToDefault Whether or not to defer to the default permission group if the given one is null.
+     * @return True if the given permission group has the given permission or any subpermission thereof.
+     */
+    private boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    {
+        if(permGroup == null)
+            return deferToDefault ? defaultPermissions.hasPermissionOrAnyUnder(permission) : false;
+
+        return permGroup.hasPermissionOrAnyUnder(permission);
+    }
+    //endregion
+
     //region args
 
     /**
@@ -660,7 +711,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     /**
      * <p>Gets the argument associated with the given permission in the default permissions.</p>
      *
-     * <p>That is, where the default permissions has a permission as described in {@link #hasDefaultPermission(String)}
+     * <p>That is, where the default permissions has a permission as described in {@link #isDefaultPermission(String)}
      * and where the most relevant default permission to the given permissions has a permission argument associated,
      * returns that argument. Otherwise, returns null.</p>
      * @param permission The permission to get the permission argument of.

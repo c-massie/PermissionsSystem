@@ -302,7 +302,7 @@ public class PermissionsRegistryTest
     }
     //endregion
 
-    //region
+    //region hasGroup
     @Test
     public void hasGroup()
     {
@@ -1927,4 +1927,104 @@ public class PermissionsRegistryTest
 
         assertEquals(saveString, reg.groupsToSaveString());
     }
+
+    //region has any subpermission of
+    @Test
+    public void hasAnySubPermissionOf_none()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_direct()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "my.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_inherited()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "my.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedSame()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.perm");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedUnder()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a");
+        reg.assignUserPermission("user1", "-this.is.a.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedOver()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a");
+        reg.assignUserPermission("user1", "-this.is");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedSameStar()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.perm.*");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedAboveStar()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.*");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+    //endregion
 }
