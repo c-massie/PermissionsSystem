@@ -1,5 +1,9 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
+import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
+import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -533,6 +537,46 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                   : new PermissionStatus(permission, false, null);
 
         return permGroup.getPermissionStatus(permission);
+    }
+    //endregion
+
+    //region assertHas
+
+    /**
+     * Asserts that a given user "has" a given permission.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The user to assert has the given permission.
+     * @param permission The permission to assert that the user has.
+     * @throws UserMissingPermissionException If the user does not have the given permission.
+     */
+    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
+    {
+        if(!userHasPermission(userId, permission))
+            throw new UserMissingPermissionException(userId, permission);
+    }
+
+    /**
+     * Asserts that a given group "has" a given permission.
+     * @see #groupHasPermission(String, String)
+     * @param groupName The name of the group
+     * @param permission The permission to assert that the group has.
+     * @throws GroupMissingPermissionException If the group does not have the given permission.
+     */
+    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
+    {
+        if(!groupHasPermission(groupName, permission))
+            throw new GroupMissingPermissionException(groupName, permission);
+    }
+
+    /**
+     * Asserts that a given permission is part of the default permissions.
+     * @param permission The permission to assert is default.
+     * @throws PermissionNotDefaultException If the default permissions does not include the given permission.
+     */
+    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
+    {
+        if(!isDefaultPermission(permission))
+            throw new PermissionNotDefaultException(permission);
     }
     //endregion
 
