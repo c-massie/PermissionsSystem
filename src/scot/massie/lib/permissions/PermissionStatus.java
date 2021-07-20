@@ -1,5 +1,7 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.permissions.exceptions.MissingPermissionException;
+
 public final class PermissionStatus
 {
     PermissionStatus(String permission, boolean hasPermission, String permissionArg)
@@ -18,6 +20,12 @@ public final class PermissionStatus
 
     public boolean hasPermission()
     { return hasPermission; }
+
+    public void assertHasPermission() throws MissingPermissionException
+    {
+        if(!hasPermission)
+            throw new MissingPermissionException(permission);
+    }
 
     public String getPermissionArg()
     { return permissionArg; }
