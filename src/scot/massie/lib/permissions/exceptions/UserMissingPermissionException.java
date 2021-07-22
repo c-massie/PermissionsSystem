@@ -3,6 +3,7 @@ package scot.massie.lib.permissions.exceptions;
 /**
  * Thrown when asserting that a user has a permission which they do not.
  */
+@SuppressWarnings("rawtypes") // As this is an exception, I can't be more specific about the ID of the user.
 public class UserMissingPermissionException extends MissingPermissionException
 {
     /**

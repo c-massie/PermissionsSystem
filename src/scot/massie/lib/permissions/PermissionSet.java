@@ -547,11 +547,11 @@ public final class PermissionSet
      */
     public List<String> getPermissionsAsStrings(boolean includeArgs)
     {
-        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
-        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(Tree.TreePath::getNodes);
+        Stream<List<String>> descPaths = descendantPermissionTree.getPaths().stream().map(Tree.TreePath::getNodes);
         List<String> result = new ArrayList<>();
 
-        Stream.concat(exactPaths, descendantPaths)
+        Stream.concat(exactPaths, descPaths)
               .distinct()
               .sorted(PATH_COMPARATOR)
               .forEachOrdered(path ->
@@ -594,16 +594,13 @@ public final class PermissionSet
     public String toSaveString()
     {
         StringBuilder sb = new StringBuilder();
-        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(x -> x.getNodes());
-        Stream<List<String>> descendantPaths = descendantPermissionTree.getPaths().stream().map(x -> x.getNodes());
+        Stream<List<String>> exactPaths = exactPermissionTree.getPaths().stream().map(Tree.TreePath::getNodes);
+        Stream<List<String>> descPaths = descendantPermissionTree.getPaths().stream().map(Tree.TreePath::getNodes);
 
-        Stream.concat(exactPaths, descendantPaths)
+        Stream.concat(exactPaths, descPaths)
               .distinct()
               .sorted(PATH_COMPARATOR)
-              .forEachOrdered(path ->
-                              {
-                                  sb.append(getSaveStringForPermission(path)).append("\n");
-                              });
+              .forEachOrdered(path -> sb.append(getSaveStringForPermission(path)).append("\n"));
 
         return sb.length() == 0 ? sb.toString() : sb.substring(0, sb.length() - 1);
     }

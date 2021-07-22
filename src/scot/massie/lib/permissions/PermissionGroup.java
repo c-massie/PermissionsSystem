@@ -516,6 +516,8 @@ public class PermissionGroup
             pgroupsAlreadyChecked.add(permGroup);
         }
 
+        // If statement is a step before returning false, not part of the final statement.
+        //noinspection RedundantIfStatement
         if(defaultPermissions.hasPermissionOrAnyUnder(permissionPath, pgroupsAlreadyCheckedCheck))
             return true;
 
@@ -584,6 +586,8 @@ public class PermissionGroup
             if(pg.name.equals(groupId) || pg.hasGroup(groupId))
                 return true;
 
+        // If statement is a step before returning false, not part of the final statement.
+        //noinspection RedundantIfStatement
         if(defaultPermissions.name.equals(groupId) || defaultPermissions.hasGroup(groupId))
             return true;
 

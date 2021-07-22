@@ -195,7 +195,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                String descendantGroupName,
                                                String msg)
         {
-            super();
+            super(msg);
             this.currentAncestorGroupName = ancestorGroupName;
             this.currentDescendantGroupName = descendantGroupName;
         }
@@ -204,7 +204,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                String descendantGroupName,
                                                Throwable cause)
         {
-            super();
+            super(cause);
             this.currentAncestorGroupName = ancestorGroupName;
             this.currentDescendantGroupName = descendantGroupName;
         }
@@ -214,7 +214,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                String message,
                                                Throwable cause)
         {
-            super();
+            super(message, cause);
             this.currentAncestorGroupName = ancestorGroupName;
             this.currentDescendantGroupName = descendantGroupName;
         }
@@ -356,12 +356,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
             int lineIndentLevel = getIndentLevel(line);
             String nextLine;
+            StringBuilder lineBuilder = new StringBuilder(line);
 
             while(((nextLine = readLineDumbly()) != null) && ((lineIndentLevel + 4) <= getIndentLevel(nextLine)))
-                line += "\n" + nextLine.substring(lineIndentLevel);
+                lineBuilder.append("\n").append(nextLine.substring(lineIndentLevel));
 
             heldOverLine = nextLine;
-            return line;
+            return lineBuilder.toString();
         }
 
         @Override
@@ -660,7 +661,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     private boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
-            return deferToDefault ? defaultPermissions.hasPermission(permission) : false;
+            return deferToDefault && defaultPermissions.hasPermission(permission);
 
         return permGroup.hasPermission(permission);
     }
@@ -711,7 +712,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     private boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
-            return deferToDefault ? defaultPermissions.hasPermissionOrAnyUnder(permission) : false;
+            return deferToDefault && defaultPermissions.hasPermissionOrAnyUnder(permission);
 
         return permGroup.hasPermissionOrAnyUnder(permission);
     }
@@ -859,7 +860,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     private boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
     {
         if(permGroup == null)
-            return false;
+            return deferToDefault && defaultPermissions.hasGroup(groupId);
 
         return permGroup.hasGroup(groupId);
     }
@@ -1209,11 +1210,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         String userIdString = groupPrefixPosition < 0
                                       ? saveString.trim()
                                       : saveString.substring(0, groupPrefixPosition).trim();
+
         ID userId = parseIdFromString.apply(userIdString);
+        PermissionGroup pg = getUserPermissionsGroup(userId);
 
-        PermissionGroup pg = groupName.equals("*") ? defaultPermissions : getUserPermissionsGroup(userId);
-
-        if(!groupName.isEmpty())
+        if(groupName != null && !groupName.isEmpty())
             pg.addPermissionGroup(getGroupPermissionsGroup(groupName));
 
         return pg;
@@ -1465,7 +1466,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                                    .sorted(Comparator.comparing(PermissionGroup::getName))
                                                    .iterator();
 
-        PermissionGroup pgprevious = null, pg = null;
+        PermissionGroup pgprevious;
+        PermissionGroup pg = null;
 
         while(iter.hasNext())
         {
