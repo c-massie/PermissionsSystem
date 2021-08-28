@@ -102,24 +102,24 @@ public final class PermissionSet
      *
      * <p>Permission paths are the paths to the permission in this tree or {@link #descendantPermissionTree}.</p>
      */
-    private final Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
+    final Tree<String, Permission> exactPermissionTree = new RecursiveTree<>();
 
     /**
      * <p>The tree of descendant permissions. Permissions in this tree cover only permissions descending from them.</p>
      *
      * <p>Permission paths are the paths to the permission in this tree or {@link #exactPermissionTree}.</p>
      */
-    private final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
+    final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
     //endregion
 
     //region static string manipulation methods
-    private static String[] splitPath(String permissionPath)
-    { return permissionPath.split("\\."); }
+    static String[] splitPath(String permissionPath)
+    { return permissionPath.split("\\.", -1); }
 
-    private static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
+    static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
     { return perm.negates() ? ("-" + path) : path; }
 
-    private static String applyPermissionToPathString(String path, Permission perm)
+    static String applyPermissionToPathString(String path, Permission perm)
     {
         if(perm.negates())
             path = "-" + path;
@@ -135,7 +135,7 @@ public final class PermissionSet
         return path;
     }
 
-    private static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
+    static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
     { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
     //endregion
 
@@ -166,7 +166,8 @@ public final class PermissionSet
      *          permission. It should just be a simple permission path in the form of "this.is.some.permission".
      * @param permissionPath The permission path to get the permission that applies to it.
      * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
-     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}, or null if no permission
+     *         in this permission set applies to the given permission path.
      */
     public PermissionWithPath getMostRelevantPermission(String permissionPath)
     { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
@@ -176,7 +177,8 @@ public final class PermissionSet
      * at.
      * @param permissionPath The permission path, as a list of nodes, to get the permission that applies to it.
      * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
-     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}, or null if no permission
+     *         in this permission set applies to the given permission path.
      */
     public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
     {
@@ -210,7 +212,8 @@ public final class PermissionSet
      * at.
      * @param permissionPath The permission path, as an array of nodes, to get the permission that applies to it.
      * @return The {@link Permission} that applies to the provided permission path, paired with the path of that
-     *         permission in this permission set, in the form of a {@link PermissionWithPath}.
+     *         permission in this permission set, in the form of a {@link PermissionWithPath}, or null if no permission
+     *         in this permission set applies to the given permission path.
      */
     public PermissionWithPath getMostRelevantPermission(String... permissionPath)
     { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
