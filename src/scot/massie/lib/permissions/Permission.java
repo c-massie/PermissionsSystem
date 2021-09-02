@@ -141,6 +141,26 @@ public final class Permission
     //endregion
 
     //region Overloads
+
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        if(!permits)
+            sb.append("-");
+
+        sb.append("permission");
+
+        if(isIndirect)
+            sb.append("(indirectly)");
+
+        if(hasArg())
+            sb.append(": ").append(argument);
+
+        return sb.toString();
+    }
+
     /**
      * <p>Gets whether this permission is equal to the provided object.</p>
      *

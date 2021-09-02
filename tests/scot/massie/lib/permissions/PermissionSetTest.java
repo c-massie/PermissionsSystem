@@ -2,6 +2,8 @@ package scot.massie.lib.permissions;
 
 import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.Test;
+import scot.massie.lib.collections.trees.Tree;
+import scot.massie.lib.collections.trees.TreeEntry;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -17,6 +19,12 @@ class PermissionSetTest
     /*
 
     Tests assume that set works as expected, except for the tests for set itself
+
+    set(...) tests are written against the implementation of PermissionSet. In particular, with the expectation that
+    .set(...) will place the correct Permission objects at the correct paths in .exactPermissionTree and
+    .descendantPermissionTree.
+
+    Other mutator tests are written assuming the accessors are working as expected.
 
     Where overloads of String, List<String>, and String... exist, only test the List<String> overload. The other two
     overloads point to the List<String> overload, and the String overload should work where splitPath works as expected.
@@ -114,6 +122,8 @@ class PermissionSetTest
             permission
             permission with single-line arg
             permission with multi-line arg
+            permission with multi-line arg, no newline before first line
+            permission with multi-line arg, not indented
             wildcard permission
             negating permission
             permission with wildcard in illegal place
@@ -121,6 +131,7 @@ class PermissionSetTest
         setWhileDeIndenting
             permission without arg
             permission with single-line arg
+            permission with single-line arg on next line
             permission with multi-line arg
         remove
             empty
@@ -563,9 +574,6 @@ class PermissionSetTest
                                                                         "uno.dos.*");
     }
 
-
-
-
     @Test
     void toSaveString_empty()
     { assertThat(new PermissionSet().toSaveString()).isEqualTo(""); }
@@ -607,5 +615,219 @@ class PermissionSetTest
                                                   + "first.second\n"
                                                   + "-one.two\n"
                                                   + "uno.dos.*:\n    doot\n    noot");
+    }
+
+    @Test
+    void set_permission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.PERMITTING;
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+
+        assertThat(actualExactEntry).isNotNull();
+
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY;
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_permissionWithSingleLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot");
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot");
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_permissionWithMultiLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second:\n    doot\n    noot");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot");
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot");
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_permissionWithMultiLineArg_noNewlineBefore() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot\n    noot");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot");
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot");
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_permissionWithMultiLineArg_notIndented() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second:\ndoot\nnoot");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot");
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot");
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_wildcardPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        assertThat(exacts).isEmpty();
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING;
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_negatingPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+
+        Tree<String, Permission> exacts = pset.exactPermissionTree;
+        Permission expectedExact = Permission.NEGATING;
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantPermissionTree;
+        Permission expectedDescendant = Permission.NEGATING_INDIRECTLY;
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void set_illegalWildcard()
+    {
+        PermissionSet pset = new PermissionSet();
+        assertThrows(ParseException.class, () -> pset.set("first.*.second"));
+        assertThrows(ParseException.class, () -> pset.set("*.first.second"));
+        assertThrows(ParseException.class, () -> pset.set("first*.second"));
+        assertThrows(ParseException.class, () -> pset.set("first.second*"));
+    }
+
+    @Test
+    void set_illegalNegation()
+    {
+        PermissionSet pset = new PermissionSet();
+        assertThrows(ParseException.class, () -> pset.set("first-second"));
+        assertThrows(ParseException.class, () -> pset.set("first.-second"));
+        assertThrows(ParseException.class, () -> pset.set("first-.second"));
+        assertThrows(ParseException.class, () -> pset.set("first.second-"));
+        assertThrows(ParseException.class, () -> pset.set("--first-second"));
+    }
+
+    @Test
+    void setWhileDeIndenting_withoutArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.setWhileDeIndenting("first.second");
+        Permission perm = pset.getPermission("first.second");
+
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.hasArg()).isFalse();
+    }
+
+    @Test
+    void setWhileDeIndenting_withSingleLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.setWhileDeIndenting("first.second: doot");
+        Permission perm = pset.getPermission("first.second");
+
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.hasArg()).isTrue();
+        assertThat(perm.getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void setWhileDeIndenting_withSingleLineArgOnNextLine() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.setWhileDeIndenting("first.second:\n    doot");
+        Permission perm = pset.getPermission("first.second");
+
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.hasArg()).isTrue();
+        assertThat(perm.getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void setWhileDeIndenting_withMultiLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.setWhileDeIndenting("first.second:\n    doot\n    hoot\n    noot");
+        Permission perm = pset.getPermission("first.second");
+
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.hasArg()).isTrue();
+        assertThat(perm.getArg()).isEqualTo("doot\nhoot\nnoot");
     }
 }
