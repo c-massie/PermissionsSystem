@@ -137,9 +137,13 @@ class PermissionSetTest
             empty
             no matching permission
             matching permission
-            matching permission, but wrong state of negation
+            matching permission, matching permission is negating
+            matching permission, matching permission has argument
+            matching permission, matching and input permissions are wildcarded
             matching permission, but wrong use of wildcard
             matching permission, also has same permission wildcarded that should not be removed
+            matching permission, input permission was negated which should be ignored
+            matching permission, input permission had argument, which should be ignored
         clear
             simple function, doesn't need to be tested
 
@@ -669,14 +673,14 @@ class PermissionSetTest
         pset.set("first.second:\n    doot\n    noot");
 
         Tree<String, Permission> exacts = pset.exactPermissionTree;
-        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot");
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\n    noot");
         assertThat(exacts).hasSize(1);
         TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
         assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
         assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
 
         Tree<String, Permission> descendants = pset.descendantPermissionTree;
-        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot");
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\n    noot");
         assertThat(descendants).hasSize(1);
         TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
         assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
@@ -690,14 +694,14 @@ class PermissionSetTest
         pset.set("first.second: doot\n    noot");
 
         Tree<String, Permission> exacts = pset.exactPermissionTree;
-        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot");
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\n    noot");
         assertThat(exacts).hasSize(1);
         TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
         assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
         assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
 
         Tree<String, Permission> descendants = pset.descendantPermissionTree;
-        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot");
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\n    noot");
         assertThat(descendants).hasSize(1);
         TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
         assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
@@ -829,5 +833,99 @@ class PermissionSetTest
         assertThat(perm.permits()).isTrue();
         assertThat(perm.hasArg()).isTrue();
         assertThat(perm.getArg()).isEqualTo("doot\nhoot\nnoot");
+    }
+
+    @Test
+    void remove_empty()
+    {
+        PermissionSet pset = new PermissionSet();
+        assertThat(pset.remove("first.second")).isFalse();
+    }
+
+    @Test
+    void remove_noMatchingPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("beep.boop");
+        assertThat(pset.remove("first.second")).isFalse();
+        assertThat(pset.getPermission("first.second")).isNull();
+        assertThat(pset.getPermission("beep.boop")).isEqualTo(Permission.PERMITTING);
+    }
+
+    @Test
+    void remove_matchingPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
+    }
+
+    @Test
+    void remove_matchingPermission_matchingIsNegating() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
+    }
+
+    @Test
+    void remove_matchingPermission_matchingHasArgument() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
+    }
+
+    @Test
+    void remove_hasWildcardAndIsWildcarded() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*");
+        assertThat(pset.remove("first.second.*")).isTrue();
+        assertThat(pset.getPermission("first.second.third")).isNull();
+    }
+
+    @Test
+    void remove_wrongWildcard() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        pset.set("beep.boop.*");
+        assertThat(pset.remove("first.second.*")).isFalse();
+        assertThat(pset.remove("beep.boop")).isFalse();
+        assertThat(pset.getPermission("first.second")).isEqualTo(Permission.PERMITTING);
+        assertThat(pset.getPermission("beep.boop.*")).isEqualTo(Permission.PERMITTING);
+    }
+
+    @Test
+    void remove_hasWildcardedAndNotWildcarded() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        pset.set("first.second.*: noot");
+        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
+        assertThat(pset.getPermission("first.second.third")).isEqualTo(Permission.PERMITTING.withArg("noot"));
+    }
+
+    @Test
+    void remove_inputPermIsNegated_doesntMatter() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        assertThat(pset.remove("-first.second")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
+    }
+
+    @Test
+    void remove_inputPermHasArgument_doesntMatter() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        assertThat(pset.remove("first.second: doot")).isTrue();
+        assertThat(pset.getPermission("first.second")).isNull();
     }
 }
