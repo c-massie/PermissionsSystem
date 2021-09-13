@@ -3,6 +3,10 @@ package scot.massie.lib.permissions;
 import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class PermissionGroupTest
 {
     /*
@@ -18,6 +22,7 @@ public class PermissionGroupTest
             permission that group doesn't have, that fallback group does
             permission that group doesn't have, that default permissions group does
             permission that group doesn't have that fallback group and default group does
+            permission that group doesn't have
         getPermissionGroups
             empty
             with fallback groups specified
@@ -45,4 +50,141 @@ public class PermissionGroupTest
             to different (ensure group has new priority)
             to different (ensure group is in correct place in order of group that references this one and others)
      */
+
+    PermissionGroup getGroupWithPerms(String[] perms)
+    {
+        return new PermissionGroup("testpermgroup")
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsAndFallback(String[] perms, PermissionGroup fallback)
+    {
+        return new PermissionGroup("testpermgroup")
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+
+            referencedGroups.add(fallback);
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsAndDefault(String[] perms, PermissionGroup def)
+    {
+        return new PermissionGroup("testpermgroup", def)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsFallbackAndDefault(String[] perms, PermissionGroup fallback, PermissionGroup def)
+    {
+        return new PermissionGroup("testpermgroup", def)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+
+            referencedGroups.add(fallback);
+        }};
+    }
+
+    @Test
+    void getMostRelevantPermission_has()
+    {
+        PermissionGroup pg = getGroupWithPerms(new String[] {"first.second.third: doot"});
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_hasAndFallbackHas()
+    {
+        PermissionGroup fbpg = getGroupWithPerms(new String[] {"first.second.third: noot"});
+        PermissionGroup pg = getGroupWithPermsAndFallback(new String[] {"first.second.third: doot"}, fbpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_hasAndDefaultHas()
+    {
+        PermissionGroup dpg = getGroupWithPerms(new String[] {"first.second.third: hoot"});
+        PermissionGroup pg = getGroupWithPermsAndDefault(new String[] {"first.second.third: doot"}, dpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_fallbackHas()
+    {
+        PermissionGroup fbpg = getGroupWithPerms(new String[] {"first.second.third: noot"});
+        PermissionGroup pg = getGroupWithPermsAndFallback(new String[] {}, fbpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_defaultHas()
+    {
+        PermissionGroup dpg = getGroupWithPerms(new String[] {"first.second.third: hoot"});
+        PermissionGroup pg = getGroupWithPermsAndDefault(new String[] {}, dpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("hoot");
+    }
+
+    @Test
+    void getMostRelevantPermission_fallbackAndDefaultHas()
+    {
+        PermissionGroup dpg = getGroupWithPerms(new String[] {"first.second.third: hoot"});
+        PermissionGroup fbpg = getGroupWithPerms(new String[] {"first.second.third: noot"});
+        PermissionGroup pg = getGroupWithPermsFallbackAndDefault(new String[] {}, fbpg, dpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_doesntHave()
+    {
+        PermissionGroup dpg = getGroupWithPerms(new String[] {});
+        PermissionGroup fbpg = getGroupWithPerms(new String[] {});
+        PermissionGroup pg = getGroupWithPermsFallbackAndDefault(new String[] {}, fbpg, dpg);
+        PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
+
+        assertThat(pwp).isNull();
+    }
 }
