@@ -185,7 +185,7 @@ public class PermissionGroup
     /**
      * The name, possibly used as a unique identifier, of the permission group.
      */
-    protected String name;
+    String name;
 
     /**
      * <p>The priority of this permission group, as a double.</p>
@@ -193,7 +193,7 @@ public class PermissionGroup
      * <p>Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
      * groups are queried before lower priority groups.</p>
      */
-    protected double priority;
+    double priority;
 
     /**
      * <p>The priority of this permission group, as a long.</p>
@@ -201,18 +201,18 @@ public class PermissionGroup
      * <p>Priority determines the ordering of this group in the groups referenced by other groups, where higher priority
      * groups are queried before lower priority groups.</p>
      */
-    protected long priorityAsLong;
+    long priorityAsLong;
 
     /**
      * Whether or not this permission group's priority was provided as, and should be read as, a long. If false, it
      * should be read as a double instead.
      */
-    protected boolean priorityIsLong;
+    boolean priorityIsLong;
 
     /**
      * The store of permissions for this group. Queries of the permission group's permission are directed to this.
      */
-    protected final PermissionSet permissionSet = new PermissionSet();
+    final PermissionSet permissionSet = new PermissionSet();
 
     /**
      * <p>Groups that should be referenced by this group.</p>
@@ -222,7 +222,7 @@ public class PermissionGroup
      * groups until one is found that *does* cover the specified permission. These groups are checked in order from
      * higher priority to lower priority.</p>
      */
-    protected final List<PermissionGroup> referencedGroups = new ArrayList<>();
+    final List<PermissionGroup> referencedGroups = new ArrayList<>();
 
     /**
      * <p>The permission group to check if this one and all others referenced do not cover a given permission.</p>
@@ -230,7 +230,7 @@ public class PermissionGroup
      * <p>Queries defer to this only after this group's permission set and all other referenced groups have been
      * queried, and only if none of them have permissions covering the specified one.</p>
      */
-    protected PermissionGroup defaultPermissions;
+    PermissionGroup defaultPermissions;
 
     /**
      * Callback that alerts this permission group when the priority of a permission group this group references changes

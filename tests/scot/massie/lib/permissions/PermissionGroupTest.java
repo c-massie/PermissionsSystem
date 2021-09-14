@@ -23,10 +23,6 @@ public class PermissionGroupTest
             permission that group doesn't have, that default permissions group does
             permission that group doesn't have that fallback group and default group does
             permission that group doesn't have
-        getPermissionGroups
-            empty
-            with fallback groups specified
-            empty but with default group specified
         toSaveString
             empty
             single permission
@@ -52,8 +48,11 @@ public class PermissionGroupTest
      */
 
     PermissionGroup getGroupWithPerms(String[] perms)
+    { return getGroupWithPerms("testpermgroup", perms); }
+
+    PermissionGroup getGroupWithPerms(String groupName, String[] perms)
     {
-        return new PermissionGroup("testpermgroup")
+        return new PermissionGroup(groupName)
         {{
             for(String s : perms)
             {
@@ -66,8 +65,11 @@ public class PermissionGroupTest
     }
 
     PermissionGroup getGroupWithPermsAndFallback(String[] perms, PermissionGroup fallback)
+    { return getGroupWithPermsAndFallback("testpermgroup", perms, fallback); }
+
+    PermissionGroup getGroupWithPermsAndFallback(String groupName, String[] perms, PermissionGroup fallback)
     {
-        return new PermissionGroup("testpermgroup")
+        return new PermissionGroup(groupName)
         {{
             for(String s : perms)
             {
@@ -82,8 +84,11 @@ public class PermissionGroupTest
     }
 
     PermissionGroup getGroupWithPermsAndDefault(String[] perms, PermissionGroup def)
+    { return getGroupWithPermsAndDefault("testpermgroup", perms, def); }
+
+    PermissionGroup getGroupWithPermsAndDefault(String groupName, String[] perms, PermissionGroup def)
     {
-        return new PermissionGroup("testpermgroup", def)
+        return new PermissionGroup(groupName, def)
         {{
             for(String s : perms)
             {
@@ -96,8 +101,14 @@ public class PermissionGroupTest
     }
 
     PermissionGroup getGroupWithPermsFallbackAndDefault(String[] perms, PermissionGroup fallback, PermissionGroup def)
+    { return getGroupWithPermsFallbackAndDefault("testpermgroup", perms, fallback, def); }
+
+    PermissionGroup getGroupWithPermsFallbackAndDefault(String groupName,
+                                                        String[] perms,
+                                                        PermissionGroup fallback,
+                                                        PermissionGroup def)
     {
-        return new PermissionGroup("testpermgroup", def)
+        return new PermissionGroup(groupName, def)
         {{
             for(String s : perms)
             {
