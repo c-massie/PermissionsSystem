@@ -4,6 +4,7 @@ import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +31,10 @@ public class PermissionGroupTest
             single group
             multiple groups
             single group and permission
+            empty with priority
+            permissions and priority
+            single group and priority
+            multiple groups and priority
     mutators
         addPermissionGroup
             when empty
@@ -64,6 +69,20 @@ public class PermissionGroupTest
         }};
     }
 
+    PermissionGroup getGroupWithPerms(String groupName, long priority, String[] perms)
+    {
+        return new PermissionGroup(groupName, priority)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+        }};
+    }
+
     PermissionGroup getGroupWithPermsAndFallback(String[] perms, PermissionGroup fallback)
     { return getGroupWithPermsAndFallback("testpermgroup", perms, fallback); }
 
@@ -80,6 +99,54 @@ public class PermissionGroupTest
             }
 
             referencedGroups.add(fallback);
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsAndFallback(String groupName, long priority, String[] perms, PermissionGroup fallback)
+    {
+        return new PermissionGroup(groupName, priority)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+
+            referencedGroups.add(fallback);
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsAndFallback(String groupName, String[] perms, PermissionGroup[] fallbacks)
+    {
+        return new PermissionGroup(groupName)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+
+            Collections.addAll(referencedGroups, fallbacks);
+        }};
+    }
+
+    PermissionGroup getGroupWithPermsAndFallback(String groupName, long priority, String[] perms, PermissionGroup[] fallbacks)
+    {
+        return new PermissionGroup(groupName, priority)
+        {{
+            for(String s : perms)
+            {
+                try
+                { permissionSet.set(s); }
+                catch(ParseException e)
+                { throw new RuntimeException(e); }
+            }
+
+            Collections.addAll(referencedGroups, fallbacks);
         }};
     }
 
@@ -197,5 +264,113 @@ public class PermissionGroupTest
         PermissionSet.PermissionWithPath pwp = pg.getMostRelevantPermission("first.second.third");
 
         assertThat(pwp).isNull();
+    }
+
+    @Test
+    void getSaveString_empty()
+    {
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup");
+    }
+
+    @Test
+    void getSaveString_singlePermission()
+    {
+        PermissionGroup pg = getGroupWithPerms("testgroup", new String[]{ "first.second.third" });
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup\n    first.second.third");
+    }
+
+    @Test
+    void getSaveString_multiplePermissions()
+    {
+        PermissionGroup pg = getGroupWithPerms("testgroup", new String[]
+        {
+            "first.second.third",
+            "uno.dos.tres",
+            "eins.zwei.drei"
+        });
+
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres\n");
+    }
+
+    @Test
+    void getSaveString_singleReferencedGroup()
+    {
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", new String[0], new PermissionGroup("fallback"));
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup #fallback");
+    }
+
+    @Test
+    void getSaveString_multipleReferencedGroups()
+    {
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", new String[0], new PermissionGroup[]
+        {
+            new PermissionGroup("fallback1"),
+            new PermissionGroup("fallback3"),
+            new PermissionGroup("fallback2"),
+        });
+
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup\n    #fallback1\n    #fallback2\n    #fallback3");
+    }
+
+    @Test
+    void getSaveString_singleReferencedGroupAndPermission()
+    {
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
+                                                          new String[]{ "first.second.third" },
+                                                          new PermissionGroup[]
+        { new PermissionGroup("fallback1") });
+
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup\n    #fallback\n    first.second.third");
+    }
+
+    @Test
+    void getSaveString_emptyWithPriority()
+    {
+        PermissionGroup pg = new PermissionGroup("testgroup", 14);
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup: 14");
+    }
+
+    @Test
+    void getSaveString_multiplePermissionsAndPriority()
+    {
+        PermissionGroup pg = getGroupWithPerms("testgroup", 14, new String[]
+        {
+            "first.second.third",
+            "uno.dos.tres",
+            "eins.zwei.drei"
+        });
+
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup: 14\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres\n");
+    }
+
+    @Test
+    void getSaveString_singleReferencedGroupAndPriority()
+    {
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", 14, new String[0], new PermissionGroup("fallback"));
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup: 14 #fallback");
+    }
+
+    @Test
+    void getSaveString_multipleReferencedGroupsAndPriority()
+    {
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", 14, new String[0], new PermissionGroup[]
+        {
+            new PermissionGroup("fallback1"),
+            new PermissionGroup("fallback3"),
+            new PermissionGroup("fallback2"),
+        });
+
+        String ss = pg.toSaveString();
+        assertThat(ss).isEqualTo("testgroup: 14\n    #fallback1\n    #fallback2\n    #fallback3");
     }
 }
