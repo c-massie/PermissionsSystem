@@ -373,4 +373,30 @@ public class PermissionGroupTest
         String ss = pg.toSaveString();
         assertThat(ss).isEqualTo("testgroup: 14\n    #fallback1\n    #fallback2\n    #fallback3");
     }
+
+    @Test
+    void addPermissionGroup_empty()
+    {
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        PermissionGroup fbpg = new PermissionGroup("fallback");
+        pg.addPermissionGroup(fbpg);
+        assertThat(pg.referencedGroups).containsExactly(fbpg);
+    }
+
+    @Test
+    void addPermissionGroup_fallbackInMiddleOfOrder()
+    {
+        new PermissionGroup("testgroup");
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
+        PermissionGroup fbpg4 = new PermissionGroup("fallback4", 13);
+        PermissionGroup fbpg5 = new PermissionGroup("fallback5", 17);
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
+                                                          new String[] {},
+                                                          new PermissionGroup[] {fbpg1, fbpg2, fbpg4, fbpg5});
+
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 5);
+        pg.addPermissionGroup(fbpg3);
+        assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg2, fbpg3, fbpg4, fbpg5);
+    }
 }
