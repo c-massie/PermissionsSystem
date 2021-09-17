@@ -39,7 +39,7 @@ public class PermissionGroupTest
         addPermissionGroup
             when empty
             when priority in middle of permission group priorities (ensure order)
-        removePermissionGroup
+        removePermissionGroup (tests assume addPermissionGroup is working as intended)
             empty
             permission group not present
             permission group present (ensure callback is removed)
@@ -65,6 +65,8 @@ public class PermissionGroupTest
                 { permissionSet.set(s); }
                 catch(ParseException e)
                 { throw new RuntimeException(e); }
+
+
             }
         }};
     }
@@ -386,7 +388,6 @@ public class PermissionGroupTest
     @Test
     void addPermissionGroup_fallbackInMiddleOfOrder()
     {
-        new PermissionGroup("testgroup");
         PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
         PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
         PermissionGroup fbpg4 = new PermissionGroup("fallback4", 13);
@@ -398,5 +399,41 @@ public class PermissionGroupTest
         PermissionGroup fbpg3 = new PermissionGroup("fallback3", 5);
         pg.addPermissionGroup(fbpg3);
         assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg2, fbpg3, fbpg4, fbpg5);
+    }
+
+    @Test
+    void removePermissionGroup_empty()
+    {
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        PermissionGroup nppg = new PermissionGroup("notpresent");
+        assertThat(nppg.removePermissionGroup(nppg)).isFalse();
+    }
+
+    @Test
+    void removePermissionGroup_notPresent()
+    {
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1");
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2");
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3");
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", new String[0], new PermissionGroup[] {fbpg1, fbpg2, fbpg3});
+        PermissionGroup nppg = new PermissionGroup("notpresent");
+        assertThat(pg.removePermissionGroup(nppg)).isFalse();
+        assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg2, fbpg3);
+    }
+
+    @Test
+    void removePermissionGroup_present()
+    {
+        // assumes .addPermissionGroup works as expected
+
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1");
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2");
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3");
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.addPermissionGroup(fbpg1);
+        pg.addPermissionGroup(fbpg2);
+        pg.addPermissionGroup(fbpg3);
+        assertThat(pg.removePermissionGroup(fbpg2)).isTrue();
+        assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg3);
     }
 }
