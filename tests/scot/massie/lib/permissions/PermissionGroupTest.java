@@ -42,10 +42,11 @@ public class PermissionGroupTest
         removePermissionGroup (tests assume addPermissionGroup is working as intended)
             empty
             permission group not present
-            permission group present (ensure callback is removed)
+            permission group present
         clear
             empty
-            permission groups present (ensure callbacks removed)
+            has permissions
+            has permission groups
         reassignPriority
             to same
             to different (ensure group has new priority)
@@ -415,7 +416,9 @@ public class PermissionGroupTest
         PermissionGroup fbpg1 = new PermissionGroup("fallback1");
         PermissionGroup fbpg2 = new PermissionGroup("fallback2");
         PermissionGroup fbpg3 = new PermissionGroup("fallback3");
-        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", new String[0], new PermissionGroup[] {fbpg1, fbpg2, fbpg3});
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
+                                                          new String[0],
+                                                          new PermissionGroup[] {fbpg1, fbpg2, fbpg3});
         PermissionGroup nppg = new PermissionGroup("notpresent");
         assertThat(pg.removePermissionGroup(nppg)).isFalse();
         assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg2, fbpg3);
@@ -435,5 +438,98 @@ public class PermissionGroupTest
         pg.addPermissionGroup(fbpg3);
         assertThat(pg.removePermissionGroup(fbpg2)).isTrue();
         assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg3);
+    }
+
+    @Test
+    void clear_empty()
+    {
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.clear();
+        assertThat(pg.referencedGroups).isEmpty();
+        assertThat(pg.permissionSet.getPermissionsAsStrings(false)).isEmpty();
+    }
+
+    @Test
+    void clear_hasPermissions()
+    {
+        PermissionGroup pg = getGroupWithPerms("testgroup", new String[]{ "first.second.third",
+                                                                          "uno.dos.tres",
+                                                                          "eins.zwei.drei" });
+
+        pg.clear();
+        assertThat(pg.referencedGroups).isEmpty();
+        assertThat(pg.permissionSet.getPermissionsAsStrings(false)).isEmpty();
+    }
+
+    @Test
+    void clear_hasPermissionGroups()
+    {
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1");
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2");
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3");
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
+                                                          new String[0],
+                                                          new PermissionGroup[] {fbpg1, fbpg2, fbpg3});
+
+        pg.clear();
+        assertThat(pg.referencedGroups).isEmpty();
+        assertThat(pg.permissionSet.getPermissionsAsStrings(false)).isEmpty();
+    }
+
+    @Test
+    void reassignPriority_toSame()
+    {
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 11);
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.addPermissionGroup(fbpg1);
+        pg.addPermissionGroup(fbpg2);
+        pg.addPermissionGroup(fbpg3);
+
+        fbpg2.reassignPriority(7);
+
+        assertThat(fbpg2.getPriority()).isEqualTo(7.0);
+        assertThat(fbpg2.getPriorityAsLong()).isEqualTo(7);
+        assertThat(fbpg2.getPriorityAsString()).isEqualTo("7");
+    }
+
+    @Test
+    void reassignPriority_toDifferent()
+    {
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 11);
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.addPermissionGroup(fbpg1);
+        pg.addPermissionGroup(fbpg2);
+        pg.addPermissionGroup(fbpg3);
+
+        fbpg2.reassignPriority(8);
+
+        assertThat(fbpg2.getPriority()).isEqualTo(8.0);
+        assertThat(fbpg2.getPriorityAsLong()).isEqualTo(8);
+        assertThat(fbpg2.getPriorityAsString()).isEqualTo("8");
+    }
+
+    @Test
+    void reassignPriority_toDifferentAffectingOrder()
+    {
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 11);
+        PermissionGroup fbpg4 = new PermissionGroup("fallback3", 19);
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.addPermissionGroup(fbpg1);
+        pg.addPermissionGroup(fbpg2);
+        pg.addPermissionGroup(fbpg3);
+        pg.addPermissionGroup(fbpg4);
+
+        fbpg2.reassignPriority(13);
+
+        assertThat(fbpg2.getPriority()).isEqualTo(13.0);
+        assertThat(fbpg2.getPriorityAsLong()).isEqualTo(13);
+        assertThat(fbpg2.getPriorityAsString()).isEqualTo("13");
+        assertThat(pg.referencedGroups).containsExactly(fbpg4, fbpg2, fbpg3, fbpg1);
     }
 }
