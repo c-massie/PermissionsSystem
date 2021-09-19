@@ -296,7 +296,7 @@ public class PermissionGroupTest
         });
 
         String ss = pg.toSaveString();
-        assertThat(ss).isEqualTo("testgroup\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres\n");
+        assertThat(ss).isEqualTo("testgroup\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres");
     }
 
     @Test
@@ -310,12 +310,12 @@ public class PermissionGroupTest
     @Test
     void getSaveString_multipleReferencedGroups()
     {
-        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", new String[0], new PermissionGroup[]
-        {
-            new PermissionGroup("fallback1"),
-            new PermissionGroup("fallback3"),
-            new PermissionGroup("fallback2"),
-        });
+        // Assumes .addPermissionGroup(...) is working as expected.
+
+        PermissionGroup pg = new PermissionGroup("testgroup");
+        pg.addPermissionGroup(new PermissionGroup("fallback1", 21));
+        pg.addPermissionGroup(new PermissionGroup("fallback3", 5));
+        pg.addPermissionGroup(new PermissionGroup("fallback2", 13));
 
         String ss = pg.toSaveString();
         assertThat(ss).isEqualTo("testgroup\n    #fallback1\n    #fallback2\n    #fallback3");
@@ -327,7 +327,7 @@ public class PermissionGroupTest
         PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
                                                           new String[]{ "first.second.third" },
                                                           new PermissionGroup[]
-        { new PermissionGroup("fallback1") });
+        { new PermissionGroup("fallback") });
 
         String ss = pg.toSaveString();
         assertThat(ss).isEqualTo("testgroup\n    #fallback\n    first.second.third");
@@ -352,7 +352,7 @@ public class PermissionGroupTest
         });
 
         String ss = pg.toSaveString();
-        assertThat(ss).isEqualTo("testgroup: 14\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres\n");
+        assertThat(ss).isEqualTo("testgroup: 14\n    eins.zwei.drei\n    first.second.third\n    uno.dos.tres");
     }
 
     @Test
@@ -366,12 +366,12 @@ public class PermissionGroupTest
     @Test
     void getSaveString_multipleReferencedGroupsAndPriority()
     {
-        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", 14, new String[0], new PermissionGroup[]
-        {
-            new PermissionGroup("fallback1"),
-            new PermissionGroup("fallback3"),
-            new PermissionGroup("fallback2"),
-        });
+        // Assumes .addPermissionGroup(...) is working as expected.
+
+        PermissionGroup pg = new PermissionGroup("testgroup", 14);
+        pg.addPermissionGroup(new PermissionGroup("fallback1", 21));
+        pg.addPermissionGroup(new PermissionGroup("fallback3", 5));
+        pg.addPermissionGroup(new PermissionGroup("fallback2", 13));
 
         String ss = pg.toSaveString();
         assertThat(ss).isEqualTo("testgroup: 14\n    #fallback1\n    #fallback2\n    #fallback3");
@@ -389,15 +389,15 @@ public class PermissionGroupTest
     @Test
     void addPermissionGroup_fallbackInMiddleOfOrder()
     {
-        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 3);
-        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 7);
-        PermissionGroup fbpg4 = new PermissionGroup("fallback4", 13);
-        PermissionGroup fbpg5 = new PermissionGroup("fallback5", 17);
+        PermissionGroup fbpg1 = new PermissionGroup("fallback1", 17);
+        PermissionGroup fbpg2 = new PermissionGroup("fallback2", 13);
+        PermissionGroup fbpg4 = new PermissionGroup("fallback4", 5);
+        PermissionGroup fbpg5 = new PermissionGroup("fallback5", 3);
         PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
                                                           new String[] {},
                                                           new PermissionGroup[] {fbpg1, fbpg2, fbpg4, fbpg5});
 
-        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 5);
+        PermissionGroup fbpg3 = new PermissionGroup("fallback3", 7);
         pg.addPermissionGroup(fbpg3);
         assertThat(pg.referencedGroups).containsExactly(fbpg1, fbpg2, fbpg3, fbpg4, fbpg5);
     }

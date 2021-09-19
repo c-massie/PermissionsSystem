@@ -658,6 +658,9 @@ public class PermissionGroup
 
         return result.toString();
     }
+
+    @Override public String toString()
+    { return (priority == 0) ? (name) : (name + ": " + getPriorityAsString()); }
     //endregion
 
     //region mutators
