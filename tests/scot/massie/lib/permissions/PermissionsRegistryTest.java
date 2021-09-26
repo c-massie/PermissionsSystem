@@ -1896,7 +1896,7 @@ public class PermissionsRegistryTest
     }
     //endregion
 
-    //region single-line permissions.
+    //region single-line permissions
     @Test
     public void singleLine_saving()
     {
@@ -1927,6 +1927,7 @@ public class PermissionsRegistryTest
 
         assertEquals(saveString, reg.groupsToSaveString());
     }
+    //endregion
 
     //region has any subpermission of
     @Test
