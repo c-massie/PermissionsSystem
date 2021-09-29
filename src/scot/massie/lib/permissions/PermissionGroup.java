@@ -10,7 +10,7 @@ import java.util.function.Predicate;
  */
 public class PermissionGroup
 {
-    private static final class PriorityChangeCallback
+    protected static final class PriorityChangeCallback
     {
         public PriorityChangeCallback(PermissionGroup source)
         { this.source = source; }
@@ -185,7 +185,7 @@ public class PermissionGroup
     /**
      * The name, possibly used as a unique identifier, of the permission group.
      */
-    String name;
+    final String name;
 
     /**
      * <p>The priority of this permission group, as a double.</p>
@@ -236,13 +236,13 @@ public class PermissionGroup
      * Callback that alerts this permission group when the priority of a permission group this group references changes
      * its priority, which may require re-sorting the list of referenced groups.
      */
-    private final PriorityChangeCallback priorityChangeCallback = new PriorityChangeCallback(this);
+    protected final PriorityChangeCallback priorityChangeCallback = new PriorityChangeCallback(this);
 
     /**
      * The callbacks to call when this permission group's priority is changed. These should be the callbacks provided
      * by all permission groups that reference this one.
      */
-    private final Collection<PriorityChangeCallback> callbacksToCallOnPriorityChange = new HashSet<>();
+    protected final Collection<PriorityChangeCallback> callbacksToCallOnPriorityChange = new HashSet<>();
     //endregion
 
     //region methods
@@ -336,27 +336,27 @@ public class PermissionGroup
      * <p>Where the given permission is not covered by this permission group's permission set, any referenced permission
      * group, or the default permission group, returns null, to indicate that there is no permission relevant to the
      * given permission.</p>
-     * @param permissionAsString The permission as a list of nodes to get the most relevant permission to.
+     * @param permissionAsStrings The permission as a list of nodes to get the most relevant permission to.
      * @return The most relevant permission found among this permission group's permission set, the referenced
      *         permission groups, or the default group. If no relevant permission is found, returns null.
      */
-    protected PermissionSet.PermissionWithPath getMostRelevantPermission(List<String> permissionAsString)
+    protected PermissionSet.PermissionWithPath getMostRelevantPermission(List<String> permissionAsStrings)
     {
-        PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
+        PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsStrings);
 
         if(mrp != null)
             return mrp;
 
         for(PermissionGroup permGroup : referencedGroups)
         {
-            mrp = permGroup.getMostRelevantPermission(permissionAsString);
+            mrp = permGroup.getMostRelevantPermission(permissionAsStrings);
 
             if(mrp != null)
                 return mrp;
         }
 
         // Not an infinite recursive loop; eventually stops at a emptyDefaultPermissions where this method returns null.
-        return defaultPermissions.getMostRelevantPermission(permissionAsString);
+        return defaultPermissions.getMostRelevantPermission(permissionAsStrings);
     }
 
     /**
@@ -562,7 +562,7 @@ public class PermissionGroup
      * @return True if the given permission path is specifically negated (and not simply not covered by) this permission
      *         group. Otherwise, false.
      */
-    private boolean negatesPermission(List<String> permissionPath)
+    protected boolean negatesPermission(List<String> permissionPath)
     {
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
@@ -774,14 +774,14 @@ public class PermissionGroup
      * Adds a callback to call when this permission group's priority changes.
      * @param callback The callback to call
      */
-    private void registerPriorityChangeCallback(PriorityChangeCallback callback)
+    protected void registerPriorityChangeCallback(PriorityChangeCallback callback)
     { callbacksToCallOnPriorityChange.add(callback); }
 
     /**
      * Removes a callback to call when this permission group's priority changes, it will no longer be called.
      * @param callback The callback to no longer call.
      */
-    private void deregisterPriorityChangeCallback(PriorityChangeCallback callback)
+    protected void deregisterPriorityChangeCallback(PriorityChangeCallback callback)
     { callbacksToCallOnPriorityChange.remove(callback); }
     //endregion
 
@@ -791,6 +791,10 @@ public class PermissionGroup
     public void clear()
     {
         permissionSet.clear();
+
+        for(PermissionGroup group : referencedGroups)
+            group.deregisterPriorityChangeCallback(priorityChangeCallback);
+
         referencedGroups.clear();
     }
     //endregion
