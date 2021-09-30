@@ -6,30 +6,78 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-// Intended strictly for use with ThreadsafePermissionsRegistry
-// Sync locks are nested, but as circular dependencies aren't allowed, there should be no chance of a deadlock.
-//
-// The capacity for permission groups to sort the permission groups lists of permission groups they're referenced by
-// when they change their priorities is removed. Permission groups are instead sorted on access.
+/**
+ * A thread-safe variant of {@link PermissionGroup}.
+ *
+ * A synchronized lock of one permission group may be entered while already in the lock of another permission group
+ * which references it, (that is; of a permission group which "has" the former group) but as circular dependencies
+ * aren't allowed, there shoudn't be two permission groups mutually waiting for the other to exit their locks, and
+ * deadlocks should be prevented.
+ *
+ * An optimisation of PermissionGroup is that referenced PermissionGroups are ordered ahead of time, either when they're
+ * added/removed, or when the priority of one of those referenced PermissionGroups changes. This isn't supported in
+ * ThreadsafePermissionGroup.
+ */
 public class ThreadsafePermissionGroup extends PermissionGroup
 {
+    /**
+     * The main synchronisation lock.
+     */
     protected static final Object mainSyncLock = new Object();
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     */
     public ThreadsafePermissionGroup(String name)
     { super(name); }
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     * @param priority The priority of the permission group. Permission groups fall back on their referenced permission
+     *                 groups in order of priority, checking the highest priority first.
+     */
     public ThreadsafePermissionGroup(String name, long priority)
     { super(name, priority); }
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     * @param priority The priority of the permission group. Permission groups fall back on their referenced permission
+     *                 groups in order of priority, checking the highest priority first.
+     */
     public ThreadsafePermissionGroup(String name, double priority)
     { super(name, priority); }
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     * @param defaultPermissions The permission group that should be fallen back on after checking all referenced
+     *                           permission groups.
+     */
     public ThreadsafePermissionGroup(String name, PermissionGroup defaultPermissions)
     { super(name, defaultPermissions); }
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     * @param defaultPermissions The permission group that should be fallen back on after checking all referenced
+     *                           permission groups.
+     * @param priority The priority of the permission group. Permission groups fall back on their referenced permission
+     *                 groups in order of priority, checking the highest priority first.
+     */
     public ThreadsafePermissionGroup(String name, PermissionGroup defaultPermissions, long priority)
     { super(name, defaultPermissions, priority); }
 
+    /**
+     * Creates a new threadsafe permission group object.
+     * @param name The name of the permission group.
+     * @param defaultPermissions The permission group that should be fallen back on after checking all referenced
+     *                           permission groups.
+     * @param priority The priority of the permission group. Permission groups fall back on their referenced permission
+     *                 groups in order of priority, checking the highest priority first.
+     */
     public ThreadsafePermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
     { super(name, defaultPermissions, priority); }
 
