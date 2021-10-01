@@ -377,6 +377,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region initialisation
+    protected PermissionsRegistry(PermissionGroup defaultPermissions,
+                                  Function<ID, String> idToString,
+                                  Function<String, ID> idFromString,
+                                  Path usersFile,
+                                  Path groupsFile)
+    {
+        this.defaultPermissions = defaultPermissions;
+        this.convertIdToString = idToString;
+        this.parseIdFromString = idFromString;
+        this.usersFilePath = usersFile;
+        this.groupsFilePath = groupsFile;
+    }
 
     /**
      * Creates a new permissions registry with the ability to save and load to and from files.
@@ -389,12 +401,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                Function<String, ID> idFromString,
                                Path usersFile,
                                Path groupsFile)
-    {
-        this.convertIdToString = idToString;
-        this.parseIdFromString = idFromString;
-        this.usersFilePath = usersFile;
-        this.groupsFilePath = groupsFile;
-    }
+    { this(new PermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
 
     /**
      * Creates a new permissions registry without the ability to save and load to and from files.
@@ -403,12 +410,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     public PermissionsRegistry(Function<ID, String> idToString,
                                Function<String, ID> idFromString)
-    {
-        this.convertIdToString = idToString;
-        this.parseIdFromString = idFromString;
-        this.usersFilePath = null;
-        this.groupsFilePath = null;
-    }
+    { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
     //endregion
 
     //region instance variables
@@ -426,7 +428,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     /**
      * The default permission group.
      */
-    protected final PermissionGroup defaultPermissions = new PermissionGroup("*");
+    protected final PermissionGroup defaultPermissions;
 
 
     /**
@@ -531,7 +533,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return A PermissionStatus object containing the permission queried, whether or not the permission group "has"
      *         it, and the permission argument if applicable.
      */
-    private PermissionStatus getPermissionStatus(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    protected PermissionStatus getPermissionStatus(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
             return deferToDefault ? defaultPermissions.getPermissionStatus(permission)
@@ -658,7 +660,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *             <il><p>The given permission group object is null and deferToDefault is true.</p></il>
      *         </ul>
      */
-    private boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    protected boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
             return deferToDefault && defaultPermissions.hasPermission(permission);
@@ -709,7 +711,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param deferToDefault Whether or not to defer to the default permission group if the given one is null.
      * @return True if the given permission group has the given permission or any subpermission thereof.
      */
-    private boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
             return deferToDefault && defaultPermissions.hasPermissionOrAnyUnder(permission);
@@ -783,7 +785,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         permission group, or null if the given permission group doesn't have that permission, or if the most
      *         relevant permission doesn't have a permission argument associated.
      */
-    private String getPermissionArg(PermissionGroup permGroup, String permission, boolean deferToDefault)
+    protected String getPermissionArg(PermissionGroup permGroup, String permission, boolean deferToDefault)
     {
         if(permGroup == null)
             return deferToDefault ? defaultPermissions.getPermissionArg(permission) : null;
@@ -857,7 +859,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      *         <p>Otherwise, false.</p>
      */
-    private boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
+    protected boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
     {
         if(permGroup == null)
             return deferToDefault && defaultPermissions.hasGroup(groupId);
@@ -957,7 +959,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return A sorted list of all permissions of the given permissions group object, not including assigned groups,
      *         and not including permission arguments.
      */
-    private List<String> getPermissions(PermissionGroup permGroup)
+    protected List<String> getPermissions(PermissionGroup permGroup)
     {
         if(permGroup == null)
             return Collections.emptyList();
@@ -1004,7 +1006,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return A list of the names of all groups the given permission group object references, in order of group
      *         priorities from highest to lowest.
      */
-    private List<String> getGroupsOf(PermissionGroup permGroup)
+    protected List<String> getGroupsOf(PermissionGroup permGroup)
     {
         if(permGroup == null)
             return Collections.emptyList();
@@ -1261,7 +1263,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permGroup The permission group object to assign a permission to.
      * @param permission The permission to assign to the given permission group object.
      */
-    private void assignPermission(PermissionGroup permGroup, String permission)
+    protected void assignPermission(PermissionGroup permGroup, String permission)
     {
         markAsModified();
 
@@ -1311,7 +1313,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permission The permission to remove.
      * @return True if the permission group object was modified as a result of this call. Otherwise, false.
      */
-    private boolean revokePermission(PermissionGroup permGroup, String permission)
+    protected boolean revokePermission(PermissionGroup permGroup, String permission)
     {
         if(permGroup == null)
             return false;
@@ -1362,7 +1364,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupIdBeingAssigned The name of the group to assign.
      * @param checkForCircular Whether or not to check for circular hierarchies.
      */
-    private void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
+    protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
     {
         PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroup(groupIdBeingAssigned);
 
@@ -1412,7 +1414,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupIdBeingRevoked The name of the group to remove.
      * @return True if the permission group object was modified as a result of this call. Otherwise, false.
      */
-    private boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
+    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
     {
         if(permGroup == null)
             return false;
@@ -1460,7 +1462,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permGroups The permission groups to write.
      * @throws IOException If an IO exception is thrown by the provided writer.
      */
-    private static void savePerms(BufferedWriter writer, Collection<PermissionGroup> permGroups) throws IOException
+    protected static void savePerms(BufferedWriter writer, Collection<PermissionGroup> permGroups) throws IOException
     {
         Iterator<PermissionGroup> iter = permGroups.stream()
                                                    .sorted(Comparator.comparing(PermissionGroup::getName))
@@ -1605,7 +1607,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups to be assigned to a permission group objects has an
      *                                   invalid name.
      */
-    private void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader, boolean isForGroups) throws IOException
+    protected void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader, boolean isForGroups) throws IOException
     {
         PermissionGroup currentPermGroup = null;
         markAsModified();
