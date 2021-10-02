@@ -29,145 +29,119 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         { return permissionsForUsers.get(userId); }
     }
 
+    protected PermissionGroup getPermissionGroupForUserOrNull(ID userId)
+    {
+        synchronized(permissionsForUsers)
+        { return permissionsForUsers.getOrDefault(userId, null); }
+    }
+
     protected PermissionGroup getPermissionGroupForGroup(String groupId)
     {
         synchronized(assignableGroups)
         { return assignableGroups.get(groupId); }
     }
 
+    protected PermissionGroup getPermissionGroupForGroupOrNull(String groupId)
+    {
+        synchronized(assignableGroups)
+        { return assignableGroups.getOrDefault(groupId, null); }
+    }
+
 
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return getPermissionStatus(getPermissionGroupForUser(userId), permission, true); }
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    public PermissionStatus getDefaultPermissionStatus(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected PermissionStatus getPermissionStatus(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return getPermissionStatus(getPermissionGroupForGroup(groupId), permission, false); }
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return hasPermission(getPermissionGroupForUser(userId), permission, true); }
 
     @Override
     public boolean groupHasPermission(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return isDefaultPermission(permission);
 
-    @Override
-    public boolean isDefaultPermission(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return hasPermission(getPermissionGroupForGroup(groupId), permission, false);
+    }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return hasAnySubPermissionOf(getPermissionGroupForUser(userId), permission, true); }
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return isOrAnySubPermissionOfIsDefault(permission);
 
-    @Override
-    public boolean isOrAnySubPermissionOfIsDefault(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return hasAnySubPermissionOf(getPermissionGroupForGroup(groupId), permission, false);
+    }
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return getPermissionArg(getPermissionGroupForUser(userId), permission, true); }
 
     @Override
     public String getGroupPermissionArg(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return getDefaultPermissionArg(permission);
 
-    @Override
-    public String getDefaultPermissionArg(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected String getPermissionArg(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return getPermissionArg(getPermissionGroupForGroup(groupId), permission, false);
+    }
 
     @Override
     public boolean userHasGroup(ID userId, String groupId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return hasGroup(getPermissionGroupForUser(userId), groupId, true); }
 
     @Override
     public boolean groupExtendsFromGroup(String groupId, String superGroupId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return isDefaultGroup(superGroupId);
 
-    @Override
-    public boolean isDefaultGroup(String groupId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return hasGroup(getPermissionGroupForGroup(groupId), superGroupId, false);
+    }
 
     @Override
     public Collection<String> getGroupNames()
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { synchronized(assignableGroups) { return new HashSet<>(assignableGroups.keySet()); } }
 
     @Override
     public Collection<ID> getUsers()
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { synchronized(assignableGroups) { return new HashSet<>(permissionsForUsers.keySet()); } }
 
     @Override
     public List<String> getUserPermissions(ID userId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return getPermissions(getPermissionGroupForUserOrNull(userId)); }
 
     @Override
     public List<String> getGroupPermissions(String groupdId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupdId))
+            return getDefaultPermissions();
 
-    @Override
-    public List<String> getDefaultPermissions()
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected List<String> getPermissions(PermissionGroup permGroup)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return getPermissions(getPermissionGroupForGroup(groupdId));
+    }
 
     @Override
     public List<String> getGroupsOfUser(ID userId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    { return getGroupsOf(getPermissionGroupForUserOrNull(userId)); }
 
     @Override
     public List<String> getGroupsOfGroup(String groupId)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return getDefaultGroups();
 
-    @Override
-    public List<String> getDefaultGroups()
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected List<String> getGroupsOf(PermissionGroup permGroup)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        return getGroupsOf(getPermissionGroupForGroup(groupId));
+    }
 
     @Override
     public void assignUserPermission(ID userId, String permission)

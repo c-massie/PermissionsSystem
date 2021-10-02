@@ -691,7 +691,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         {@link #groupHasPermission(String, String)}. Otherwise, false.
      */
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
-    { return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false); }
+    {
+        if("*".equals(groupId))
+            return isOrAnySubPermissionOfIsDefault(permission);
+
+        return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false);
+    }
 
     /**
      * Checks whether or not the default permissions "has" a given permission or any subpermission thereof.
