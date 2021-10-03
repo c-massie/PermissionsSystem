@@ -403,6 +403,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                Path groupsFile)
     { this(new PermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
 
+    protected PermissionsRegistry(PermissionGroup defaultPermissions,
+                                  Function<ID, String> idToString,
+                                  Function<String, ID> idFromString)
+    { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
+
     /**
      * Creates a new permissions registry without the ability to save and load to and from files.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
@@ -466,7 +471,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupName The string to assert is a valid group name.
      * @throws InvalidGroupNameException If the given group name is not a valid name.
      */
-    private static void assertGroupNameValid(String groupName)
+    protected static void assertGroupNameValid(String groupName)
     {
         groupName.codePoints().forEach(codePoint ->
         {
@@ -480,7 +485,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param subgroup The proposed subgroup.
      * @param supergroup The proposed supergroup.
      */
-    private static void assertNotCircular(PermissionGroup subgroup, PermissionGroup supergroup)
+    protected static void assertNotCircular(PermissionGroup subgroup, PermissionGroup supergroup)
     {
         if((subgroup == supergroup) || (supergroup.hasGroup(supergroup.getName())))
             throw new CircularGroupHierarchyException(subgroup.getName(), supergroup.getName());
@@ -1034,7 +1039,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroup(String groupId)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId)
     {
         assertGroupNameValid(groupId);
 
@@ -1053,7 +1058,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroup(String groupId, long priority)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, long priority)
     {
         assertGroupNameValid(groupId);
 
@@ -1079,7 +1084,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException if the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroup(String groupId, double priority)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, double priority)
     {
         assertGroupNameValid(groupId);
 
@@ -1106,7 +1111,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidPriorityException If the provided priority was not parsable as a number.
      * @throws InvalidGroupNameException If the provided group name was not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroup(String groupId, String priorityAsString) throws InvalidPriorityException
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString) throws InvalidPriorityException
     {
         long priorityAsLong = 0;
         boolean priorityIsLong = true;
@@ -1117,7 +1122,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsLong = false; }
 
         if(priorityIsLong)
-            return getGroupPermissionsGroup(groupId, priorityAsLong);
+            return getGroupPermissionsGroupOrNew(groupId, priorityAsLong);
 
         double priorityAsDouble = 0;
         boolean priorityIsDouble = true;
@@ -1128,7 +1133,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsDouble = false; }
 
         if(priorityIsDouble)
-            return getGroupPermissionsGroup(groupId, priorityAsDouble);
+            return getGroupPermissionsGroupOrNew(groupId, priorityAsDouble);
 
         throw new InvalidPriorityException(priorityAsString);
     }
@@ -1170,12 +1175,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             priorityString = null;
 
         PermissionGroup result = groupName.equals("*")  ? defaultPermissions
-                               : priorityString != null ? getGroupPermissionsGroup(groupName, priorityString)
-                               :                          getGroupPermissionsGroup(groupName);
+                               : priorityString != null ? getGroupPermissionsGroupOrNew(groupName, priorityString)
+                               :                          getGroupPermissionsGroupOrNew(groupName);
 
         if(superGroupName != null)
         {
-            PermissionGroup superGroup = getGroupPermissionsGroup(superGroupName);
+            PermissionGroup superGroup = getGroupPermissionsGroupOrNew(superGroupName);
             assertNotCircular(result, superGroup);
             result.addPermissionGroup(superGroup);
         }
@@ -1189,7 +1194,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param userId The ID of the user to get the permission group object of.
      * @return The permission group object of the user of the given ID.
      */
-    PermissionGroup getUserPermissionsGroup(ID userId)
+    PermissionGroup getUserPermissionsGroupOrNew(ID userId)
     {
         return permissionsForUsers.computeIfAbsent(userId, id ->
         {
@@ -1219,10 +1224,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                                       : saveString.substring(0, groupPrefixPosition).trim();
 
         ID userId = parseIdFromString.apply(userIdString);
-        PermissionGroup pg = getUserPermissionsGroup(userId);
+        PermissionGroup pg = getUserPermissionsGroupOrNew(userId);
 
         if(groupName != null && !groupName.isEmpty())
-            pg.addPermissionGroup(getGroupPermissionsGroup(groupName));
+            pg.addPermissionGroup(getGroupPermissionsGroupOrNew(groupName));
 
         return pg;
     }
@@ -1240,7 +1245,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permission The permission to assign.
      */
     public void assignUserPermission(ID userId, String permission)
-    { assignPermission(getUserPermissionsGroup(userId), permission); }
+    { assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
 
     /**
      * Assigns a permission to a group.
@@ -1253,7 +1258,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if("*".equals(groupId))
             assignDefaultPermission(permission);
         else
-            assignPermission(getGroupPermissionsGroup(groupId), permission);
+            assignPermission(getGroupPermissionsGroupOrNew(groupId), permission);
     }
 
     /**
@@ -1339,7 +1344,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { assignGroupTo(getUserPermissionsGroup(userId), groupIdBeingAssigned, false); }
+    { assignGroupTo(getUserPermissionsGroupOrNew(userId), groupIdBeingAssigned, false); }
 
     /**
      * Assigns a group to another group. A group can not extend from itself or a group that extends from it.
@@ -1352,7 +1357,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if("*".equals(groupId))
             assignDefaultGroup(groupIdBeingAssigned);
 
-        assignGroupTo(getGroupPermissionsGroup(groupId), groupIdBeingAssigned, true);
+        assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true);
     }
 
     /**
@@ -1371,7 +1376,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
     {
-        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroup(groupIdBeingAssigned);
+        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
 
         if(checkForCircular)
             assertNotCircular(permGroup, permGroupBeingAssigned);
@@ -1628,7 +1633,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
                 if(line.startsWith("#"))
                 {
-                    PermissionGroup groupToAssign = getGroupPermissionsGroup(line.substring(1).trim());
+                    PermissionGroup groupToAssign = getGroupPermissionsGroupOrNew(line.substring(1).trim());
 
                     if(isForGroups)
                         assertNotCircular(currentPermGroup, groupToAssign);

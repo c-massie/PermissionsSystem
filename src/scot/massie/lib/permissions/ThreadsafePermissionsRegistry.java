@@ -18,10 +18,10 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
                                          Function<String, ID> idFromString,
                                          Path usersFile,
                                          Path groupsFile)
-    { super(idToString, idFromString, usersFile, groupsFile); }
+    { super(new ThreadsafePermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
-    { super(idToString, idFromString); }
+    { super(new ThreadsafePermissionGroup("*"), idToString, idFromString); }
 
     protected PermissionGroup getPermissionGroupForUser(ID userId)
     {
@@ -142,6 +142,8 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
         return getGroupsOf(getPermissionGroupForGroup(groupId));
     }
+
+
 
     @Override
     public void assignUserPermission(ID userId, String permission)

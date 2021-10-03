@@ -310,7 +310,7 @@ public class PermissionsRegistryTest
         reg.assignGroupToGroup("red", "blue");
         reg.assignGroupToGroup("green", "red");
         reg.assignGroupToGroup("cyan", "green");
-        reg.getGroupPermissionsGroup("yellow");
+        reg.getGroupPermissionsGroupOrNew("yellow");
         reg.assignGroupToUser("user1", "green");
 
         assertFalse(reg.userHasGroup("user1", "cyan"));
@@ -1512,14 +1512,14 @@ public class PermissionsRegistryTest
     public void groupPriority_saving()
     {
         PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroup("katara", 5);
-        reg.getGroupPermissionsGroup("iroh", -3.76);
-        reg.getGroupPermissionsGroup("azula", -3.4);
-        reg.getGroupPermissionsGroup("suki", -3.9);
-        reg.getGroupPermissionsGroup("appa", -3);
-        reg.getGroupPermissionsGroup("momo", -4);
-        reg.getGroupPermissionsGroup("jet", 4.2);
-        reg.getGroupPermissionsGroup("sozin", 2.5);
+        reg.getGroupPermissionsGroupOrNew("katara", 5);
+        reg.getGroupPermissionsGroupOrNew("iroh", -3.76);
+        reg.getGroupPermissionsGroupOrNew("azula", -3.4);
+        reg.getGroupPermissionsGroupOrNew("suki", -3.9);
+        reg.getGroupPermissionsGroupOrNew("appa", -3);
+        reg.getGroupPermissionsGroupOrNew("momo", -4);
+        reg.getGroupPermissionsGroupOrNew("jet", 4.2);
+        reg.getGroupPermissionsGroupOrNew("sozin", 2.5);
 
         reg.assignGroupPermission("katara", "someperm: doot");
         reg.assignGroupPermission("momo", "someperm: moot");
@@ -1546,14 +1546,14 @@ public class PermissionsRegistryTest
     public void groupPriority_order()
     {
         PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroup("katara", 5);
-        reg.getGroupPermissionsGroup("iroh", -3.76);
-        reg.getGroupPermissionsGroup("azula", -3.4);
-        reg.getGroupPermissionsGroup("suki", -3.9);
-        reg.getGroupPermissionsGroup("appa", -3);
-        reg.getGroupPermissionsGroup("momo", -4);
-        reg.getGroupPermissionsGroup("jet", 4.2);
-        reg.getGroupPermissionsGroup("sozin", 2.5);
+        reg.getGroupPermissionsGroupOrNew("katara", 5);
+        reg.getGroupPermissionsGroupOrNew("iroh", -3.76);
+        reg.getGroupPermissionsGroupOrNew("azula", -3.4);
+        reg.getGroupPermissionsGroupOrNew("suki", -3.9);
+        reg.getGroupPermissionsGroupOrNew("appa", -3);
+        reg.getGroupPermissionsGroupOrNew("momo", -4);
+        reg.getGroupPermissionsGroupOrNew("jet", 4.2);
+        reg.getGroupPermissionsGroupOrNew("sozin", 2.5);
 
         reg.assignGroupToUser("user1", "katara");
         reg.assignGroupToUser("user1", "iroh");
@@ -1591,16 +1591,16 @@ public class PermissionsRegistryTest
         // secondary priority inferred from alphabetical order.
 
         PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroup("katara");
-        reg.getGroupPermissionsGroup("iroh");
-        reg.getGroupPermissionsGroup("azula");
-        reg.getGroupPermissionsGroup("suki");
-        reg.getGroupPermissionsGroup("appa");
-        reg.getGroupPermissionsGroup("momo");
-        reg.getGroupPermissionsGroup("jet");
-        reg.getGroupPermissionsGroup("sozin");
-        reg.getGroupPermissionsGroup("toph", 2);
-        reg.getGroupPermissionsGroup("boulder", 2);
+        reg.getGroupPermissionsGroupOrNew("katara");
+        reg.getGroupPermissionsGroupOrNew("iroh");
+        reg.getGroupPermissionsGroupOrNew("azula");
+        reg.getGroupPermissionsGroupOrNew("suki");
+        reg.getGroupPermissionsGroupOrNew("appa");
+        reg.getGroupPermissionsGroupOrNew("momo");
+        reg.getGroupPermissionsGroupOrNew("jet");
+        reg.getGroupPermissionsGroupOrNew("sozin");
+        reg.getGroupPermissionsGroupOrNew("toph", 2);
+        reg.getGroupPermissionsGroupOrNew("boulder", 2);
 
         reg.assignGroupToUser("user1", "katara");
         reg.assignGroupToUser("user1", "iroh");
