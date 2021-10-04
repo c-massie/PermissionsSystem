@@ -22,44 +22,28 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(new ThreadsafePermissionGroup("*"), idToString, idFromString); }
-
-    protected PermissionGroup getPermissionGroupForUser(ID userId)
-    {
-        synchronized(permissionsForUsers)
-        { return permissionsForUsers.get(userId); }
-    }
-
-    protected PermissionGroup getPermissionGroupForUserOrNull(ID userId)
-    {
-        synchronized(permissionsForUsers)
-        { return permissionsForUsers.getOrDefault(userId, null); }
-    }
-
-    protected PermissionGroup getPermissionGroupForGroup(String groupId)
-    {
-        synchronized(assignableGroups)
-        { return assignableGroups.get(groupId); }
-    }
-
-    protected PermissionGroup getPermissionGroupForGroupOrNull(String groupId)
-    {
-        synchronized(assignableGroups)
-        { return assignableGroups.getOrDefault(groupId, null); }
-    }
-
-
+    
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
-    { return getPermissionStatus(getPermissionGroupForUser(userId), permission, true); }
+    {
+        synchronized(permissionsForUsers)
+        { return getPermissionStatus(permissionsForUsers.get(userId), permission, true); }
+    }
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
-    { return getPermissionStatus(getPermissionGroupForGroup(groupId), permission, false); }
+    {
+        synchronized(assignableGroups)
+        { return getPermissionStatus(assignableGroups.get(groupId), permission, false); }
+    }
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
-    { return hasPermission(getPermissionGroupForUser(userId), permission, true); }
+    {
+        synchronized(permissionsForUsers)
+        { return hasPermission(permissionsForUsers.get(userId), permission, true); }
+    }
 
     @Override
     public boolean groupHasPermission(String groupId, String permission)
@@ -67,12 +51,16 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isDefaultPermission(permission);
 
-        return hasPermission(getPermissionGroupForGroup(groupId), permission, false);
+        synchronized(assignableGroups)
+        { return hasPermission(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
-    { return hasAnySubPermissionOf(getPermissionGroupForUser(userId), permission, true); }
+    {
+        synchronized(permissionsForUsers)
+        { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
+    }
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
@@ -80,12 +68,16 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isOrAnySubPermissionOfIsDefault(permission);
 
-        return hasAnySubPermissionOf(getPermissionGroupForGroup(groupId), permission, false);
+        synchronized(assignableGroups)
+        { return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
-    { return getPermissionArg(getPermissionGroupForUser(userId), permission, true); }
+    {
+        synchronized(permissionsForUsers)
+        { return getPermissionArg(permissionsForUsers.get(userId), permission, true); }
+    }
 
     @Override
     public String getGroupPermissionArg(String groupId, String permission)
@@ -93,12 +85,16 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return getDefaultPermissionArg(permission);
 
-        return getPermissionArg(getPermissionGroupForGroup(groupId), permission, false);
+        synchronized(assignableGroups)
+        { return getPermissionArg(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public boolean userHasGroup(ID userId, String groupId)
-    { return hasGroup(getPermissionGroupForUser(userId), groupId, true); }
+    {
+        synchronized(permissionsForUsers)
+        { return hasGroup(permissionsForUsers.get(userId), groupId, true); }
+    }
 
     @Override
     public boolean groupExtendsFromGroup(String groupId, String superGroupId)
@@ -106,7 +102,8 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isDefaultGroup(superGroupId);
 
-        return hasGroup(getPermissionGroupForGroup(groupId), superGroupId, false);
+        synchronized(assignableGroups)
+        { return hasGroup(assignableGroups.get(groupId), superGroupId, false); }
     }
 
     @Override
@@ -119,7 +116,10 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
     @Override
     public List<String> getUserPermissions(ID userId)
-    { return getPermissions(getPermissionGroupForUserOrNull(userId)); }
+    {
+        synchronized(permissionsForUsers)
+        { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
+    }
 
     @Override
     public List<String> getGroupPermissions(String groupdId)
@@ -127,12 +127,16 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupdId))
             return getDefaultPermissions();
 
-        return getPermissions(getPermissionGroupForGroup(groupdId));
+        synchronized(assignableGroups)
+        { return getPermissions(assignableGroups.get(groupdId)); }
     }
 
     @Override
     public List<String> getGroupsOfUser(ID userId)
-    { return getGroupsOf(getPermissionGroupForUserOrNull(userId)); }
+    {
+        synchronized(permissionsForUsers)
+        { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
+    }
 
     @Override
     public List<String> getGroupsOfGroup(String groupId)
@@ -140,7 +144,8 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return getDefaultGroups();
 
-        return getGroupsOf(getPermissionGroupForGroup(groupId));
+        synchronized(assignableGroups)
+        { return getGroupsOf(assignableGroups.get(groupId)); }
     }
 
 
