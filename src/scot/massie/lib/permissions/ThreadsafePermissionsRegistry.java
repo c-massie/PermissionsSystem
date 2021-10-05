@@ -152,71 +152,115 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
     @Override
     public void assignUserPermission(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        synchronized(permissionsForUsers)
+        { assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
+    }
 
     @Override
     public void assignGroupPermission(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    public void assignDefaultPermission(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected void assignPermission(PermissionGroup permGroup, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            assignDefaultPermission(permission);
+        else
+            synchronized(assignableGroups)
+            { assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
+    }
 
     @Override
     public boolean revokeUserPermission(ID userId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        synchronized(permissionsForUsers)
+        { return revokePermission(permissionsForUsers.get(userId), permission); }
+    }
 
     @Override
     public boolean revokeGroupPermission(String groupId, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return revokeDefaultPermission(permission);
 
-    @Override
-    public boolean revokeDefaultPermission(String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
-
-    @Override
-    protected boolean revokePermission(PermissionGroup permGroup, String permission)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        synchronized(assignableGroups)
+        { return revokePermission(assignableGroups.get(groupId), permission); }
+    }
 
     @Override
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        synchronized(permissionsForUsers)
+        { assignGroupTo(getUserPermissionsGroupOrNew(userId), groupIdBeingAssigned, false); }
+    }
 
     @Override
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            assignDefaultGroup(groupIdBeingAssigned);
 
-    @Override
-    public void assignDefaultGroup(String groupIdBeingAssigned)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        synchronized(assignableGroups)
+        { assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true); }
+    }
 
     @Override
     protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+
+        // TO DO: Merge these two functions into one in ThreadsafePermissionGroup so nothing can happen between them.
+        if(checkForCircular)
+            assertNotCircular(permGroup, permGroupBeingAssigned);
+
+        permGroup.addPermissionGroup(permGroupBeingAssigned);
+    }
 
     @Override
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        synchronized(permissionsForUsers)
+        { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
+    }
 
     @Override
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if("*".equals(groupId))
+            return revokeDefaultGroup(groupIdBeingRevoked);
 
-    @Override
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+        synchronized(assignableGroups)
+        { return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked); }
+    }
 
     @Override
     protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        if(permGroup == null)
+            return false;
+
+
+        // TO DO: Make this threadsafe.
+
+        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+
+        if(permGroupBeingRevoked == null)
+            return false;
+
+        markAsModified();
+        return permGroup.removePermissionGroup(permGroupBeingRevoked);
+    }
 
     @Override
     public void clear()
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    {
+        synchronized(permissionsForUsers)
+        {
+            synchronized(assignableGroups)
+            {
+                permissionsForUsers.clear();
+                assignableGroups.clear();
+                defaultPermissions.clear();
+            }
+        }
+    }
 
     @Override
     protected void saveUsers() throws IOException
