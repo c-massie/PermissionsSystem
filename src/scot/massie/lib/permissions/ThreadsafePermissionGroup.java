@@ -1,5 +1,7 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.functionalinterfaces.Procedure;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,6 +82,16 @@ public class ThreadsafePermissionGroup extends PermissionGroup
      */
     public ThreadsafePermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
     { super(name, defaultPermissions, priority); }
+
+    /**
+     * Performs an operation within this ThreadsafePermissionGroup's synchronisation lock.
+     * @param thingToDo The operation to perform.
+     */
+    public void doAtomically(Procedure thingToDo)
+    {
+        synchronized(mainSyncLock)
+        { thingToDo.run(); }
+    }
 
     @Override
     public double getPriority()

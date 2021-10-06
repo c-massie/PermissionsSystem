@@ -210,6 +210,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if(checkForCircular)
             assertNotCircular(permGroup, permGroupBeingAssigned);
 
+        markAsModified();
         permGroup.addPermissionGroup(permGroupBeingAssigned);
     }
 

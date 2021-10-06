@@ -1381,6 +1381,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         if(checkForCircular)
             assertNotCircular(permGroup, permGroupBeingAssigned);
 
+        markAsModified();
         permGroup.addPermissionGroup(permGroupBeingAssigned);
     }
     //endregion
