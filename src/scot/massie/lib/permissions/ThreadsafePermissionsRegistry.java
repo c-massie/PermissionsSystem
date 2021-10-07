@@ -3,6 +3,7 @@ package scot.massie.lib.permissions;
 import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
 import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
+import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -188,7 +189,15 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
         synchronized(permissionsForUsers)
-        { assignGroupTo(getUserPermissionsGroupOrNew(userId), groupIdBeingAssigned, false); }
+        {
+            synchronized(assignableGroups)
+            {
+                PermissionGroup userPermGroup = getUserPermissionsGroupOrNew(userId);
+                PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+                markAsModified();
+                userPermGroup.addPermissionGroup(permGroupBeingAssigned);
+            }
+        }
     }
 
     @Override
@@ -198,21 +207,30 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
             assignDefaultGroup(groupIdBeingAssigned);
 
         synchronized(assignableGroups)
-        { assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true); }
+        {
+            PermissionGroup permGroup = getGroupPermissionsGroupOrNew(groupId);
+            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+            assertNotCircular(permGroup, permGroupBeingAssigned);
+            markAsModified();
+            permGroup.addPermissionGroup(permGroupBeingAssigned);
+        }
+    }
+
+    @Override
+    public void assignDefaultGroup(String groupIdBeingAssigned)
+    {
+        synchronized(assignableGroups)
+        {
+            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+            assertNotCircular(defaultPermissions, permGroupBeingAssigned);
+            markAsModified();
+            defaultPermissions.addPermissionGroup(permGroupBeingAssigned);
+        }
     }
 
     @Override
     protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
-    {
-        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
-
-        // TO DO: Merge these two functions into one in ThreadsafePermissionGroup so nothing can happen between them.
-        if(checkForCircular)
-            assertNotCircular(permGroup, permGroupBeingAssigned);
-
-        markAsModified();
-        permGroup.addPermissionGroup(permGroupBeingAssigned);
-    }
+    { throw new UnsupportedOperationException("Variants implemented separately."); }
 
     @Override
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
@@ -232,21 +250,45 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     }
 
     @Override
+    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
+    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
+
+    @Override
     protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
     {
         if(permGroup == null)
             return false;
 
+        synchronized(assignableGroups)
+        {
+            if(permGroup == defaultPermissions)
+            {
+                MutableWrapper<Boolean> result = new MutableWrapper<>(false);
 
-        // TO DO: Make this threadsafe.
+                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
+                {
+                    PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
 
-        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+                    if(permGroupBeingRevoked == null)
+                        return;
 
-        if(permGroupBeingRevoked == null)
-            return false;
+                    markAsModified();
+                    result.set(permGroup.removePermissionGroup(permGroupBeingRevoked));
+                });
 
-        markAsModified();
-        return permGroup.removePermissionGroup(permGroupBeingRevoked);
+                return result.get();
+            }
+            else
+            {
+                PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+
+                if(permGroupBeingRevoked == null)
+                    return false;
+
+                markAsModified();
+                return permGroup.removePermissionGroup(permGroupBeingRevoked);
+            }
+        }
     }
 
     @Override
@@ -256,9 +298,12 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         {
             synchronized(assignableGroups)
             {
-                permissionsForUsers.clear();
-                assignableGroups.clear();
-                defaultPermissions.clear();
+                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
+                {
+                    permissionsForUsers.clear();
+                    assignableGroups.clear();
+                    defaultPermissions.clear();
+                });
             }
         }
     }
