@@ -7,6 +7,7 @@ import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -308,19 +309,94 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         }
     }
 
-    @Override
-    protected void saveUsers() throws IOException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+
 
     @Override
-    protected void saveGroups() throws IOException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    public String usersToSaveString()
+    {
+        StringWriter sw = new StringWriter();
+
+        try(BufferedWriter writer = new BufferedWriter(sw))
+        {
+            synchronized(permissionsForUsers)
+            { saveUsers(writer); }
+        }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        return sw.toString();
+    }
 
     @Override
-    protected void loadUsers() throws IOException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    public String groupsToSaveString()
+    {
+        StringWriter sw = new StringWriter();
+
+        try(BufferedWriter writer = new BufferedWriter(sw))
+        {
+            synchronized(assignableGroups)
+            { saveGroups(writer); }
+        }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        return sw.toString();
+    }
 
     @Override
-    protected void loadGroups() throws IOException
-    { throw new UnsupportedOperationException("Not implemented yet."); }
+    public void save() throws IOException
+    {
+        synchronized(permissionsForUsers)
+        {
+            synchronized(assignableGroups)
+            {
+                MutableWrapper<IOException> toRethrow = new MutableWrapper<>(null);
+
+                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
+                {
+                    try
+                    {
+                        saveUsers();
+                        saveGroups();
+                        hasBeenDifferentiatedFromFiles = false;
+                    }
+                    catch(IOException ex)
+                    { toRethrow.set(ex); }
+                });
+
+                if(toRethrow.get() != null)
+                    throw new IOException(toRethrow.get());
+            }
+        }
+    }
+
+    @Override
+    public void load() throws IOException
+    {
+        synchronized(permissionsForUsers)
+        {
+            synchronized(assignableGroups)
+            {
+                MutableWrapper<IOException> toRethrow = new MutableWrapper<>(null);
+
+                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
+                {
+                    try
+                    {
+                        permissionsForUsers.clear();
+                        assignableGroups.clear();
+                        defaultPermissions.clear();
+                        loadGroups();
+                        loadUsers();
+                        hasBeenDifferentiatedFromFiles = false;
+                    }
+                    catch(IOException ex)
+                    { toRethrow.set(ex); }
+                });
+
+                if(toRethrow.get() != null)
+                    throw new IOException(toRethrow.get());
+            }
+        }
+    }
 }
