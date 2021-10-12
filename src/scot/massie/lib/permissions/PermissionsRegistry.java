@@ -406,7 +406,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     protected PermissionsRegistry(PermissionGroup defaultPermissions,
                                   Function<ID, String> idToString,
                                   Function<String, ID> idFromString)
-    { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
+    { this(defaultPermissions, idToString, idFromString, null, null); }
 
     /**
      * Creates a new permissions registry without the ability to save and load to and from files.
