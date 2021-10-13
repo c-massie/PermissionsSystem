@@ -1,5 +1,11 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.permissions.events.args.PermissionAssignedEventArgs;
+import scot.massie.lib.permissions.events.args.PermissionGroupAssignedEventArgs;
+import scot.massie.lib.permissions.events.args.PermissionGroupRevokedEventArgs;
+import scot.massie.lib.permissions.events.args.PermissionRevokedEventArgs;
+import scot.massie.lib.permissions.events.args.PermissionsClearedEventArgs;
+import scot.massie.lib.permissions.events.args.PermissionsLoadedEventArgs;
 import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
 import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
@@ -171,55 +177,100 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
 
     @Override
     public void assignUserPermission(ID userId, String permission)
-    { inner.assignUserPermission(userId, permission); }
+    {
+        inner.assignUserPermission(userId, permission);
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission));
+    }
 
     @Override
     public void assignGroupPermission(String groupId, String permission)
-    { inner.assignGroupPermission(groupId, permission); }
+    {
+        inner.assignGroupPermission(groupId, permission);
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission));
+    }
 
     @Override
     public void assignDefaultPermission(String permission)
-    { inner.assignDefaultPermission(permission); }
+    {
+        inner.assignDefaultPermission(permission);
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission));
+    }
 
     @Override
     public boolean revokeUserPermission(ID userId, String permission)
-    { return inner.revokeUserPermission(userId, permission); }
+    {
+        boolean result = inner.revokeUserPermission(userId, permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission));
+        return result;
+    }
 
     @Override
     public boolean revokeGroupPermission(String groupId, String permission)
-    { return inner.revokeGroupPermission(groupId, permission); }
+    {
+        boolean result = inner.revokeGroupPermission(groupId, permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission));
+        return result;
+    }
 
     @Override
     public boolean revokeDefaultPermission(String permission)
-    { return inner.revokeDefaultPermission(permission); }
+    {
+        boolean result = inner.revokeDefaultPermission(permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission));
+        return result;
+    }
 
     @Override
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { inner.assignGroupToUser(userId, groupIdBeingAssigned); }
+    {
+        inner.assignGroupToUser(userId, groupIdBeingAssigned);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this, userId, groupIdBeingAssigned));
+    }
 
     @Override
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    { inner.assignGroupToGroup(groupId, groupIdBeingAssigned); }
+    {
+        inner.assignGroupToGroup(groupId, groupIdBeingAssigned);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this, groupId, groupIdBeingAssigned));
+    }
 
     @Override
     public void assignDefaultGroup(String groupIdBeingAssigned)
-    { inner.assignDefaultGroup(groupIdBeingAssigned); }
+    {
+        inner.assignDefaultGroup(groupIdBeingAssigned);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupIdBeingAssigned));
+    }
 
     @Override
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    { return inner.revokeGroupFromUser(userId, groupIdBeingRevoked); }
+    {
+        boolean result = inner.revokeGroupFromUser(userId, groupIdBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutUser(this, userId, groupIdBeingRevoked));
+        return result;
+    }
 
     @Override
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    { return inner.revokeGroupFromGroup(groupId, groupIdBeingRevoked); }
+    {
+        boolean result = inner.revokeGroupFromGroup(groupId, groupIdBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutGroup(this, groupId, groupIdBeingRevoked));
+        return result;
+    }
 
     @Override
     public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { return inner.revokeDefaultGroup(groupIdBeingRevoked); }
+    {
+        boolean result = inner.revokeDefaultGroup(groupIdBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this, groupIdBeingRevoked));
+        return result;
+    }
 
     @Override
     public void clear()
-    { inner.clear(); }
+    {
+        inner.clear();
+        cleared_internal.invoke(new PermissionsClearedEventArgs<>(this));
+    }
 
     @Override
     public String usersToSaveString()
@@ -235,6 +286,9 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
 
     @Override
     public void load() throws IOException
-    { inner.load(); }
+    {
+        inner.load();
+        loaded_internal.invoke(new PermissionsLoadedEventArgs<>(this));
+    }
     //endregion
 }
