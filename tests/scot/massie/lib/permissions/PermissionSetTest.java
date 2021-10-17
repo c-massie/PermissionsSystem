@@ -839,7 +839,7 @@ class PermissionSetTest
     void remove_empty()
     {
         PermissionSet pset = new PermissionSet();
-        assertThat(pset.remove("first.second")).isFalse();
+        assertThat(pset.remove("first.second")).isNull();
     }
 
     @Test
@@ -847,7 +847,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("beep.boop");
-        assertThat(pset.remove("first.second")).isFalse();
+        assertThat(pset.remove("first.second")).isNull();
         assertThat(pset.getPermission("first.second")).isNull();
         assertThat(pset.getPermission("beep.boop")).isEqualTo(Permission.PERMITTING);
     }
@@ -857,7 +857,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("first.second");
-        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.remove("first.second")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("first.second")).isNull();
     }
 
@@ -866,7 +866,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("-first.second");
-        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.remove("first.second")).isEqualTo(Permission.NEGATING);
         assertThat(pset.getPermission("first.second")).isNull();
     }
 
@@ -875,7 +875,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("first.second: doot");
-        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.remove("first.second")).isEqualTo(Permission.PERMITTING.withArg("doot"));
         assertThat(pset.getPermission("first.second")).isNull();
     }
 
@@ -884,7 +884,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("first.second.*");
-        assertThat(pset.remove("first.second.*")).isTrue();
+        assertThat(pset.remove("first.second.*")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("first.second.third")).isNull();
     }
 
@@ -894,8 +894,8 @@ class PermissionSetTest
         PermissionSet pset = new PermissionSet();
         pset.set("first.second");
         pset.set("beep.boop.*");
-        assertThat(pset.remove("first.second.*")).isFalse();
-        assertThat(pset.remove("beep.boop")).isFalse();
+        assertThat(pset.remove("first.second.*")).isNull();
+        assertThat(pset.remove("beep.boop")).isNull();
         assertThat(pset.getPermission("first.second")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("beep.boop.*")).isEqualTo(Permission.PERMITTING);
     }
@@ -906,7 +906,7 @@ class PermissionSetTest
         PermissionSet pset = new PermissionSet();
         pset.set("first.second: doot");
         pset.set("first.second.*: noot");
-        assertThat(pset.remove("first.second")).isTrue();
+        assertThat(pset.remove("first.second")).isEqualTo(Permission.PERMITTING.withArg("doot"));
         assertThat(pset.getPermission("first.second")).isNull();
         assertThat(pset.getPermission("first.second.third")).isEqualTo(Permission.PERMITTING.withArg("noot"));
     }
@@ -916,7 +916,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("first.second");
-        assertThat(pset.remove("-first.second")).isTrue();
+        assertThat(pset.remove("-first.second")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("first.second")).isNull();
     }
 
@@ -925,7 +925,7 @@ class PermissionSetTest
     {
         PermissionSet pset = new PermissionSet();
         pset.set("first.second");
-        assertThat(pset.remove("first.second: doot")).isTrue();
+        assertThat(pset.remove("first.second: doot")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("first.second")).isNull();
     }
 }

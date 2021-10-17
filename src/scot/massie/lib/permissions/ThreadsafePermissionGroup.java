@@ -298,7 +298,7 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     { synchronized(mainSyncLock) { super.addPermissionWhileDeIndenting(permissionAsString); } }
 
     @Override
-    public boolean removePermission(String permissionPath)
+    public Permission removePermission(String permissionPath)
     { synchronized(mainSyncLock) { return super.removePermission(permissionPath); } }
 
     @Override

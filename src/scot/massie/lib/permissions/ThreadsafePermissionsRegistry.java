@@ -170,14 +170,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public boolean revokeUserPermission(ID userId, String permission)
+    public Permission revokeUserPermission(ID userId, String permission)
     {
         synchronized(permissionsForUsers)
         { return revokePermission(permissionsForUsers.get(userId), permission); }
     }
 
     @Override
-    public boolean revokeGroupPermission(String groupId, String permission)
+    public Permission revokeGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
             return revokeDefaultPermission(permission);

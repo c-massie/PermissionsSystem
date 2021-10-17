@@ -728,9 +728,9 @@ public final class PermissionSet
      * @apiNote This does not remove any permissions "lower than" (starting with) or "higher than" (truncated from) the
      *          provided permission.
      * @param permissionAsString The permission formatted as a string.
-     * @return True if the permission set was changed as a result of this call. Otherwise, false.
+     * @return The permission object that was at the given path in the permission set, or null if there was none.
      */
-    public boolean remove(String permissionAsString)
+    public Permission remove(String permissionAsString)
     {
         permissionAsString = permissionAsString.trim();
 
@@ -752,30 +752,30 @@ public final class PermissionSet
 
         if(!isForWildcard)
         {
-            if(exactPermissionTree.clearAt(path) != null)
+            Permission permissionThatWasThere = exactPermissionTree.clearAt(path);
+
+            if(permissionThatWasThere != null)
             {
                 Permission descendantPerm = descendantPermissionTree.getAtOrNull(path);
 
                 if(descendantPerm != null && descendantPerm.isIndirect())
                     descendantPermissionTree.clearAt(path);
-
-                return true;
             }
-            else
-                return false;
+
+            return permissionThatWasThere;
         }
         else
         {
             MutableWrapper<Boolean> removedFlag = new MutableWrapper<>(false);
 
-            descendantPermissionTree.clearAtIf(path, (xpath, xperm) ->
+            Permission permissionThatWasThere = descendantPermissionTree.clearAtIf(path, (xpath, xperm) ->
             {
                 boolean isDirect = !xperm.isIndirect();
                 removedFlag.set(isDirect);
                 return isDirect;
             });
 
-            return removedFlag.get();
+            return removedFlag.get() ? permissionThatWasThere : null;
         }
     }
 

@@ -197,25 +197,25 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     }
 
     @Override
-    public boolean revokeUserPermission(ID userId, String permission)
+    public Permission revokeUserPermission(ID userId, String permission)
     {
-        boolean result = inner.revokeUserPermission(userId, permission);
+        Permission result = inner.revokeUserPermission(userId, permission);
         permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission));
         return result;
     }
 
     @Override
-    public boolean revokeGroupPermission(String groupId, String permission)
+    public Permission revokeGroupPermission(String groupId, String permission)
     {
-        boolean result = inner.revokeGroupPermission(groupId, permission);
+        Permission result = inner.revokeGroupPermission(groupId, permission);
         permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission));
         return result;
     }
 
     @Override
-    public boolean revokeDefaultPermission(String permission)
+    public Permission revokeDefaultPermission(String permission)
     {
-        boolean result = inner.revokeDefaultPermission(permission);
+        Permission result = inner.revokeDefaultPermission(permission);
         permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission));
         return result;
     }

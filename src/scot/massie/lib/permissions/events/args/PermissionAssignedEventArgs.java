@@ -87,10 +87,10 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
     { return this.permission.trim().startsWith("-"); }
 
     /**
-     * Gets whether the permission being assigned is an allowing permission.
-     * @return True if the permission being assigned is an allowing permission. Otherwise, false.
+     * Gets whether the permission being assigned is a permitting permission.
+     * @return True if the permission being assigned is a permitting permission. Otherwise, false.
      */
-    public boolean permissionIsAllowing()
+    public boolean permissionIsPermitting()
     { return !this.permission.trim().startsWith("-"); }
 
     /**

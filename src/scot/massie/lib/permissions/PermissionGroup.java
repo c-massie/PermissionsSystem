@@ -136,7 +136,7 @@ public class PermissionGroup
         { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
 
         @Override
-        public boolean removePermission(String permissionPath)
+        public Permission removePermission(String permissionPath)
         { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
 
         @Override
@@ -689,9 +689,10 @@ public class PermissionGroup
      *
      * <p>See {@link PermissionSet#remove(String)}.</p>
      * @param permissionPath The permission to remove from this group.
-     * @return True if this group was modified as a result of this call. Otherwise, false.
+     * @return A permission object representing the permission directly in the group at the given path, or null if there
+     *         was none.
      */
-    public boolean removePermission(String permissionPath)
+    public Permission removePermission(String permissionPath)
     { return permissionSet.remove(permissionPath); }
     //endregion
 

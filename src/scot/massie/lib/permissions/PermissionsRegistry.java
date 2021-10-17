@@ -1290,18 +1290,20 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Removes a permission from a user.
      * @param userId The ID of the user to remove a permission from.
      * @param permission The permission to remove.
-     * @return True if a permission was removed as a result of this call. Otherwise, false.
+     * @return A Permission object representing the specified permission in the permissions registry, or null if there
+     *         was none. (And thus was not removed)
      */
-    public boolean revokeUserPermission(ID userId, String permission)
+    public Permission revokeUserPermission(ID userId, String permission)
     { return revokePermission(permissionsForUsers.get(userId), permission); }
 
     /**
      * Removes a permission from a group.
      * @param groupId The name of the group to remove a permission from.
      * @param permission The permission to remove.
-     * @return True if a permission was removed as a result of this call. Otherwise, false.
+     * @return A Permission object representing the specified permission in the permissions registry, or null if there
+     *         was none. (And thus was not removed)
      */
-    public boolean revokeGroupPermission(String groupId, String permission)
+    public Permission revokeGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
             return revokeDefaultPermission(permission);
@@ -1312,21 +1314,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     /**
      * Removes a permission from the default permissions.
      * @param permission The permission to remove.
-     * @return True if a permission was removed as a result of this call. Otherwise, false.
+     * @return A Permission object representing the specified permission in the permissions registry, or null if there
+     *         was none. (And thus was not removed)
      */
-    public boolean revokeDefaultPermission(String permission)
+    public Permission revokeDefaultPermission(String permission)
     { return revokePermission(defaultPermissions, permission); }
 
     /**
      * Removes the given permission from the specified permission group object.
      * @param permGroup The permission group object to remove a permission from.
      * @param permission The permission to remove.
-     * @return True if the permission group object was modified as a result of this call. Otherwise, false.
+     * @return A Permission object representing the specified permission in the permissions registry, or null if there
+     *         was none. (And thus was not removed)
      */
-    protected boolean revokePermission(PermissionGroup permGroup, String permission)
+    protected Permission revokePermission(PermissionGroup permGroup, String permission)
     {
         if(permGroup == null)
-            return false;
+            return null;
 
         markAsModified();
         return permGroup.removePermission(permission);
