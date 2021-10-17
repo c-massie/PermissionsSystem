@@ -78,4 +78,42 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
         return new PermissionAssignedEventArgs<>(
                 registry, PermissionsChangedEventTarget.GROUP, null, groupId, permissionAssigned);
     }
+
+    /**
+     * Gets whether the permission being assigned is a negating permission.
+     * @return True if the permission being assigned is a negating permission. Otherwise, false.
+     */
+    public boolean permissionIsNegating()
+    { return this.permission.trim().startsWith("-"); }
+
+    /**
+     * Gets whether the permission being assigned is an allowing permission.
+     * @return True if the permission being assigned is an allowing permission. Otherwise, false.
+     */
+    public boolean permissionIsAllowing()
+    { return !this.permission.trim().startsWith("-"); }
+
+    /**
+     * Gets the path of the permission assigned.
+     * @return The path of the permission assigned.
+     */
+    public String getPermissionPath()
+    {
+        String result = permission.split(":", 2)[0].trim();
+
+        if(result.startsWith("-"))
+            result = result.substring(1).trim();
+
+        return result;
+    }
+
+    /**
+     * Gets the argument text of the assigned permission.
+     * @return The argument text of the assigned permission, or null if no argument was passed to the permission.
+     */
+    public String getPermissionArg()
+    {
+        String[] permissionParts = permission.split(":", 2);
+        return (permissionParts.length >= 2) ? permissionParts[1] : null;
+    }
 }

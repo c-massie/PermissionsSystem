@@ -72,7 +72,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
             assertThat(args.getPermission()).isEqualTo("first.second:someArg");
         });
 
-        reg.assignDefaultGroup("first.second:someArg");
+        reg.assignDefaultPermission("first.second:someArg");
         assertThat(happened.get()).withFailMessage("Event didn't fire.").isTrue();
     }
 
