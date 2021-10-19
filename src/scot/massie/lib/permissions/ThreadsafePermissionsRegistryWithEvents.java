@@ -200,7 +200,7 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission revokeUserPermission(ID userId, String permission)
     {
         Permission result = inner.revokeUserPermission(userId, permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission));
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission, result));
         return result;
     }
 
@@ -208,16 +208,16 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission revokeGroupPermission(String groupId, String permission)
     {
         Permission result = inner.revokeGroupPermission(groupId, permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission));
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission, result));
         return result;
     }
 
     @Override
     public Permission revokeDefaultPermission(String permission)
     {
-        Permission result = inner.revokeDefaultPermission(permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission));
-        return result;
+        Permission r = inner.revokeDefaultPermission(permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission, r));
+        return r;
     }
 
     @Override

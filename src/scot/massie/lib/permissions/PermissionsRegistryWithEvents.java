@@ -169,25 +169,25 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
-        Permission result = super.revokeUserPermission(userId, permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission));
-        return result;
+        Permission r = super.revokeUserPermission(userId, permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutUser(this, userId, permission, r));
+        return r;
     }
 
     @Override
     public Permission revokeGroupPermission(String groupId, String permission)
     {
-        Permission result = super.revokeGroupPermission(groupId, permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission));
-        return result;
+        Permission r = super.revokeGroupPermission(groupId, permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission, r));
+        return r;
     }
 
     @Override
     public Permission revokeDefaultPermission(String permission)
     {
-        Permission result = super.revokeDefaultPermission(permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission));
-        return result;
+        Permission r = super.revokeDefaultPermission(permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutDefaultPermissions(this, permission, r));
+        return r;
     }
 
     @Override

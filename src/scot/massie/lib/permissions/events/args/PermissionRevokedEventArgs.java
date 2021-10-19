@@ -1,5 +1,6 @@
 package scot.massie.lib.permissions.events.args;
 
+import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionsRegistryWithEvents;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 
@@ -12,6 +13,8 @@ import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
         extends PermissionEventArgs<ID>
 {
+    protected final Permission permissionObjectRemoved;
+
     /**
      * Creates a new event args object.
      *
@@ -27,9 +30,11 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
                                          PermissionsChangedEventTarget target,
                                          ID userTargeted,
                                          String groupTargeted,
-                                         String permission)
+                                         String permission,
+                                         Permission permissionObjectRemoved)
     {
         super(registry, target, userTargeted, groupTargeted, permission);
+        this.permissionObjectRemoved = permissionObjectRemoved;
     }
 
     /**
@@ -40,11 +45,17 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID>
-    newAboutDefaultPermissions(PermissionsRegistryWithEvents<ID> registry, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID> newAboutDefaultPermissions(
+            PermissionsRegistryWithEvents<ID> registry,
+            String permissionAssigned,
+            Permission permissionObjectRemoved)
     {
-        return new PermissionRevokedEventArgs<>(
-                registry, PermissionsChangedEventTarget.DEFAULT_PERMISSIONS, null, null, permissionAssigned);
+        return new PermissionRevokedEventArgs<>(registry,
+                                                PermissionsChangedEventTarget.DEFAULT_PERMISSIONS,
+                                                null,
+                                                null,
+                                                permissionAssigned,
+                                                permissionObjectRemoved);
     }
 
     /**
@@ -56,11 +67,18 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID>
-    newAboutUser(PermissionsRegistryWithEvents<ID> registry, ID userId, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID> newAboutUser(
+            PermissionsRegistryWithEvents<ID> registry,
+            ID userId,
+            String permissionAssigned,
+            Permission permissionObjectRemoved)
     {
-        return new PermissionRevokedEventArgs<>(
-                registry, PermissionsChangedEventTarget.USER, userId, null, permissionAssigned);
+        return new PermissionRevokedEventArgs<>(registry,
+                                                PermissionsChangedEventTarget.USER,
+                                                userId,
+                                                null,
+                                                permissionAssigned,
+                                                permissionObjectRemoved);
     }
 
     /**
@@ -72,10 +90,60 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID>
-    newAboutGroup(PermissionsRegistryWithEvents<ID> registry, String groupId, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionRevokedEventArgs<ID> newAboutGroup(
+            PermissionsRegistryWithEvents<ID> registry,
+            String groupId,
+            String permissionAssigned,
+            Permission permissionObjectRemoved)
     {
-        return new PermissionRevokedEventArgs<>(
-                registry, PermissionsChangedEventTarget.GROUP, null, groupId, permissionAssigned);
+        return new PermissionRevokedEventArgs<>(registry,
+                                                PermissionsChangedEventTarget.GROUP,
+                                                null,
+                                                groupId,
+                                                permissionAssigned,
+                                                permissionObjectRemoved);
+    }
+
+    /**
+     * Gets the Permission object returned by the revocation call that triggered this event.
+     * @return The permission object returned by the revocation call that triggered this event, or null if no permission
+     *         object was removed.
+     */
+    public Permission getRemovedPermissionObject()
+    { return permissionObjectRemoved; }
+
+    /**
+     * Gets whether a permission was removed as a result of the revocation call that triggered this event.
+     * @return True if a permission was removed. Otherwise, false.
+     */
+    public boolean permissionWasRemoved()
+    { return permissionObjectRemoved != null; }
+
+    /**
+     * Gets the argument of the removed Permission.
+     * @return The argument of the removed permission, or null if the removed permission had no argument, or if there
+     *         was no removed permission.
+     */
+    public String getRemovedPermissionArg()
+    { return permissionObjectRemoved == null ? null : permissionObjectRemoved.getArg(); }
+
+    /**
+     * Gets whether the permission removed was a permitting permission.
+     * @return True if a permission was removed, and that permission was pemitting. Otherwise, false.
+     */
+    public boolean removedPermissionWasPermitting()
+    {
+        //noinspection SimplifiableConditionalExpression Suggested simplifcation isn't simpler.
+        return permissionObjectRemoved == null ? false : permissionObjectRemoved.permits();
+    }
+
+    /**
+     * Gets whether the permission removed was a negating permission.
+     * @return True if a permission was removed, and that permission was negating. Otherwise, false.
+     */
+    public boolean removedPermissionWasNegating()
+    {
+        //noinspection SimplifiableConditionalExpression Suggested simplifcation isn't simpler.
+        return permissionObjectRemoved == null ? false : permissionObjectRemoved.negates();
     }
 }
