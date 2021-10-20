@@ -128,11 +128,11 @@ public class PermissionGroup
         { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
 
         @Override
-        public void addPermission(String permissionAsString)
+        public Permission addPermission(String permissionAsString)
         { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
 
         @Override
-        public void addPermissionWhileDeIndenting(String permissionAsString)
+        public Permission addPermissionWhileDeIndenting(String permissionAsString)
         { throw new UnsupportedOperationException(cannotMutateErrorMsg); }
 
         @Override
@@ -669,20 +669,22 @@ public class PermissionGroup
     /**
      * Adds a permission to this permission group.
      * @param permissionAsString The permission to add.
+     * @return A permission representing the previously set permission at the given path, or null if there was none.
      * @throws ParseException If the provided permission was not parsable as a string.
      */
-    public void addPermission(String permissionAsString) throws ParseException
-    { permissionSet.set(permissionAsString); }
+    public Permission addPermission(String permissionAsString) throws ParseException
+    { return permissionSet.set(permissionAsString); }
 
     /**
      * <p>Adds a permission to this permission group, after having deïndented the string by 4 spaces.</p>
      *
      * <p>See {@link PermissionSet#setWhileDeIndenting(String)}.</p>
      * @param permissionAsString The permission to add.
+     * @return A permission representing the previously set permission at the given path, or null if there was none.
      * @throws ParseException If the provided permission was not parsable as a string.
      */
-    public void addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
-    { permissionSet.setWhileDeIndenting(permissionAsString); }
+    public Permission addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
+    { return permissionSet.setWhileDeIndenting(permissionAsString); }
 
     /**
      * <p>Removes the given permission from the permission group.</p>

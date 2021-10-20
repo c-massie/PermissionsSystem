@@ -290,12 +290,12 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     { synchronized(mainSyncLock) { return super.toString(); } }
 
     @Override
-    public void addPermission(String permissionAsString) throws ParseException
-    { synchronized(mainSyncLock) { super.addPermission(permissionAsString); } }
+    public Permission addPermission(String permissionAsString) throws ParseException
+    { synchronized(mainSyncLock) { return super.addPermission(permissionAsString); } }
 
     @Override
-    public void addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
-    { synchronized(mainSyncLock) { super.addPermissionWhileDeIndenting(permissionAsString); } }
+    public Permission addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
+    { synchronized(mainSyncLock) { return super.addPermissionWhileDeIndenting(permissionAsString); } }
 
     @Override
     public Permission removePermission(String permissionPath)

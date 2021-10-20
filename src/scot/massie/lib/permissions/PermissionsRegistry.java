@@ -1243,42 +1243,46 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a permission to a user.
      * @param userId The ID of the user to assign a permission to.
      * @param permission The permission to assign.
+     * @return A Permission object representing the permission previously assigned, or null if there was none.
      */
-    public void assignUserPermission(ID userId, String permission)
-    { assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
+    public Permission assignUserPermission(ID userId, String permission)
+    { return assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
 
     /**
      * Assigns a permission to a group.
      * @param groupId The name of the group to assign a permission to.
      * @param permission The permission to assign.
+     * @return A Permission object representing the permission previously assigned, or null if there was none.
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
-    public void assignGroupPermission(String groupId, String permission)
+    public Permission assignGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
-            assignDefaultPermission(permission);
+            return assignDefaultPermission(permission);
         else
-            assignPermission(getGroupPermissionsGroupOrNew(groupId), permission);
+            return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission);
     }
 
     /**
      * Assigns a default permission. All users will be considered to have this permission unless otherwise overridden.
      * @param permission The permission to assign.
+     * @return A Permission object representing the permission previously assigned, or null if there was none.
      */
-    public void assignDefaultPermission(String permission)
-    { assignPermission(defaultPermissions, permission); }
+    public Permission assignDefaultPermission(String permission)
+    { return assignPermission(defaultPermissions, permission); }
 
     /**
      * Assigns the given permission to given permission group object.
      * @param permGroup The permission group object to assign a permission to.
      * @param permission The permission to assign to the given permission group object.
+     * @return A Permission object representing the permission previously assigned, or null if there was none.
      */
-    protected void assignPermission(PermissionGroup permGroup, String permission)
+    protected Permission assignPermission(PermissionGroup permGroup, String permission)
     {
         markAsModified();
 
         try
-        { permGroup.addPermission(permission); }
+        { return permGroup.addPermission(permission); }
         catch(ParseException e)
         { throw new InvalidPermissionException(permission, e); }
     }

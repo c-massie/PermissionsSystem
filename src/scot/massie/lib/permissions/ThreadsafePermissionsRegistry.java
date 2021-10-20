@@ -153,20 +153,20 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
 
     @Override
-    public void assignUserPermission(ID userId, String permission)
+    public Permission assignUserPermission(ID userId, String permission)
     {
         synchronized(permissionsForUsers)
-        { assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
+        { return assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
     }
 
     @Override
-    public void assignGroupPermission(String groupId, String permission)
+    public Permission assignGroupPermission(String groupId, String permission)
     {
         if("*".equals(groupId))
-            assignDefaultPermission(permission);
+            return assignDefaultPermission(permission);
         else
             synchronized(assignableGroups)
-            { assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
+            { return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
     }
 
     @Override

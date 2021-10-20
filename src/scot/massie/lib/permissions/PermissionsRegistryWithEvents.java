@@ -146,24 +146,27 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
 
     //region methods
     @Override
-    public void assignUserPermission(ID userId, String permission)
+    public Permission assignUserPermission(ID userId, String permission)
     {
-        super.assignUserPermission(userId, permission);
+        Permission oldValue = super.assignUserPermission(userId, permission);
         permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission));
+        return oldValue;
     }
 
     @Override
-    public void assignGroupPermission(String groupId, String permission)
+    public Permission assignGroupPermission(String groupId, String permission)
     {
-        super.assignGroupPermission(groupId, permission);
+        Permission oldValue = super.assignGroupPermission(groupId, permission);
         permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission));
+        return oldValue;
     }
 
     @Override
-    public void assignDefaultPermission(String permission)
+    public Permission assignDefaultPermission(String permission)
     {
-        super.assignDefaultPermission(permission);
+        Permission oldValue = super.assignDefaultPermission(permission);
         permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission));
+        return oldValue;
     }
 
     @Override

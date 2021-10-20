@@ -648,9 +648,10 @@ public final class PermissionSet
      * <p>Any text after the first colon ":" is considered to make up the string argument, and not be part of the formatted
      * permission itself.</p>
      * @param permissionAsString The permission formatted as a string.
+     * @return The permission object previously set at the given path, or null if there was none.
      * @throws ParseException If the provided string is not parsable as a permission.
      */
-    public void set(String permissionAsString) throws ParseException
+    public Permission set(String permissionAsString) throws ParseException
     {
         boolean isNegation = false;
         boolean isWildcard = false;
@@ -671,10 +672,10 @@ public final class PermissionSet
 
         if(permWithoutArg.equals("*"))
         {
-            exactPermissionTree.setRootItem(perm);
+            Permission oldValue = exactPermissionTree.setRootItem(perm);
             descendantPermissionTree.setRootItemIf(perm.indirectly(),
                                                    (path, perm1) -> (perm1 == null) || (perm1.isIndirect()));
-            return;
+            return oldValue;
         }
 
         if(permWithoutArg.endsWith(".*"))
@@ -699,14 +700,17 @@ public final class PermissionSet
 
         //String[] path = splitPath(permWithoutArg);
         TreePath<String> path = new TreePath<>(splitPath(permWithoutArg));
+        Permission oldValue;
 
         if(!isWildcard)
         {
-            exactPermissionTree.setAt(path, perm);
+            oldValue = exactPermissionTree.setAt(path, perm);
             descendantPermissionTree.setAtIf(path, perm.indirectly(), (tp, p) -> (p == null) || (p.isIndirect()));
         }
         else // if isWildcard
-            descendantPermissionTree.setAt(path, perm);
+            oldValue = descendantPermissionTree.setAt(path, perm);
+
+        return oldValue;
     }
 
     /**
@@ -716,10 +720,11 @@ public final class PermissionSet
      * <p>This is specifically useful where a permission argument spans multiple lines and the format requires that such
      * arguments be indented 4 spades from the permission itself.</p>
      * @param permissionAsString The permission formatted as a string.
+     * @return The permission object previously set at the given path, or null if there was none.
      * @throws ParseException If the provided string is not parsable as a permission.
      */
-    public void setWhileDeIndenting(String permissionAsString) throws ParseException
-    { set(permissionAsString.replaceAll("(?m)^ {4}", "")); }
+    public Permission setWhileDeIndenting(String permissionAsString) throws ParseException
+    { return set(permissionAsString.replaceAll("(?m)^ {4}", "")); }
 
     /**
      * Removes the provided permission from the permission set.
