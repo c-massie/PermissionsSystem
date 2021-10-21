@@ -179,7 +179,7 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignUserPermission(ID userId, String permission)
     {
         Permission oldValue = inner.assignUserPermission(userId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission, oldValue));
         return oldValue;
     }
 
@@ -187,7 +187,7 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignGroupPermission(String groupId, String permission)
     {
         Permission oldValue = inner.assignGroupPermission(groupId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission, oldValue));
         return oldValue;
     }
 
@@ -195,7 +195,7 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignDefaultPermission(String permission)
     {
         Permission oldValue = inner.assignDefaultPermission(permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission, oldValue));
         return oldValue;
     }
 

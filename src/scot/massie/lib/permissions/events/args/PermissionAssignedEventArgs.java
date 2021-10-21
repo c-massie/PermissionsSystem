@@ -1,5 +1,6 @@
 package scot.massie.lib.permissions.events.args;
 
+import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionsRegistryWithEvents;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 
@@ -12,6 +13,12 @@ import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
         extends PermissionEventArgs<ID>
 {
+    /**
+     * A permission object representing the permission previously assigned to the target at the given path. Null if
+     * there was no previously assigned permission to the target at the given path.
+     */
+    protected final Permission previousPermissionObject;
+
     /**
      * Creates a new event args object.
      *
@@ -27,9 +34,11 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
                                           PermissionsChangedEventTarget target,
                                           ID userTargeted,
                                           String groupTargeted,
-                                          String permission)
+                                          String permission,
+                                          Permission previousPermissionObject)
     {
         super(registry, target, userTargeted, groupTargeted, permission);
+        this.previousPermissionObject = previousPermissionObject;
     }
 
     /**
@@ -40,11 +49,15 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID>
-    newAboutDefaultPermissions(PermissionsRegistryWithEvents<ID> registry, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID> newAboutDefaultPermissions(
+            PermissionsRegistryWithEvents<ID> registry, String permissionAssigned, Permission previousPermissionObject)
     {
-        return new PermissionAssignedEventArgs<>(
-                registry, PermissionsChangedEventTarget.DEFAULT_PERMISSIONS, null, null, permissionAssigned);
+        return new PermissionAssignedEventArgs<>(registry,
+                                                 PermissionsChangedEventTarget.DEFAULT_PERMISSIONS,
+                                                 null,
+                                                 null,
+                                                 permissionAssigned,
+                                                 previousPermissionObject);
     }
 
     /**
@@ -56,11 +69,18 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID>
-    newAboutUser(PermissionsRegistryWithEvents<ID> registry, ID userId, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID> newAboutUser(
+            PermissionsRegistryWithEvents<ID> registry,
+            ID userId,
+            String permissionAssigned,
+            Permission previousPermissionObject)
     {
-        return new PermissionAssignedEventArgs<>(
-                registry, PermissionsChangedEventTarget.USER, userId, null, permissionAssigned);
+        return new PermissionAssignedEventArgs<>(registry,
+                                                 PermissionsChangedEventTarget.USER,
+                                                 userId,
+                                                 null,
+                                                 permissionAssigned,
+                                                 previousPermissionObject);
     }
 
     /**
@@ -72,11 +92,18 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
      * @param <ID>               The type users in the registry are identified by.
      * @return A new event args object.
      */
-    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID>
-    newAboutGroup(PermissionsRegistryWithEvents<ID> registry, String groupId, String permissionAssigned)
+    public static <ID extends Comparable<? super ID>> PermissionAssignedEventArgs<ID> newAboutGroup(
+            PermissionsRegistryWithEvents<ID> registry,
+            String groupId,
+            String permissionAssigned,
+            Permission previousPermissionObject)
     {
-        return new PermissionAssignedEventArgs<>(
-                registry, PermissionsChangedEventTarget.GROUP, null, groupId, permissionAssigned);
+        return new PermissionAssignedEventArgs<>(registry,
+                                                 PermissionsChangedEventTarget.GROUP,
+                                                 null,
+                                                 groupId,
+                                                 permissionAssigned,
+                                                 previousPermissionObject);
     }
 
     /**
@@ -116,4 +143,42 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
         String[] permissionParts = permission.split(":", 2);
         return (permissionParts.length >= 2) ? permissionParts[1] : null;
     }
+
+    /**
+     * Gets whether a permission was already registered at the given path.
+     * @return True if a matching permission already existed and was overwritten. Otherwise, false.
+     */
+    public boolean assignmentIsOverwritingPreviousPermission()
+    { return previousPermissionObject != null; }
+
+    /**
+     * Gets a Permission object representing the overwritten permission matching the one being assigned, that was
+     * previously assigned to the target.
+     * @return A Permission object representing the permission overwritten, or null if there was no matching permission
+     *         which was overwritten.
+     */
+    public Permission getPreviousPermissionObject()
+    { return previousPermissionObject; }
+
+    /**
+     * Gets whether the previous matching permission was a negating permission.
+     * @return True if there was a previous matching permission and it was negating. Otherwise, false.
+     */
+    public boolean previousPermissionWasNegating()
+    { return previousPermissionObject != null && previousPermissionObject.negates(); }
+
+    /**
+     * Gets whether the previous matching permission was a permitting permission.
+     * @return True if there was a previous matching permission and it was permitting. Otherwise, false.
+     */
+    public boolean previousPermissionWasPermitting()
+    { return previousPermissionObject != null && previousPermissionObject.permits(); }
+
+    /**
+     * Gets the permission arg associated with the previous matching permission.
+     * @return If there was a previous matching permission and it had a permission arg, the permission arg of the
+     *         previous matching permission. Otherwise, null.
+     */
+    public String getPreviousPermissionArg()
+    { return previousPermissionObject == null ? null : previousPermissionObject.getArg(); }
 }

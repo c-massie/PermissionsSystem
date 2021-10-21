@@ -132,18 +132,12 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
      * @return True if a permission was removed, and that permission was pemitting. Otherwise, false.
      */
     public boolean removedPermissionWasPermitting()
-    {
-        //noinspection SimplifiableConditionalExpression Suggested simplifcation isn't simpler.
-        return permissionObjectRemoved == null ? false : permissionObjectRemoved.permits();
-    }
+    { return permissionObjectRemoved != null && permissionObjectRemoved.permits(); }
 
     /**
      * Gets whether the permission removed was a negating permission.
      * @return True if a permission was removed, and that permission was negating. Otherwise, false.
      */
     public boolean removedPermissionWasNegating()
-    {
-        //noinspection SimplifiableConditionalExpression Suggested simplifcation isn't simpler.
-        return permissionObjectRemoved == null ? false : permissionObjectRemoved.negates();
-    }
+    { return permissionObjectRemoved != null && permissionObjectRemoved.negates(); }
 }
