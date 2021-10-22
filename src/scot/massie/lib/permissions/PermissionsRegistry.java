@@ -246,8 +246,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Primarily exists to merge multiple lines that make up on logical line in a save string into single lines
      * possibly containing newline characters.</p>
      *
-     * <p>A line in this sense may make up multiple actual lines where a permission is spread across multiple lines - e.g.
-     * where a permission has a multi-line permission argument.</p>
+     * <p>A line in this sense may make up multiple actual lines where a permission is spread across multiple lines -
+     * e.g. where a permission has a multi-line permission argument.</p>
      */
     private static class PermissionsLineReader extends Reader
     {
@@ -263,8 +263,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         private boolean lastLineReadDumblyHadStringArg = false;
 
         /**
-         * <p>Reads lines from the contained reader without considering logical lines that may span across multiple actual
-         * lines.</p>
+         * <p>Reads lines from the contained reader without considering logical lines that may span across multiple
+         * actual lines.</p>
          *
          * <p>Has the side effect of setting {@link #lastLineReadDumblyHadStringArg} when reading a line containing a
          * permission argument, so that it can be determined by {@link #readLine()} whether the multiple actual lines
@@ -857,9 +857,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      *         <ul>
      *             <il>
-     *                 <p>The given permission group object is non-null and it or any of the groups it references directly
-     *                 or indirectly (which may or may not include the default permission group object) references the
-     *                 a permission group by the specified name.</p>
+     *                 <p>The given permission group object is non-null and it or any of the groups it references
+     *                 directly or indirectly (which may or may not include the default permission group object)
+     *                 references the a permission group by the specified name.</p>
      *             </il>
      *             <il>
      *                 <p>The given permission group object is null, deferToDefault is true, and the default permission
@@ -1111,7 +1111,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidPriorityException If the provided priority was not parsable as a number.
      * @throws InvalidGroupNameException If the provided group name was not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString) throws InvalidPriorityException
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString)
+            throws InvalidPriorityException
     {
         long priorityAsLong = 0;
         boolean priorityIsLong = true;
@@ -1161,7 +1162,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         String superGroupName = (groupPrefixPosition < 0) ? (null) : (saveString.substring(groupPrefixPosition + 1));
 
         String priorityString = (prioritySeparatorPosition < 0) ? (null)
-                              : (groupPrefixPosition < 0)       ? (saveString.substring(prioritySeparatorPosition + 1).trim())
+                              : (groupPrefixPosition < 0)       ? (saveString.substring(prioritySeparatorPosition + 1)
+                                                                             .trim())
                               : (saveString.substring(prioritySeparatorPosition + 1, groupPrefixPosition).trim());
 
         String groupName = prioritySeparatorPosition > 0 ? saveString.substring(0, prioritySeparatorPosition).trim()
@@ -1204,8 +1206,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * <p>Gets the permission group object of the specified user, making any modifications to it to bring it in line with
-     * the provided save string. If the user is not currently registered, registers them.</p>
+     * <p>Gets the permission group object of the specified user, making any modifications to it to bring it in line
+     * with the provided save string. If the user is not currently registered, registers them.</p>
      *
      * <p>Where the provided save string includes a referenced permission group, which would have been given in the same
      * line as the string representation of the user being gotten's ID, the referenced permission group is assigned to
@@ -1626,7 +1628,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups to be assigned to a permission group objects has an
      *                                   invalid name.
      */
-    protected void loadPerms(PermissionsLineReader reader, Function<String, PermissionGroup> createEntityFromHeader, boolean isForGroups) throws IOException
+    protected void loadPerms(PermissionsLineReader reader,
+                             Function<String, PermissionGroup> createEntityFromHeader,
+                             boolean isForGroups)
+            throws IOException
     {
         PermissionGroup currentPermGroup = null;
         markAsModified();

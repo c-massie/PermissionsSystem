@@ -605,13 +605,13 @@ public final class PermissionSet
      *
      * <p>Each added permission is represented by a dot-notated path.</p>
      * <ul>
-     *     <il><p>This path may be suffixed with ".*" to indicate that it covers all permissions below it unless explicitly set
-     *     themselves.</p></il>
-     *     <il><p>This path may be prefixed with "-" to indicate that it negates any permissions it covers rather than allowing
-     *     them.</p></il>
-     *     <il><p>This path may be followed by a colon ":" - any text after the colon on the line, or indented four spaces on
-     *     following lines until a line note indented by four spaces is found, is considered path of the argument passed
-     *     to the permission, and is not part of the permission syntax itself.</p></il>
+     *     <il><p>This path may be suffixed with ".*" to indicate that it covers all permissions below it unless
+     *     explicitly set themselves.</p></il>
+     *     <il><p>This path may be prefixed with "-" to indicate that it negates any permissions it covers rather than
+     *     allowing them.</p></il>
+     *     <il><p>This path may be followed by a colon ":" - any text after the colon on the line, or indented four
+     *     spaces on following lines until a line note indented by four spaces is found, is considered path of the
+     *     argument passed to the permission, and is not part of the permission syntax itself.</p></il>
      * </ul>
      *
      * @return A string representation of this permission set.
@@ -639,14 +639,14 @@ public final class PermissionSet
      *
      * <p>Permissions must be in the form of: "first.second.third"</p>
      *
-     * <p>Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with it),
-     * but not to itself.</p>
+     * <p>Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with
+     * it), but not to itself.</p>
      *
      * <p>Permissions may be prefixed with "-" to indicate that it negates the permission and any it covers, rather than
      * allowing them.</p>
      *
-     * <p>Any text after the first colon ":" is considered to make up the string argument, and not be part of the formatted
-     * permission itself.</p>
+     * <p>Any text after the first colon ":" is considered to make up the string argument, and not be part of the
+     * formatted permission itself.</p>
      * @param permissionAsString The permission formatted as a string.
      * @return The permission object previously set at the given path, or null if there was none.
      * @throws ParseException If the provided string is not parsable as a permission.

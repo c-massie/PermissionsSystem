@@ -78,17 +78,20 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     /**
      * Fired when a permission is assigned to something.
      */
-    public final Event<PermissionAssignedEventArgs<ID>> permissionAssigned = new ProtectedEvent<>(permissionAssigned_internal);
+    public final Event<PermissionAssignedEventArgs<ID>> permissionAssigned
+            = new ProtectedEvent<>(permissionAssigned_internal);
 
     /**
      * Fired when a permission is revoked from something.
      */
-    public final Event<PermissionRevokedEventArgs<ID>> permissionRevoked = new ProtectedEvent<>(permissionRevoked_internal);
+    public final Event<PermissionRevokedEventArgs<ID>> permissionRevoked
+            = new ProtectedEvent<>(permissionRevoked_internal);
 
     /**
      * Fired when a group is assigned to something.
      */
-    public final Event<PermissionGroupAssignedEventArgs<ID>> groupAssigned = new ProtectedEvent<>(groupAssigned_internal);
+    public final Event<PermissionGroupAssignedEventArgs<ID>> groupAssigned
+            = new ProtectedEvent<>(groupAssigned_internal);
 
     /**
      * Fired when a group is revoked from something.
@@ -118,7 +121,8 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
      *     <li>loaded</li>
      * </ul>
      */
-    public final Event<PermissionsChangedEventArgs<ID>> contentsChanged = new ProtectedEvent<>(contentsChanged_internal);
+    public final Event<PermissionsChangedEventArgs<ID>> contentsChanged
+            = new ProtectedEvent<>(contentsChanged_internal);
     //endregion
     //endregion
 
@@ -149,7 +153,10 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     public Permission assignUserPermission(ID userId, String permission)
     {
         Permission oldValue = super.assignUserPermission(userId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this,
+                                                                                    userId,
+                                                                                    permission,
+                                                                                    oldValue));
         return oldValue;
     }
 
@@ -157,7 +164,10 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     public Permission assignGroupPermission(String groupId, String permission)
     {
         Permission oldValue = super.assignGroupPermission(groupId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this,
+                                                                                     groupId,
+                                                                                     permission,
+                                                                                     oldValue));
         return oldValue;
     }
 
@@ -165,7 +175,9 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     public Permission assignDefaultPermission(String permission)
     {
         Permission oldValue = super.assignDefaultPermission(permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this,
+                                                                                                  permission,
+                                                                                                  oldValue));
         return oldValue;
     }
 
@@ -197,21 +209,25 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
         super.assignGroupToUser(userId, groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this, userId, groupIdBeingAssigned));
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this,
+                                                                                    userId,
+                                                                                    groupIdBeingAssigned));
     }
 
     @Override
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
         super.assignGroupToGroup(groupId, groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this, groupId, groupIdBeingAssigned));
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this,
+                                                                                     groupId,
+                                                                                     groupIdBeingAssigned));
     }
 
     @Override
-    public void assignDefaultGroup(String groupIdBeingAssigned)
+    public void assignDefaultGroup(String groupId)
     {
-        super.assignDefaultGroup(groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupIdBeingAssigned));
+        super.assignDefaultGroup(groupId);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupId));
     }
 
     @Override
@@ -234,7 +250,8 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     public boolean revokeDefaultGroup(String groupIdBeingRevoked)
     {
         boolean result = super.revokeDefaultGroup(groupIdBeingRevoked);
-        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this, groupIdBeingRevoked));
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this,
+                                                                                                groupIdBeingRevoked));
         return result;
     }
 

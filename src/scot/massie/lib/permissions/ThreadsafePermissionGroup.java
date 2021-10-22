@@ -177,7 +177,8 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     @Override
     protected boolean hasPermissionOrAnyUnder(String permissionPath, Predicate<PermissionSet.PermissionWithPath> check)
     {
-        // Add check for where all permissions under the path are included because it's covered by something that covers it
+        // Add check for where all permissions under the path are included because it's covered by something that covers
+        // it.
         // Add optimisation where everything's negated.
 
         synchronized(mainSyncLock)

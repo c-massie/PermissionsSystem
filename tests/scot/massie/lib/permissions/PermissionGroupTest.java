@@ -105,7 +105,10 @@ public class PermissionGroupTest
         }};
     }
 
-    PermissionGroup getGroupWithPermsAndFallback(String groupName, long priority, String[] perms, PermissionGroup fallback)
+    PermissionGroup getGroupWithPermsAndFallback(String groupName,
+                                                 long priority,
+                                                 String[] perms,
+                                                 PermissionGroup fallback)
     {
         return new PermissionGroup(groupName, priority)
         {{
@@ -137,7 +140,10 @@ public class PermissionGroupTest
         }};
     }
 
-    PermissionGroup getGroupWithPermsAndFallback(String groupName, long priority, String[] perms, PermissionGroup[] fallbacks)
+    PermissionGroup getGroupWithPermsAndFallback(String groupName,
+                                                 long priority,
+                                                 String[] perms,
+                                                 PermissionGroup[] fallbacks)
     {
         return new PermissionGroup(groupName, priority)
         {{
@@ -358,7 +364,10 @@ public class PermissionGroupTest
     @Test
     void getSaveString_singleReferencedGroupAndPriority()
     {
-        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup", 14, new String[0], new PermissionGroup("fallback"));
+        PermissionGroup pg = getGroupWithPermsAndFallback("testgroup",
+                                                          14,
+                                                          new String[0],
+                                                          new PermissionGroup("fallback"));
         String ss = pg.toSaveString();
         assertThat(ss).isEqualTo("testgroup: 14 #fallback");
     }

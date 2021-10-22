@@ -160,7 +160,8 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     { return inner.getGroupPermissionsGroupOrNew(groupId, priority); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString) throws InvalidPriorityException
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString)
+            throws InvalidPriorityException
     { return inner.getGroupPermissionsGroupOrNew(groupId, priorityAsString); }
 
     @Override
@@ -179,7 +180,10 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignUserPermission(ID userId, String permission)
     {
         Permission oldValue = inner.assignUserPermission(userId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this, userId, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutUser(this,
+                                                                                    userId,
+                                                                                    permission,
+                                                                                    oldValue));
         return oldValue;
     }
 
@@ -187,7 +191,10 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignGroupPermission(String groupId, String permission)
     {
         Permission oldValue = inner.assignGroupPermission(groupId, permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this, groupId, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutGroup(this,
+                                                                                     groupId,
+                                                                                     permission,
+                                                                                     oldValue));
         return oldValue;
     }
 
@@ -195,7 +202,9 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public Permission assignDefaultPermission(String permission)
     {
         Permission oldValue = inner.assignDefaultPermission(permission);
-        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this, permission, oldValue));
+        permissionAssigned_internal.invoke(PermissionAssignedEventArgs.newAboutDefaultPermissions(this,
+                                                                                                  permission,
+                                                                                                  oldValue));
         return oldValue;
     }
 
@@ -227,21 +236,26 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
         inner.assignGroupToUser(userId, groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this, userId, groupIdBeingAssigned));
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this,
+                                                                                    userId,
+                                                                                    groupIdBeingAssigned));
     }
 
     @Override
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
         inner.assignGroupToGroup(groupId, groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this, groupId, groupIdBeingAssigned));
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this,
+                                                                                     groupId,
+                                                                                     groupIdBeingAssigned));
     }
 
     @Override
-    public void assignDefaultGroup(String groupIdBeingAssigned)
+    public void assignDefaultGroup(String groupId)
     {
-        inner.assignDefaultGroup(groupIdBeingAssigned);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupIdBeingAssigned));
+        inner.assignDefaultGroup(groupId);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this,
+                                                                                                  groupId));
     }
 
     @Override
@@ -264,7 +278,8 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     public boolean revokeDefaultGroup(String groupIdBeingRevoked)
     {
         boolean result = inner.revokeDefaultGroup(groupIdBeingRevoked);
-        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this, groupIdBeingRevoked));
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this,
+                                                                                                groupIdBeingRevoked));
         return result;
     }
 
