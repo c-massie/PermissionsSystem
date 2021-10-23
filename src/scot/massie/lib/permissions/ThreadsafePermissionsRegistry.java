@@ -1,17 +1,14 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
-import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
-import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.function.Function;
 
 public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
