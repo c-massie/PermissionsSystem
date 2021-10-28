@@ -10,6 +10,7 @@ import java.util.function.Predicate;
  */
 public class PermissionGroup
 {
+    //region inner classes
     protected static final class PriorityChangeCallback
     {
         public PriorityChangeCallback(PermissionGroup source)
@@ -18,76 +19,6 @@ public class PermissionGroup
         private final PermissionGroup source;
 
         public void onPriorityChange() { source.sortPermissionGroups(); }
-    }
-
-    //region initialisation
-
-    /**
-     * <p>Creates a new permission group.</p>
-     *
-     * <p>When no priority is provided, it is 0 by default.</p>
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     */
-    public PermissionGroup(String name)
-    { this(name, emptyDefaultPermissions, 0L); }
-
-    /**
-     * Creates a new permission group.
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     * @param priority The initial priority of this permission group.
-     */
-    public PermissionGroup(String name, long priority)
-    { this(name, emptyDefaultPermissions, priority); }
-
-    /**
-     * Creates a new permission group.
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     * @param priority The initial priority of this permission group.
-     */
-    public PermissionGroup(String name, double priority)
-    { this(name, emptyDefaultPermissions, priority); }
-
-    /**
-     * <p>Creates a new permission group.</p>
-     *
-     * <p>When no priority is provided, it is 0 by default.</p>
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
-     *                           permission.
-     */
-    public PermissionGroup(String name, PermissionGroup defaultPermissions)
-    { this(name, defaultPermissions, 0L); }
-
-    /**
-     * Creates a new permission group.
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
-     *                           permission.
-     * @param priority The initial priority of this permission group.
-     */
-    public PermissionGroup(String name, PermissionGroup defaultPermissions, long priority)
-    {
-        this.name = name;
-        this.defaultPermissions = defaultPermissions;
-        this.priority = priority;
-        this.priorityAsLong = priority;
-        this.priorityIsLong = true;
-    }
-
-    /**
-     * Creates a new permission group.
-     * @param name The name of the permission group. This may be used as a unique identifier.
-     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
-     *                           permission.
-     * @param priority The initial priority of this permission group.
-     */
-    public PermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
-    {
-        this.name = name;
-        this.defaultPermissions = defaultPermissions;
-        this.priority = priority;
-        this.priorityAsLong = ((Double)priority).longValue();
-        this.priorityIsLong = false;
     }
     //endregion
 
@@ -101,7 +32,7 @@ public class PermissionGroup
     public static final Comparator<PermissionGroup> priorityComparatorHighestFirst = (a, b) ->
     {
         int result = a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
-                                      : (-Double.compare(a.priority,       b.priority      ));
+                             : (-Double.compare(a.priority,       b.priority      ));
 
         if(result != 0)
             return result;
@@ -243,6 +174,77 @@ public class PermissionGroup
      * by all permission groups that reference this one.
      */
     protected final Collection<PriorityChangeCallback> callbacksToCallOnPriorityChange = new HashSet<>();
+    //endregion
+
+    //region initialisation
+
+    /**
+     * <p>Creates a new permission group.</p>
+     *
+     * <p>When no priority is provided, it is 0 by default.</p>
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     */
+    public PermissionGroup(String name)
+    { this(name, emptyDefaultPermissions, 0L); }
+
+    /**
+     * Creates a new permission group.
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     * @param priority The initial priority of this permission group.
+     */
+    public PermissionGroup(String name, long priority)
+    { this(name, emptyDefaultPermissions, priority); }
+
+    /**
+     * Creates a new permission group.
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     * @param priority The initial priority of this permission group.
+     */
+    public PermissionGroup(String name, double priority)
+    { this(name, emptyDefaultPermissions, priority); }
+
+    /**
+     * <p>Creates a new permission group.</p>
+     *
+     * <p>When no priority is provided, it is 0 by default.</p>
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
+     *                           permission.
+     */
+    public PermissionGroup(String name, PermissionGroup defaultPermissions)
+    { this(name, defaultPermissions, 0L); }
+
+    /**
+     * Creates a new permission group.
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
+     *                           permission.
+     * @param priority The initial priority of this permission group.
+     */
+    public PermissionGroup(String name, PermissionGroup defaultPermissions, long priority)
+    {
+        this.name = name;
+        this.defaultPermissions = defaultPermissions;
+        this.priority = priority;
+        this.priorityAsLong = priority;
+        this.priorityIsLong = true;
+    }
+
+    /**
+     * Creates a new permission group.
+     * @param name The name of the permission group. This may be used as a unique identifier.
+     * @param defaultPermissions The permission group to check if this one or any referenced by it do not cover a given
+     *                           permission.
+     * @param priority The initial priority of this permission group.
+     */
+    public PermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
+    {
+        this.name = name;
+        this.defaultPermissions = defaultPermissions;
+        this.priority = priority;
+        this.priorityAsLong = ((Double)priority).longValue();
+        this.priorityIsLong = false;
+    }
     //endregion
 
     //region methods

@@ -4,16 +4,16 @@ import scot.massie.lib.permissions.exceptions.MissingPermissionException;
 
 public final class PermissionStatus
 {
+    private final String permission;
+    private final boolean hasPermission;
+    private final String permissionArg;
+
     PermissionStatus(String permission, boolean hasPermission, String permissionArg)
     {
         this.permission = permission;
         this.hasPermission = hasPermission;
         this.permissionArg = permissionArg;
     }
-
-    private final String permission;
-    private final boolean hasPermission;
-    private final String permissionArg;
 
     public String getPermission()
     { return permission; }

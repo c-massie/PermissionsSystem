@@ -13,43 +13,6 @@ import java.util.Objects;
 @Immutable
 public final class Permission
 {
-    //region Initialisation
-    private Permission(boolean permits, String argument, boolean isIndirect)
-    {
-        this.permits = permits;
-        this.argument = argument;
-        this.isIndirect = isIndirect;
-    }
-
-    /**
-     * Gets a variant of the permission this is called on, with the given string as an associated string argument.
-     * @param argument The string argument to get a copy of this argument associated with.
-     * @return A copy of the permission this is called on, with the given string as an associated string
-     *         argument.
-     */
-    @NotNull
-    public Permission withArg(String argument)
-    { return new Permission(permits, argument, isIndirect); }
-
-    /**
-     * Gets a variant of the permission this is called on, marked as being the indirect consequence of another
-     * permission.
-     * @return A copy of the permission this is called on, marked as being indirect. Returns the same object where the
-     *         call results in no change.
-     */
-    @NotNull
-    public Permission indirectly()
-    {
-        if(argument == null)
-            return permits ? PERMITTING_INDIRECTLY : NEGATING_INDIRECTLY;
-
-        if(isIndirect)
-            return this;
-
-        return new Permission(permits, argument, true);
-    }
-    //endregion
-
     //region Default instances
     /**
      * Permission permitting something, which is explicitly specified.
@@ -90,6 +53,43 @@ public final class Permission
      * {@link PermissionSet}, the permission "some.permission.path" implies the permission "some.permission.path.*".
      */
     private final boolean isIndirect;
+    //endregion
+
+    //region Initialisation
+    private Permission(boolean permits, String argument, boolean isIndirect)
+    {
+        this.permits = permits;
+        this.argument = argument;
+        this.isIndirect = isIndirect;
+    }
+
+    /**
+     * Gets a variant of the permission this is called on, with the given string as an associated string argument.
+     * @param argument The string argument to get a copy of this argument associated with.
+     * @return A copy of the permission this is called on, with the given string as an associated string
+     *         argument.
+     */
+    @NotNull
+    public Permission withArg(String argument)
+    { return new Permission(permits, argument, isIndirect); }
+
+    /**
+     * Gets a variant of the permission this is called on, marked as being the indirect consequence of another
+     * permission.
+     * @return A copy of the permission this is called on, marked as being indirect. Returns the same object where the
+     *         call results in no change.
+     */
+    @NotNull
+    public Permission indirectly()
+    {
+        if(argument == null)
+            return permits ? PERMITTING_INDIRECTLY : NEGATING_INDIRECTLY;
+
+        if(isIndirect)
+            return this;
+
+        return new Permission(permits, argument, true);
+    }
     //endregion
 
     //region Accessors

@@ -376,48 +376,6 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region initialisation
-    protected PermissionsRegistry(PermissionGroup defaultPermissions,
-                                  Function<ID, String> idToString,
-                                  Function<String, ID> idFromString,
-                                  Path usersFile,
-                                  Path groupsFile)
-    {
-        this.defaultPermissions = defaultPermissions;
-        this.convertIdToString = idToString;
-        this.parseIdFromString = idFromString;
-        this.usersFilePath = usersFile;
-        this.groupsFilePath = groupsFile;
-    }
-
-    /**
-     * Creates a new permissions registry with the ability to save and load to and from files.
-     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
-     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
-     * @param usersFile The filepath of the users permissions save file.
-     * @param groupsFile The filepath of the groups permissions save file.
-     */
-    public PermissionsRegistry(Function<ID, String> idToString,
-                               Function<String, ID> idFromString,
-                               Path usersFile,
-                               Path groupsFile)
-    { this(new PermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
-
-    protected PermissionsRegistry(PermissionGroup defaultPermissions,
-                                  Function<ID, String> idToString,
-                                  Function<String, ID> idFromString)
-    { this(defaultPermissions, idToString, idFromString, null, null); }
-
-    /**
-     * Creates a new permissions registry without the ability to save and load to and from files.
-     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
-     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
-     */
-    public PermissionsRegistry(Function<ID, String> idToString,
-                               Function<String, ID> idFromString)
-    { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
-    //endregion
-
     //region instance variables
 
     /**
@@ -461,6 +419,48 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Flag indicating whether or not the permissions registry has been modified since it was last saved or loaded.
      */
     protected boolean hasBeenDifferentiatedFromFiles = false;
+    //endregion
+
+    //region initialisation
+    protected PermissionsRegistry(PermissionGroup defaultPermissions,
+                                  Function<ID, String> idToString,
+                                  Function<String, ID> idFromString,
+                                  Path usersFile,
+                                  Path groupsFile)
+    {
+        this.defaultPermissions = defaultPermissions;
+        this.convertIdToString = idToString;
+        this.parseIdFromString = idFromString;
+        this.usersFilePath = usersFile;
+        this.groupsFilePath = groupsFile;
+    }
+
+    /**
+     * Creates a new permissions registry with the ability to save and load to and from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     * @param usersFile The filepath of the users permissions save file.
+     * @param groupsFile The filepath of the groups permissions save file.
+     */
+    public PermissionsRegistry(Function<ID, String> idToString,
+                               Function<String, ID> idFromString,
+                               Path usersFile,
+                               Path groupsFile)
+    { this(new PermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
+
+    protected PermissionsRegistry(PermissionGroup defaultPermissions,
+                                  Function<ID, String> idToString,
+                                  Function<String, ID> idFromString)
+    { this(defaultPermissions, idToString, idFromString, null, null); }
+
+    /**
+     * Creates a new permissions registry without the ability to save and load to and from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     */
+    public PermissionsRegistry(Function<ID, String> idToString,
+                               Function<String, ID> idFromString)
+    { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
     //endregion
 
     //region methods
