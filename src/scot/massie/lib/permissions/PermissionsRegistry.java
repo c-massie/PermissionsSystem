@@ -495,7 +495,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region accessors
     //region permission queries
     //region get status
-
+    //region single
     /**
      * Gets all the status information pertaining to the direct relationship between the specified user and the given
      * permission.
@@ -548,6 +548,46 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
+    //region multiple
+    public PermissionStatus getUserPermissionStatuses(ID userId, Iterable<String> permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public PermissionStatus getUserPermissionStatuses(ID userId, String... permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public PermissionStatus getGroupPermissionStatuses(String groupId, Iterable<String> permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public PermissionStatus getGroupPermissionStatuses(String groupId, String... permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public PermissionStatus getDefaultPermissionStatuses(Iterable<String> permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public PermissionStatus getDefaultPermissionStatuses(String... permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    protected PermissionStatus getPermissionStatuses(PermissionGroup permGroup,
+                                                     Iterable<String> permission,
+                                                     boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
+    //endregion
+
     //region assertHas
 
     /**
@@ -585,6 +625,76 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         if(!isDefaultPermission(permission))
             throw new PermissionNotDefaultException(permission);
+    }
+    //endregion
+
+    //region assertHasAll
+
+    public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertUserHasAllPermissions(ID userId, String... permissions) throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertGroupHasAllPermissions(String groupId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertGroupHasAllPermissions(String groupId, String... permissions) throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertAllAreDefaultPermissions(Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertAllAreDefaultPermissions(String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
+
+    //region assertHasAny
+
+    public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertUserHasAnyPermission(ID userId, String... permissions) throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertGroupHasAnyPermission(String groupId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertGroupHasAnyPermission(String groupId, String... permissions) throws UserMissingPermissionException
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertAnyAreDefaultPermission(Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public void assertAnyAreDefaultPermission(String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
     //endregion
 
@@ -674,6 +784,80 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
+    //region hasAll
+    public boolean userHasAllPermissions(ID userId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAllPermissions(ID userId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupHasAllPermissions(String groupId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupHasAllPermissions(String groupId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAllDefaultPermissions(Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAllDefaultPermissions(String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    protected boolean hasAllPermissions(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
+
+    //region hasAny
+    public boolean userHasAnyPermission(ID userId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAnyPermission(ID userId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupHasAnyPermission(String groupId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupHasAnyPermission(String groupId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAnyDefaultPermission(Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAnyDefaultPermission(String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    protected boolean hasAnyPermission(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
+
     //region has any subpermission of
 
     /**
@@ -686,6 +870,16 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
     { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
+
+    public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAnySubPermissionOf(ID userId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
 
     /**
      * Checks whether or not a specified group "has" a given permission or any subpermission thereof.
@@ -703,6 +897,16 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false);
     }
 
+    public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAnySubPermissionOf(String groupId, String... permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
     /**
      * Checks whether or not the default permissions "has" a given permission or any subpermission thereof.
      * @see #isDefaultPermission(String)
@@ -712,6 +916,16 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     public boolean isOrAnySubPermissionOfIsDefault(String permission)
     { return hasAnySubPermissionOf(defaultPermissions, permission, false); }
+
+    public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean isOrAnySubPermissionOfIsDefault(String... permission)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
 
     /**
      * Checks whether or not a given PermissionGroup object "has" a given permission or any subpermission thereof.
@@ -727,6 +941,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             return deferToDefault && defaultPermissions.hasPermissionOrAnyUnder(permission);
 
         return permGroup.hasPermissionOrAnyUnder(permission);
+    }
+
+    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String[] permission, boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup,
+                                            Iterable<String> permission,
+                                            boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
     //endregion
 
@@ -806,7 +1032,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region group queries
-
+    //region has
+    
     /**
      * Gets whether or not the given user is assigned a group with the given name. (directly, via an assigned group, or
      * via the default permissions.)
@@ -876,6 +1103,83 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         return permGroup.hasGroup(groupId);
     }
+    //endregion
+    
+    //region has all
+    
+    public boolean userHasAllGroups(ID userId, Iterable<String> groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAllGroups(ID userId, String... groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupExtendsFromAllGroups(String groupId, Iterable<String> superGroupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupExtendsFromAllGroups(String groupId, String... superGroupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    
+    public boolean areAllDefaultGroups(Iterable<String> groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAllDefaultGroups(String... groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    
+    protected boolean hasAllGroups(PermissionGroup permGroup, Iterable<String> groupIds, boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
+    
+    //region has any
+
+    public boolean userHasAnyGroups(ID userId, Iterable<String> groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean userHasAnyGroups(ID userId, String... groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupExtendsFromAnyGroups(String groupId, Iterable<String> superGroupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean groupExtendsFromAnyGroups(String groupId, String... superGroupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAnyDefaultGroups(Iterable<String> groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public boolean areAnyDefaultGroups(String... groupIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    protected boolean hasAnyGroups(PermissionGroup permGroup, Iterable<String> groupIds, boolean deferToDefault)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+    //endregion
     //endregion
 
     //region check general state
