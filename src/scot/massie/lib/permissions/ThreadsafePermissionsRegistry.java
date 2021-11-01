@@ -13,34 +13,35 @@ import java.util.function.Function;
 
 public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
 {
+    protected final Object mainSyncLock = new Object();
+
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString,
                                          Function<String, ID> idFromString,
                                          Path usersFile,
                                          Path groupsFile)
-    { super(new ThreadsafePermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
+    { super(idToString, idFromString, usersFile, groupsFile); }
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
-    { super(new ThreadsafePermissionGroup("*"), idToString, idFromString); }
-    
+    { super(idToString, idFromString); }
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return getPermissionStatus(permissionsForUsers.get(userId), permission, true); }
     }
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
     {
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return getPermissionStatus(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return hasPermission(permissionsForUsers.get(userId), permission, true); }
     }
 
@@ -50,14 +51,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isDefaultPermission(permission);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return hasPermission(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
     }
 
@@ -67,14 +68,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isOrAnySubPermissionOfIsDefault(permission);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return getPermissionArg(permissionsForUsers.get(userId), permission, true); }
     }
 
@@ -84,14 +85,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return getDefaultPermissionArg(permission);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return getPermissionArg(assignableGroups.get(groupId), permission, false); }
     }
 
     @Override
     public boolean userHasGroup(ID userId, String groupId)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return hasGroup(permissionsForUsers.get(userId), groupId, true); }
     }
 
@@ -101,22 +102,22 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return isDefaultGroup(superGroupId);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return hasGroup(assignableGroups.get(groupId), superGroupId, false); }
     }
 
     @Override
     public Collection<String> getGroupNames()
-    { synchronized(assignableGroups) { return new HashSet<>(assignableGroups.keySet()); } }
+    { synchronized(mainSyncLock) { return new HashSet<>(assignableGroups.keySet()); } }
 
     @Override
     public Collection<ID> getUsers()
-    { synchronized(assignableGroups) { return new HashSet<>(permissionsForUsers.keySet()); } }
+    { synchronized(mainSyncLock) { return new HashSet<>(permissionsForUsers.keySet()); } }
 
     @Override
     public List<String> getUserPermissions(ID userId)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
     }
 
@@ -126,14 +127,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupdId))
             return getDefaultPermissions();
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return getPermissions(assignableGroups.get(groupdId)); }
     }
 
     @Override
     public List<String> getGroupsOfUser(ID userId)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
     }
 
@@ -143,7 +144,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return getDefaultGroups();
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return getGroupsOf(assignableGroups.get(groupId)); }
     }
 
@@ -152,7 +153,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     @Override
     public Permission assignUserPermission(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
     }
 
@@ -162,14 +163,14 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return assignDefaultPermission(permission);
         else
-            synchronized(assignableGroups)
+            synchronized(mainSyncLock)
             { return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
     }
 
     @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return revokePermission(permissionsForUsers.get(userId), permission); }
     }
 
@@ -179,22 +180,19 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return revokeDefaultPermission(permission);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return revokePermission(assignableGroups.get(groupId), permission); }
     }
 
     @Override
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         {
-            synchronized(assignableGroups)
-            {
-                PermissionGroup userPermGroup = getUserPermissionsGroupOrNew(userId);
-                PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
-                markAsModified();
-                userPermGroup.addPermissionGroup(permGroupBeingAssigned);
-            }
+            PermissionGroup userPermGroup = getUserPermissionsGroupOrNew(userId);
+            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+            markAsModified();
+            userPermGroup.addPermissionGroup(permGroupBeingAssigned);
         }
     }
 
@@ -204,7 +202,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             assignDefaultGroup(groupIdBeingAssigned);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         {
             PermissionGroup permGroup = getGroupPermissionsGroupOrNew(groupId);
             PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
@@ -217,7 +215,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     @Override
     public void assignDefaultGroup(String groupIdBeingAssigned)
     {
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         {
             PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
             assertNotCircular(defaultPermissions, permGroupBeingAssigned);
@@ -233,7 +231,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     @Override
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
     }
 
@@ -243,7 +241,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if("*".equals(groupId))
             return revokeDefaultGroup(groupIdBeingRevoked);
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         { return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked); }
     }
 
@@ -257,56 +255,28 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
         if(permGroup == null)
             return false;
 
-        synchronized(assignableGroups)
+        synchronized(mainSyncLock)
         {
-            if(permGroup == defaultPermissions)
-            {
-                MutableWrapper<Boolean> result = new MutableWrapper<>(false);
+            PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
 
-                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
-                {
-                    PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+            if(permGroupBeingRevoked == null)
+                return false;
 
-                    if(permGroupBeingRevoked == null)
-                        return;
-
-                    markAsModified();
-                    result.set(permGroup.removePermissionGroup(permGroupBeingRevoked));
-                });
-
-                return result.get();
-            }
-            else
-            {
-                PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
-
-                if(permGroupBeingRevoked == null)
-                    return false;
-
-                markAsModified();
-                return permGroup.removePermissionGroup(permGroupBeingRevoked);
-            }
+            markAsModified();
+            return permGroup.removePermissionGroup(permGroupBeingRevoked);
         }
     }
 
     @Override
     public void clear()
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         {
-            synchronized(assignableGroups)
-            {
-                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
-                {
-                    permissionsForUsers.clear();
-                    assignableGroups.clear();
-                    defaultPermissions.clear();
-                });
-            }
+            permissionsForUsers.clear();
+            assignableGroups.clear();
+            defaultPermissions.clear();
         }
     }
-
-
 
     @Override
     public String usersToSaveString()
@@ -315,7 +285,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
         try(BufferedWriter writer = new BufferedWriter(sw))
         {
-            synchronized(permissionsForUsers)
+            synchronized(mainSyncLock)
             { saveUsers(writer); }
         }
         catch(IOException e)
@@ -331,7 +301,7 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
 
         try(BufferedWriter writer = new BufferedWriter(sw))
         {
-            synchronized(assignableGroups)
+            synchronized(mainSyncLock)
             { saveGroups(writer); }
         }
         catch(IOException e)
@@ -343,57 +313,25 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     @Override
     public void save() throws IOException
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         {
-            synchronized(assignableGroups)
-            {
-                MutableWrapper<IOException> toRethrow = new MutableWrapper<>(null);
-
-                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
-                {
-                    try
-                    {
-                        saveUsers();
-                        saveGroups();
-                        hasBeenDifferentiatedFromFiles = false;
-                    }
-                    catch(IOException ex)
-                    { toRethrow.set(ex); }
-                });
-
-                if(toRethrow.get() != null)
-                    throw new IOException(toRethrow.get());
-            }
+            saveUsers();
+            saveGroups();
+            hasBeenDifferentiatedFromFiles = false;
         }
     }
 
     @Override
     public void load() throws IOException
     {
-        synchronized(permissionsForUsers)
+        synchronized(mainSyncLock)
         {
-            synchronized(assignableGroups)
-            {
-                MutableWrapper<IOException> toRethrow = new MutableWrapper<>(null);
-
-                ((ThreadsafePermissionGroup)defaultPermissions).doAtomically(() ->
-                {
-                    try
-                    {
-                        permissionsForUsers.clear();
-                        assignableGroups.clear();
-                        defaultPermissions.clear();
-                        loadGroups();
-                        loadUsers();
-                        hasBeenDifferentiatedFromFiles = false;
-                    }
-                    catch(IOException ex)
-                    { toRethrow.set(ex); }
-                });
-
-                if(toRethrow.get() != null)
-                    throw new IOException(toRethrow.get());
-            }
+            permissionsForUsers.clear();
+            assignableGroups.clear();
+            defaultPermissions.clear();
+            loadGroups();
+            loadUsers();
+            hasBeenDifferentiatedFromFiles = false;
         }
     }
 }
