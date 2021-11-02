@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -549,41 +550,50 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region multiple
-    public PermissionStatus getUserPermissionStatuses(ID userId, Iterable<String> permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, Iterable<String> permissions)
+    { return getPermissionStatuses(permissionsForUsers.get(userId), permissions, true); }
 
-    public PermissionStatus getUserPermissionStatuses(ID userId, String... permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, String... permissions)
+    { return getPermissionStatuses(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
-    public PermissionStatus getGroupPermissionStatuses(String groupId, Iterable<String> permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, Iterable<String> permissions)
+    { return getPermissionStatuses(assignableGroups.get(groupId), permissions, false); }
 
-    public PermissionStatus getGroupPermissionStatuses(String groupId, String... permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, String... permissions)
+    { return getPermissionStatuses(assignableGroups.get(groupId), Arrays.asList(permissions), false); }
 
-    public PermissionStatus getDefaultPermissionStatuses(Iterable<String> permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getDefaultPermissionStatuses(Iterable<String> permissions)
+    { return getPermissionStatuses(defaultPermissions, permissions, false); }
 
-    public PermissionStatus getDefaultPermissionStatuses(String... permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public Map<String, PermissionStatus> getDefaultPermissionStatuses(String... permissions)
+    { return getPermissionStatuses(defaultPermissions, Arrays.asList(permissions), false); }
 
-    protected PermissionStatus getPermissionStatuses(PermissionGroup permGroup,
-                                                     Iterable<String> permission,
-                                                     boolean deferToDefault)
+    protected Map<String, PermissionStatus> getPermissionStatuses(PermissionGroup permGroup,
+                                                                  Iterable<String> permissions,
+                                                                  boolean deferToDefault)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        Map<String, PermissionStatus> result = new HashMap<>();
+
+        if(permGroup == null)
+        {
+            if(deferToDefault)
+            {
+                for(String permission : permissions)
+                    result.put(permission, defaultPermissions.getPermissionStatus(permission));
+            }
+            else
+            {
+                for(String permission : permissions)
+                    result.put(permission, new PermissionStatus(permission, false, null));
+            }
+
+            return result;
+        }
+
+        for(String permission : permissions)
+            result.put(permission, permGroup.getPermissionStatus(permission));
+
+        return result;
     }
     //endregion
     //endregion
