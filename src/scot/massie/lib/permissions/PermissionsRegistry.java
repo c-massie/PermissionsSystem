@@ -851,39 +851,58 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region hasAny
-    public boolean userHasAnyPermission(ID userId, Iterable<String> permissions)
+    public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
+    { return hasAnyPermissions(permissionsForUsers.get(userId), permissions, true); }
+
+    public boolean userHasAnyPermissions(ID userId, String... permissions)
+    { return hasAnyPermissions(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
+
+    public boolean groupHasAnyPermissions(String groupId, Iterable<String> permissions)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return anyAreDefaultPermissions(permissions);
+
+        return hasAnyPermissions(assignableGroups.get(groupId), permissions, false);
     }
 
-    public boolean userHasAnyPermission(ID userId, String... permissions)
+    public boolean groupHasAnyPermissions(String groupId, String... permissions)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return anyAreDefaultPermissions(permissions);
+
+        return hasAnyPermissions(assignableGroups.get(groupId), Arrays.asList(permissions), false);
     }
 
-    public boolean groupHasAnyPermission(String groupId, Iterable<String> permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean anyAreDefaultPermissions(Iterable<String> permissions)
+    { return hasAnyPermissions(defaultPermissions, permissions, false); }
 
-    public boolean groupHasAnyPermission(String groupId, String... permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean anyAreDefaultPermissions(String... permissions)
+    { return hasAnyPermissions(defaultPermissions, Arrays.asList(permissions), false); }
 
-    public boolean areAnyDefaultPermission(Iterable<String> permissions)
+    protected boolean hasAnyPermissions(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+        if(permGroup == null)
+        {
+            if(deferToDefault)
+            {
+                for(String permission : permissions)
+                    if(defaultPermissions.hasPermission(permission))
+                        return true;
+            }
+            else
+            {
+                for(String permission : permissions) // if permissions.hasAny();
+                    return true;
+            }
 
-    public boolean areAnyDefaultPermission(String... permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+            return false;
+        }
 
-    protected boolean hasAnyPermission(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        for(String permission : permissions)
+            if(permGroup.hasPermission(permission))
+                return true;
+
+        return false;
     }
     //endregion
 
