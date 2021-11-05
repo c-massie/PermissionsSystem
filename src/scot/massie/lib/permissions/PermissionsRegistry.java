@@ -920,14 +920,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
 
     public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permissions, true); }
 
     public boolean userHasAnySubPermissionOf(ID userId, String... permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permissions, true); }
 
     /**
      * Checks whether or not a specified group "has" a given permission or any subpermission thereof.
@@ -947,12 +943,18 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return isOrAnySubPermissionOfIsDefault(permissions);
+
+        return hasAnySubPermissionOf(assignableGroups.get(groupId), permissions, false);
     }
 
     public boolean userHasAnySubPermissionOf(String groupId, String... permissions)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return isOrAnySubPermissionOfIsDefault(permissions);
+
+        return hasAnySubPermissionOf(assignableGroups.get(groupId), permissions, false);
     }
 
     /**
@@ -965,15 +967,11 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public boolean isOrAnySubPermissionOfIsDefault(String permission)
     { return hasAnySubPermissionOf(defaultPermissions, permission, false); }
 
-    public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
+    { return hasAnySubPermissionOf(defaultPermissions, permissions, false); }
 
-    public boolean isOrAnySubPermissionOfIsDefault(String... permission)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean isOrAnySubPermissionOfIsDefault(String... permissions)
+    { return hasAnySubPermissionOf(defaultPermissions, permissions, false); }
 
     /**
      * Checks whether or not a given PermissionGroup object "has" a given permission or any subpermission thereof.
@@ -991,16 +989,32 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.hasPermissionOrAnyUnder(permission);
     }
 
-    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String[] permission, boolean deferToDefault)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String[] permissions, boolean deferToDefault)
+    { return hasAnySubPermissionOf(permGroup, Arrays.asList(permissions), deferToDefault); }
 
     protected boolean hasAnySubPermissionOf(PermissionGroup permGroup,
-                                            Iterable<String> permission,
+                                            Iterable<String> permissions,
                                             boolean deferToDefault)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+        {
+            if(deferToDefault)
+            {
+                for(String perm : permissions)
+                    if(defaultPermissions.hasPermissionOrAnyUnder(perm))
+                        return true;
+
+                return false;
+            }
+            else
+                return false;
+        }
+
+        for(String perm : permissions)
+            if(permGroup.hasPermissionOrAnyUnder(perm))
+                return true;
+
+        return false;
     }
     //endregion
 
