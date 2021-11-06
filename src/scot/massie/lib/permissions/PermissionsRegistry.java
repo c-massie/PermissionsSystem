@@ -1170,38 +1170,57 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region has all
     
     public boolean userHasAllGroups(ID userId, Iterable<String> groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAllGroups(permissionsForUsers.get(userId), groupIds, true); }
 
     public boolean userHasAllGroups(ID userId, String... groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAllGroups(permissionsForUsers.get(userId), Arrays.asList(groupIds), true); }
 
     public boolean groupExtendsFromAllGroups(String groupId, Iterable<String> superGroupIds)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return areAllDefaultGroups(superGroupIds);
+
+        return hasAllGroups(assignableGroups.get(groupId), superGroupIds, false);
     }
 
     public boolean groupExtendsFromAllGroups(String groupId, String... superGroupIds)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return areAllDefaultGroups(superGroupIds);
+
+        return hasAllGroups(assignableGroups.get(groupId), Arrays.asList(superGroupIds), false);
     }
     
     public boolean areAllDefaultGroups(Iterable<String> groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAllGroups(defaultPermissions, groupIds, false); }
 
     public boolean areAllDefaultGroups(String... groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAllGroups(defaultPermissions, Arrays.asList(groupIds), false); }
     
     protected boolean hasAllGroups(PermissionGroup permGroup, Iterable<String> groupIds, boolean deferToDefault)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+        {
+            if(deferToDefault)
+            {
+                for(String groupId : groupIds)
+                    if(!defaultPermissions.hasGroup(groupId))
+                        return false;
+            }
+            else
+            {
+                for(String groupId : groupIds)
+                    return false;
+            }
+
+            return true;
+        }
+
+        for(String groupId : groupIds)
+            if(!permGroup.hasGroup(groupId))
+                return false;
+
+        return true;
     }
     //endregion
     
