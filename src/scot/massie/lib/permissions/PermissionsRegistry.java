@@ -1227,38 +1227,52 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region has any
 
     public boolean userHasAnyGroups(ID userId, Iterable<String> groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAnyGroups(permissionsForUsers.get(userId), groupIds, true); }
 
     public boolean userHasAnyGroups(ID userId, String... groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { return hasAnyGroups(permissionsForUsers.get(userId), Arrays.asList(groupIds), true); }
 
     public boolean groupExtendsFromAnyGroups(String groupId, Iterable<String> superGroupIds)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return anyAreDefaultGroups(superGroupIds);
+
+        return hasAnyGroups(assignableGroups.get(groupId), superGroupIds, false);
     }
 
     public boolean groupExtendsFromAnyGroups(String groupId, String... superGroupIds)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if("*".equals(groupId))
+            return anyAreDefaultGroups(superGroupIds);
+
+        return hasAnyGroups(assignableGroups.get(groupId), Arrays.asList(superGroupIds), false);
     }
 
-    public boolean areAnyDefaultGroups(Iterable<String> groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean anyAreDefaultGroups(Iterable<String> groupIds)
+    { return hasAnyGroups(defaultPermissions, groupIds, false); }
 
-    public boolean areAnyDefaultGroups(String... groupIds)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public boolean anyAreDefaultGroups(String... groupIds)
+    { return hasAnyGroups(defaultPermissions, Arrays.asList(groupIds), false); }
 
     protected boolean hasAnyGroups(PermissionGroup permGroup, Iterable<String> groupIds, boolean deferToDefault)
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(permGroup == null)
+        {
+            if(deferToDefault)
+            {
+                for(String groupId : groupIds)
+                    if(defaultPermissions.hasGroup(groupId))
+                        return true;
+            }
+
+            return false;
+        }
+
+        for(String groupId : groupIds)
+            if(permGroup.hasGroup(groupId))
+                return true;
+
+        return false;
     }
     //endregion
     //endregion
