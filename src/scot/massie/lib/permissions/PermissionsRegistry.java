@@ -517,7 +517,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         permission argument if applicable.
      */
     public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
-    { return getPermissionStatus(assignableGroups.get(groupId), permission, false); }
+    { return getPermissionStatus(getGroupPermissionsGroup(groupId), permission, false); }
 
     /**
      * Gets all the status information pertaining to the direct relationship between the default permissions and the
@@ -557,10 +557,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return getPermissionStatuses(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
     public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, Iterable<String> permissions)
-    { return getPermissionStatuses(assignableGroups.get(groupId), permissions, false); }
+    { return getPermissionStatuses(getGroupPermissionsGroup(groupId), permissions, false); }
 
     public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, String... permissions)
-    { return getPermissionStatuses(assignableGroups.get(groupId), Arrays.asList(permissions), false); }
+    { return getPermissionStatuses(getGroupPermissionsGroup(groupId), Arrays.asList(permissions), false); }
 
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(Iterable<String> permissions)
     { return getPermissionStatuses(defaultPermissions, permissions, false); }
@@ -736,12 +736,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return True if the group has the given permission as defined above. Otherwise, false.
      */
     public boolean groupHasPermission(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return isDefaultPermission(permission);
-
-        return hasPermission(assignableGroups.get(groupId), permission, false);
-    }
+    { return hasPermission(getGroupPermissionsGroup(groupId), permission, false); }
 
     /**
      * <p>Checks whether or not the default permissions "has" a given permission.</p>
@@ -802,20 +797,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasAllPermissions(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
     public boolean groupHasAllPermissions(String groupId, Iterable<String> permissions)
-    {
-        if("*".equals(groupId))
-            return areAllDefaultPermissions(permissions);
-
-        return hasAllPermissions(assignableGroups.get(groupId), permissions, false);
-    }
+    { return hasAllPermissions(getGroupPermissionsGroup(groupId), permissions, false); }
 
     public boolean groupHasAllPermissions(String groupId, String... permissions)
-    {
-        if("*".equals(groupId))
-            return areAllDefaultPermissions(permissions);
-
-        return hasAllPermissions(assignableGroups.get(groupId), Arrays.asList(permissions), false);
-    }
+    { return hasAllPermissions(getGroupPermissionsGroup(groupId), Arrays.asList(permissions), false); }
 
     public boolean areAllDefaultPermissions(Iterable<String> permissions)
     { return hasAllPermissions(defaultPermissions, permissions, false); }
@@ -858,20 +843,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasAnyPermissions(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
     public boolean groupHasAnyPermissions(String groupId, Iterable<String> permissions)
-    {
-        if("*".equals(groupId))
-            return anyAreDefaultPermissions(permissions);
-
-        return hasAnyPermissions(assignableGroups.get(groupId), permissions, false);
-    }
+    { return hasAnyPermissions(getGroupPermissionsGroup(groupId), permissions, false); }
 
     public boolean groupHasAnyPermissions(String groupId, String... permissions)
-    {
-        if("*".equals(groupId))
-            return anyAreDefaultPermissions(permissions);
-
-        return hasAnyPermissions(assignableGroups.get(groupId), Arrays.asList(permissions), false);
-    }
+    { return hasAnyPermissions(getGroupPermissionsGroup(groupId), Arrays.asList(permissions), false); }
 
     public boolean anyAreDefaultPermissions(Iterable<String> permissions)
     { return hasAnyPermissions(defaultPermissions, permissions, false); }
@@ -934,28 +909,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         {@link #groupHasPermission(String, String)}. Otherwise, false.
      */
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return isOrAnySubPermissionOfIsDefault(permission);
-
-        return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false);
-    }
+    { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permission, false); }
 
     public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
-    {
-        if("*".equals(groupId))
-            return isOrAnySubPermissionOfIsDefault(permissions);
-
-        return hasAnySubPermissionOf(assignableGroups.get(groupId), permissions, false);
-    }
+    { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permissions, false); }
 
     public boolean userHasAnySubPermissionOf(String groupId, String... permissions)
-    {
-        if("*".equals(groupId))
-            return isOrAnySubPermissionOfIsDefault(permissions);
-
-        return hasAnySubPermissionOf(assignableGroups.get(groupId), permissions, false);
-    }
+    { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permissions, false); }
 
     /**
      * Checks whether or not the default permissions "has" a given permission or any subpermission thereof.
@@ -1046,12 +1006,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         permission has a permission argument associated, that permission argument. Otherwise, null.
      */
     public String getGroupPermissionArg(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return getDefaultPermissionArg(permission);
-
-        return getPermissionArg(assignableGroups.get(groupId), permission, false);
-    }
+    { return getPermissionArg(getGroupPermissionsGroup(groupId), permission, false); }
 
     /**
      * <p>Gets the argument associated with the given permission in the default permissions.</p>
@@ -1116,12 +1071,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         group assigned to it by the given name. Otherwise, false.
      */
     public boolean groupExtendsFromGroup(String groupId, String superGroupId)
-    {
-        if("*".equals(groupId))
-            return isDefaultGroup(superGroupId);
-
-        return hasGroup(assignableGroups.get(groupId), superGroupId, false);
-    }
+    { return hasGroup(getGroupPermissionsGroup(groupId), superGroupId, false); }
 
     /**
      * Gets whether or not the group with the specified name is extended from by the default permissions, is assigned
@@ -1176,20 +1126,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasAllGroups(permissionsForUsers.get(userId), Arrays.asList(groupIds), true); }
 
     public boolean groupExtendsFromAllGroups(String groupId, Iterable<String> superGroupIds)
-    {
-        if("*".equals(groupId))
-            return areAllDefaultGroups(superGroupIds);
-
-        return hasAllGroups(assignableGroups.get(groupId), superGroupIds, false);
-    }
+    { return hasAllGroups(getGroupPermissionsGroup(groupId), superGroupIds, false); }
 
     public boolean groupExtendsFromAllGroups(String groupId, String... superGroupIds)
-    {
-        if("*".equals(groupId))
-            return areAllDefaultGroups(superGroupIds);
-
-        return hasAllGroups(assignableGroups.get(groupId), Arrays.asList(superGroupIds), false);
-    }
+    { return hasAllGroups(getGroupPermissionsGroup(groupId), Arrays.asList(superGroupIds), false); }
     
     public boolean areAllDefaultGroups(Iterable<String> groupIds)
     { return hasAllGroups(defaultPermissions, groupIds, false); }
@@ -1233,20 +1173,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasAnyGroups(permissionsForUsers.get(userId), Arrays.asList(groupIds), true); }
 
     public boolean groupExtendsFromAnyGroups(String groupId, Iterable<String> superGroupIds)
-    {
-        if("*".equals(groupId))
-            return anyAreDefaultGroups(superGroupIds);
-
-        return hasAnyGroups(assignableGroups.get(groupId), superGroupIds, false);
-    }
+    { return hasAnyGroups(getGroupPermissionsGroup(groupId), superGroupIds, false); }
 
     public boolean groupExtendsFromAnyGroups(String groupId, String... superGroupIds)
-    {
-        if("*".equals(groupId))
-            return anyAreDefaultGroups(superGroupIds);
-
-        return hasAnyGroups(assignableGroups.get(groupId), Arrays.asList(superGroupIds), false);
-    }
+    { return hasAnyGroups(getGroupPermissionsGroup(groupId), Arrays.asList(superGroupIds), false); }
 
     public boolean anyAreDefaultGroups(Iterable<String> groupIds)
     { return hasAnyGroups(defaultPermissions, groupIds, false); }
@@ -1336,12 +1266,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         including permission arguments.
      */
     public List<String> getGroupPermissions(String groupdId)
-    {
-        if("*".equals(groupdId))
-            return getDefaultPermissions();
-
-        return getPermissions(assignableGroups.get(groupdId));
-    }
+    { return getPermissions(getGroupPermissionsGroup(groupdId)); }
 
     /**
      * <p>Gets a list of the default permissions.</p>
@@ -1395,12 +1320,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         highest to lowest.
      */
     public List<String> getGroupsOfGroup(String groupId)
-    {
-        if("*".equals(groupId))
-            return getDefaultGroups();
-
-        return getGroupsOf(assignableGroups.get(groupId));
-    }
+    { return getGroupsOf(getGroupPermissionsGroup(groupId)); }
 
     /**
      * Gets the names of all default groups.
@@ -1432,6 +1352,16 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region PermissionGroups
 
     /**
+     * Gets the permission group object of the specified group. If the group is specified as "*", this is taken to mean
+     * the default permission group.
+     * @param groupId The ID of the group to get the PermissionGroup object of.
+     * @return The PermissionGroup object of the specified group, or the default PermissionGroup object if the group is
+     *         specified as "*", or null if the specified group does not exist and is not specified as "*".
+     */
+    PermissionGroup getGroupPermissionsGroup(String groupId)
+    { return ("*".equals(groupId)) ? (defaultPermissions) : (assignableGroups.get(groupId)); }
+
+    /**
      * Gets the permission group object of the specified group. If the specified group does not currently exist in the
      * registry, creates it.
      * @param groupId The name of the group to get the permission group object of.
@@ -1440,6 +1370,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     PermissionGroup getGroupPermissionsGroupOrNew(String groupId)
     {
+        if("*".equals(groupId))
+            return defaultPermissions;
+
         assertGroupNameValid(groupId);
 
         return assignableGroups.computeIfAbsent(groupId, s ->
@@ -1459,6 +1392,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     PermissionGroup getGroupPermissionsGroupOrNew(String groupId, long priority)
     {
+        if("*".equals(groupId))
+            return defaultPermissions;
+
         assertGroupNameValid(groupId);
 
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
@@ -1485,6 +1421,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     PermissionGroup getGroupPermissionsGroupOrNew(String groupId, double priority)
     {
+        if("*".equals(groupId))
+            return defaultPermissions;
+
         assertGroupNameValid(groupId);
 
         return assignableGroups.compute(groupId, (s, permissionGroup) ->
@@ -1513,6 +1452,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString)
             throws InvalidPriorityException
     {
+        if("*".equals(groupId))
+            return defaultPermissions;
+
         long priorityAsLong = 0;
         boolean priorityIsLong = true;
 
@@ -1657,12 +1599,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     public Permission assignGroupPermission(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return assignDefaultPermission(permission);
-        else
-            return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission);
-    }
+    { return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
 
     /**
      * Assigns a default permission. All users will be considered to have this permission unless otherwise overridden.
@@ -1709,12 +1646,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         was none. (And thus was not removed)
      */
     public Permission revokeGroupPermission(String groupId, String permission)
-    {
-        if("*".equals(groupId))
-            return revokeDefaultPermission(permission);
-
-        return revokePermission(assignableGroups.get(groupId), permission);
-    }
+    { return revokePermission(getGroupPermissionsGroup(groupId), permission); }
 
     /**
      * Removes a permission from the default permissions.
@@ -1762,12 +1694,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If either of the group names was not a valid group name.
      */
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    {
-        if("*".equals(groupId))
-            assignDefaultGroup(groupIdBeingAssigned);
-
-        assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true);
-    }
+    { assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true); }
 
     /**
      * Assigns a group to the default permissions.
@@ -1813,12 +1740,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return True if a group was deässigned from the group as a result of this call. Otherwise, false.
      */
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    {
-        if("*".equals(groupId))
-            return revokeDefaultGroup(groupIdBeingRevoked);
-
-        return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked);
-    }
+    { return revokeGroupFrom(getGroupPermissionsGroup(groupId), groupIdBeingRevoked); }
 
     /**
      * Deässigns a group as a default group.
