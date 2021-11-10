@@ -1,5 +1,8 @@
 package scot.massie.lib.permissions.exceptions;
 
+import java.util.Collection;
+import java.util.Collections;
+
 /**
  * Thrown when asserting that a user has a permission which they do not.
  */
@@ -18,7 +21,7 @@ public class UserMissingPermissionException extends MissingPermissionException
      */
     public UserMissingPermissionException(Comparable userId, String permission)
     {
-        super(permission, "The user with the ID " + userId.toString() + " was missing the permission " + permission);
+        super(permission, getDefaultMessage(userId, Collections.singletonList(permission)));
         userMissingPermissionId = userId;
     }
 
@@ -32,6 +35,108 @@ public class UserMissingPermissionException extends MissingPermissionException
     {
         super(permission, message);
         userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     */
+    public UserMissingPermissionException(Comparable userId, Iterable<String> permissions)
+    {
+        super(permissions, getDefaultMessage(userId, permissions));
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     */
+    public UserMissingPermissionException(Comparable userId, Iterable<String> permissions, String message)
+    {
+        super(permissions, message);
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     */
+    public UserMissingPermissionException(Comparable userId, Collection<String> permissions)
+    {
+        super(permissions, getDefaultMessage(userId, permissions));
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     */
+    public UserMissingPermissionException(Comparable userId, Collection<String> permissions, String message)
+    {
+        super(permissions, message);
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Gets the default exception message for a given iterable of permissions.
+     * @param permissions The permissions to get the default exception message for.
+     * @return The default exception message.
+     */
+    private static String getDefaultMessage(Comparable userId, Iterable<String> permissions)
+    {
+        int permissionCount = 0;
+        StringBuilder resultBuilder = new StringBuilder();
+        String linePrefix = "  - ";
+
+        for(String p : permissions)
+        {
+            resultBuilder.append("\n").append(linePrefix).append(p);
+            permissionCount++;
+        }
+
+        String result;
+
+        if(permissionCount == 1)
+        {
+            result = "The user with the ID " + userId.toString() + "was missing the permission "
+                     + resultBuilder.substring(linePrefix.length() + 1);
+        }
+        else
+        {
+            result = "The user with the ID " + userId.toString() + "was missing the permissions: "
+                     + resultBuilder.toString();
+        }
+
+        return result;
+    }
+
+    /**
+     * Gets the default exception message for a given collection of permissions.
+     * @param permissions The permissions to get the default exception message for.
+     * @return The default exception message.
+     */
+    private static String getDefaultMessage(Comparable userId, Collection<String> permissions)
+    {
+        if(permissions.size() != 1)
+        {
+            //noinspection OptionalGetWithoutIsPresent
+            return "The user with the ID " + userId + " was missing the permission "
+                   + permissions.stream().findFirst().get();
+        }
+
+        StringBuilder resultBuilder = new StringBuilder();
+        String linePrefix = "  - ";
+
+        for(String p : permissions)
+            resultBuilder.append("\n").append(linePrefix).append(p);
+
+        return "The user with the ID " + userId + " was missing the permissions: " + resultBuilder;
     }
 
     /**
