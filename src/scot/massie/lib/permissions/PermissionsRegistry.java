@@ -643,34 +643,58 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions)
             throws UserMissingPermissionException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(!userHasAllPermissions(userId, permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!userHasPermission(userId, perm))
+                    permissionsMissing.add(perm);
+
+            throw new UserMissingPermissionException(userId, permissionsMissing);
+        }
     }
 
     public void assertUserHasAllPermissions(ID userId, String... permissions) throws UserMissingPermissionException
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { assertUserHasAllPermissions(userId, Arrays.asList(permissions)); }
 
     public void assertGroupHasAllPermissions(String groupId, Iterable<String> permissions)
-            throws UserMissingPermissionException
+            throws GroupMissingPermissionException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(!groupHasAllPermissions(groupId, permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!groupHasPermission(groupId, perm))
+                    permissionsMissing.add(perm);
+
+            throw new GroupMissingPermissionException(groupId, permissionsMissing);
+        }
     }
 
-    public void assertGroupHasAllPermissions(String groupId, String... permissions) throws UserMissingPermissionException
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    public void assertGroupHasAllPermissions(String groupId, String... permissions)
+            throws GroupMissingPermissionException
+    { assertGroupHasAllPermissions(groupId, Arrays.asList(permissions)); }
 
     public void assertAllAreDefaultPermissions(Iterable<String> permissions)
+            throws PermissionNotDefaultException
     {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        if(!areAllDefaultPermissions(permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!isDefaultPermission(perm))
+                    permissionsMissing.add(perm);
+
+            throw new PermissionNotDefaultException(permissionsMissing);
+        }
     }
 
     public void assertAllAreDefaultPermissions(String... permissions)
-    {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+            throws PermissionNotDefaultException
+    { assertAllAreDefaultPermissions(Arrays.asList(permissions)); }
     //endregion
 
     //region assertHasAny
