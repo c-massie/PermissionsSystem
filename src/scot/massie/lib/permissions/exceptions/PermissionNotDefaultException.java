@@ -54,6 +54,40 @@ public class PermissionNotDefaultException extends MissingPermissionException
     { super(permissions, message); }
 
     /**
+     * Creates a new PermissionNotDefaultException
+     * @param permissions The permissions that are not default.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public PermissionNotDefaultException(Iterable<String> permissions, boolean isForAnyPermissions)
+    { super(permissions, getDefaultMessage(permissions), isForAnyPermissions); }
+
+    /**
+     * Creates a new PermissionNotDefaultException
+     * @param permissions The permissions that are not default.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public PermissionNotDefaultException(Iterable<String> permissions, String message, boolean isForAnyPermissions)
+    { super(permissions, message, isForAnyPermissions); }
+
+    /**
+     * Creates a new PermissionNotDefaultException
+     * @param permissions The permissions that are not default.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public PermissionNotDefaultException(Collection<String> permissions, boolean isForAnyPermissions)
+    { super(permissions, getDefaultMessage(permissions), isForAnyPermissions); }
+
+    /**
+     * Creates a new PermissionNotDefaultException
+     * @param permissions The permissions that are not default.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public PermissionNotDefaultException(Collection<String> permissions, String message, boolean isForAnyPermissions)
+    { super(permissions, message, isForAnyPermissions); }
+
+    /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
      * @return The default exception message.

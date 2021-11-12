@@ -83,6 +83,64 @@ public class GroupMissingPermissionException extends MissingPermissionException
     }
 
     /**
+     * Creates a new GroupMissingPermissionException
+     * @param groupName The name of the group missing the permissions.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public GroupMissingPermissionException(String groupName, Iterable<String> permissions, boolean isForAnyPermissions)
+    {
+        super(permissions, getDefaultMessage(groupName, permissions), isForAnyPermissions);
+        groupMissingPermissionName = groupName;
+    }
+
+    /**
+     * Creates a new GroupMissingPermissionException
+     * @param groupName The name of the group missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public GroupMissingPermissionException(String groupName,
+                                           Iterable<String> permissions,
+                                           String message,
+                                           boolean isForAnyPermissions)
+    {
+        super(permissions, message, isForAnyPermissions);
+        groupMissingPermissionName = groupName;
+    }
+
+    /**
+     * Creates a new GroupMissingPermissionException
+     * @param groupName The name of the group missing the permissions.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public GroupMissingPermissionException(String groupName,
+                                           Collection<String> permissions,
+                                           boolean isForAnyPermissions)
+    {
+        super(permissions, getDefaultMessage(groupName, permissions), isForAnyPermissions);
+        groupMissingPermissionName = groupName;
+    }
+
+    /**
+     * Creates a new GroupMissingPermissionException
+     * @param groupName The name of the group missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public GroupMissingPermissionException(String groupName,
+                                           Collection<String> permissions,
+                                           String message,
+                                           boolean isForAnyPermissions)
+    {
+        super(permissions, message, isForAnyPermissions);
+        groupMissingPermissionName = groupName;
+    }
+
+    /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
      * @return The default exception message.

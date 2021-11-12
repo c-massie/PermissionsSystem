@@ -84,6 +84,64 @@ public class UserMissingPermissionException extends MissingPermissionException
     }
 
     /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public UserMissingPermissionException(Comparable userId, Iterable<String> permissions, boolean isForAnyPermissions)
+    {
+        super(permissions, getDefaultMessage(userId, permissions), isForAnyPermissions);
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public UserMissingPermissionException(Comparable userId,
+                                          Iterable<String> permissions,
+                                          String message,
+                                          boolean isForAnyPermissions)
+    {
+        super(permissions, message, isForAnyPermissions);
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public UserMissingPermissionException(Comparable userId,
+                                          Collection<String> permissions,
+                                          boolean isForAnyPermissions)
+    {
+        super(permissions, getDefaultMessage(userId, permissions), isForAnyPermissions);
+        userMissingPermissionId = userId;
+    }
+
+    /**
+     * Creates a new UserMissingPermissionException
+     * @param userId The ID of the user missing the permissions.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public UserMissingPermissionException(Comparable userId,
+                                          Collection<String> permissions,
+                                          String message,
+                                          boolean isForAnyPermissions)
+    {
+        super(permissions, message, isForAnyPermissions);
+        userMissingPermissionId = userId;
+    }
+
+    /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
      * @return The default exception message.

@@ -15,6 +15,8 @@ public class MissingPermissionException extends Exception
      */
     final List<String> permissionsMissing;
 
+    final boolean isForAnyPermissions;
+
     /**
      * Creates a new MissingPermissionException.
      * @param permission The permission missing.
@@ -31,6 +33,7 @@ public class MissingPermissionException extends Exception
     {
         super(message);
         this.permissionsMissing = Collections.singletonList(permission);
+        this.isForAnyPermissions = false;
     }
 
     /**
@@ -38,7 +41,7 @@ public class MissingPermissionException extends Exception
      * @param permissions The permissions missing.
      */
     public MissingPermissionException(Iterable<String> permissions)
-    { this(permissions, getDefaultMessage(permissions)); }
+    { this(permissions, getDefaultMessage(permissions), false); }
 
     /**
      * Creates a new MissingPermissionException.
@@ -46,15 +49,7 @@ public class MissingPermissionException extends Exception
      * @param message The exception message.
      */
     public MissingPermissionException(Iterable<String> permissions, String message)
-    {
-        super(message);
-        List<String> psMissing = new ArrayList<>();
-
-        for(String p : permissions)
-            psMissing.add(p);
-
-        this.permissionsMissing = Collections.unmodifiableList(psMissing);
-    }
+    { this(permissions, message, false); }
 
     /**
      * Creates a new MissingPermissionException.
@@ -69,9 +64,53 @@ public class MissingPermissionException extends Exception
      * @param message The exception message.
      */
     public MissingPermissionException(Collection<String> permissions, String message)
+    { this(permissions, message, false); }
+
+    /**
+     * Creates a new MissingPermissionException.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public MissingPermissionException(Iterable<String> permissions, boolean isForAnyPermissions)
+    { this(permissions, getDefaultMessage(permissions), isForAnyPermissions); }
+
+    /**
+     * Creates a new MissingPermissionException.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public MissingPermissionException(Iterable<String> permissions, String message, boolean isForAnyPermissions)
+    {
+        super(message);
+        List<String> psMissing = new ArrayList<>();
+
+        for(String p : permissions)
+            psMissing.add(p);
+
+        this.permissionsMissing = Collections.unmodifiableList(psMissing);
+        this.isForAnyPermissions = isForAnyPermissions;
+    }
+
+    /**
+     * Creates a new MissingPermissionException.
+     * @param permissions The permissions missing.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public MissingPermissionException(Collection<String> permissions, boolean isForAnyPermissions)
+    { this(permissions, getDefaultMessage(permissions), isForAnyPermissions); }
+
+    /**
+     * Creates a new MissingPermissionException.
+     * @param permissions The permissions missing.
+     * @param message The exception message.
+     * @param isForAnyPermissions Whether allowing *any* of the permissions would be permissible.
+     */
+    public MissingPermissionException(Collection<String> permissions, String message, boolean isForAnyPermissions)
     {
         super(message);
         this.permissionsMissing = Collections.unmodifiableList(new ArrayList<>(permissions));
+        this.isForAnyPermissions = isForAnyPermissions;
     }
 
     /**
@@ -141,4 +180,12 @@ public class MissingPermissionException extends Exception
      */
     public boolean multiplePermissionsWereMissing()
     { return permissionsMissing.size() > 1; }
+
+    /**
+     * Gets whether having *any* permission required would have resulted in the permission check passing.
+     * @return True if any permission required being present would have resulted in a pass for the permission check.
+     *         Otherwise, (if all permissions were needed) false.
+     */
+    public boolean anySinglePermissionWouldHavePassedPermissionCheck()
+    { return isForAnyPermissions; }
 }
