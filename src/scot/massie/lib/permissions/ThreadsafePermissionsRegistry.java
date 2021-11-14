@@ -1,7 +1,5 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.utils.wrappers.MutableWrapper;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;

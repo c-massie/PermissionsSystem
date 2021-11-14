@@ -166,10 +166,7 @@ public class UserMissingPermissionException extends MissingPermissionException
                      + resultBuilder.substring(linePrefix.length() + 1);
         }
         else
-        {
-            result = "The user with the ID " + userId.toString() + "was missing the permissions: "
-                     + resultBuilder.toString();
-        }
+        { result = "The user with the ID " + userId.toString() + "was missing the permissions: " + resultBuilder; }
 
         return result;
     }

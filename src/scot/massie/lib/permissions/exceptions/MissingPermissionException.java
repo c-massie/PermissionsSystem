@@ -135,7 +135,7 @@ public class MissingPermissionException extends Exception
         if(permissionCount == 1)
         { result = "Missing the permission " + resultBuilder.substring(linePrefix.length() + 1); }
         else
-        { result = "Missing the permissions: " + resultBuilder.toString(); }
+        { result = "Missing the permissions: " + resultBuilder; }
 
         return result;
     }

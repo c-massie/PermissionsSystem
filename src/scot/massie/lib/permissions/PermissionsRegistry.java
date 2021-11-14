@@ -842,7 +842,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             }
             else
             {
-                for(String permission : permissions) // if permissions.hasAny();
+                for(String ignored : permissions) // if permissions.hasAny();
                     return false;
             }
 
@@ -888,7 +888,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             }
             else
             {
-                for(String permission : permissions) // if permissions.hasAny();
+                for(String ignored : permissions) // if permissions.hasAny();
                     return true;
             }
 
@@ -986,10 +986,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                     if(defaultPermissions.hasPermissionOrAnyUnder(perm))
                         return true;
 
-                return false;
             }
-            else
-                return false;
+
+            return false;
         }
 
         for(String perm : permissions)
@@ -1171,7 +1170,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             }
             else
             {
-                for(String groupId : groupIds)
+                for(String ignored : groupIds)
                     return false;
             }
 
