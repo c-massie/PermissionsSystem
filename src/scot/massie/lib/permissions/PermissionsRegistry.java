@@ -511,13 +511,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     /**
      * Gets all the status information pertaining to the direct relationship between the specified group and the given
      * permission.
-     * @param groupId The ID of the group to get the status information of the given permission.
+     * @param groupName The name of the group to get the status information of the given permission.
      * @param permission The permission to get the status of relating to the specified group.
      * @return A PermissionStatus object containing the permission queried, whether or not the group "has" it, and the
      *         permission argument if applicable.
      */
-    public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
-    { return getPermissionStatus(getGroupPermissionsGroup(groupId), permission, false); }
+    public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
+    { return getPermissionStatus(getGroupPermissionsGroup(groupName), permission, false); }
 
     /**
      * Gets all the status information pertaining to the direct relationship between the default permissions and the
@@ -550,24 +550,85 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region multiple
+
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified user and each of the
+     * given permissions.
+     * @param userId The ID of the user to get the status information of the given permissions.
+     * @param permissions The permissions to get the status of relating to the specified user.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the user "has" it, and the permission argument if applicable.
+     */
     public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, Iterable<String> permissions)
     { return getPermissionStatuses(permissionsForUsers.get(userId), permissions, true); }
 
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified user and each of the
+     * given permissions.
+     * @param userId The ID of the user to get the status information of the given permissions.
+     * @param permissions The permissions to get the status of relating to the specified user.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the user "has" it, and the permission argument if applicable.
+     */
     public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, String... permissions)
     { return getPermissionStatuses(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
-    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, Iterable<String> permissions)
-    { return getPermissionStatuses(getGroupPermissionsGroup(groupId), permissions, false); }
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified group and each of the
+     * given permissions.
+     * @param groupName The name of the group to get the status information of the given permissions.
+     * @param permissions The permissions to get the status of relating to the specified group.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the group "has" it, and the permission argument if applicable.
+     */
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, Iterable<String> permissions)
+    { return getPermissionStatuses(getGroupPermissionsGroup(groupName), permissions, false); }
 
-    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupId, String... permissions)
-    { return getPermissionStatuses(getGroupPermissionsGroup(groupId), Arrays.asList(permissions), false); }
+    /**
+     * Gets all the status information pertaining to the direct relationship between the specified group and each of the
+     * given permissions.
+     * @param groupName The name of the group to get the status information of the given permissions.
+     * @param permissions The permissions to get the status of relating to the specified group.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the group "has" it, and the permission argument if applicable.
+     */
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, String... permissions)
+    { return getPermissionStatuses(getGroupPermissionsGroup(groupName), Arrays.asList(permissions), false); }
 
+    /**
+     * Gets all the status information pertaining to the direct relationship between the default permissions and each of
+     * the given permissions.
+     * @param permissions The permissions to get the status of relating to the default permissions.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the default permissions "has" it, and the permission argument if
+     *         applicable.
+     */
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(Iterable<String> permissions)
     { return getPermissionStatuses(defaultPermissions, permissions, false); }
 
+    /**
+     * Gets all the status information pertaining to the direct relationship between the default permissions and each of
+     * the given permissions.
+     * @param permissions The permissions to get the status of relating to the default permissions.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the default permissions "has" it, and the permission argument if
+     *         applicable.
+     */
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(String... permissions)
     { return getPermissionStatuses(defaultPermissions, Arrays.asList(permissions), false); }
 
+    /**
+     * Gets all the status information pertaining to the direct relationship between the given permission group object
+     * and the given permissions.
+     * @param permGroup The permission group object to get the status information of the given permissions.
+     * @param permissions The permissions to get the status information of relating to the given permission group
+     *                    object.
+     * @param deferToDefault Whether or not to defer to the default permission group object where the given permission
+     *                       group object is null.
+     * @return A map where the keys are the permissions specified and the values are PermissionStatus objects containing
+     *         the permission queried, whether or not the given permission group object "has" it, and the permission
+     *         argument if applicable.
+     */
     protected Map<String, PermissionStatus> getPermissionStatuses(PermissionGroup permGroup,
                                                                   Iterable<String> permissions,
                                                                   boolean deferToDefault)
@@ -601,9 +662,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region assertHas
 
     /**
-     * Asserts that a given user "has" a given permission.
+     * Asserts that a specified user "has" a given permission.
      * @see #userHasPermission(Comparable, String)
-     * @param userId The user to assert has the given permission.
+     * @param userId The ID of the user to assert has the given permission.
      * @param permission The permission to assert that the user has.
      * @throws UserMissingPermissionException If the user does not have the given permission.
      */
@@ -614,9 +675,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Asserts that a given group "has" a given permission.
+     * Asserts that a specified group "has" a given permission.
      * @see #groupHasPermission(String, String)
-     * @param groupName The name of the group
+     * @param groupName The name of the group to assert has the given permission
      * @param permission The permission to assert that the group has.
      * @throws GroupMissingPermissionException If the group does not have the given permission.
      */
@@ -640,6 +701,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region assertHasAll
 
+    /**
+     * Asserts that the specified user "has" all of the given permissions.
+     * @see #userHasAllPermissions(Comparable, Iterable)
+     * @param userId The ID of the user to assert has all of the given permissions
+     * @param permissions The permissions to assert that the user has.
+     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
+     */
     public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions)
             throws UserMissingPermissionException
     {
@@ -655,28 +723,56 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         }
     }
 
-    public void assertUserHasAllPermissions(ID userId, String... permissions) throws UserMissingPermissionException
+    /**
+     * Asserts that the specified user "has" all of the given permissions.
+     * @see #userHasAllPermissions(Comparable, String...)
+     * @param userId The ID of the user to assert has all of the given permissions
+     * @param permissions The permissions to assert that the user has.
+     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
+     */
+    public void assertUserHasAllPermissions(ID userId, String... permissions)
+            throws UserMissingPermissionException
     { assertUserHasAllPermissions(userId, Arrays.asList(permissions)); }
 
-    public void assertGroupHasAllPermissions(String groupId, Iterable<String> permissions)
+    /**
+     * Asserts that the specified group "has" all of the given permissions.
+     * @see #groupHasAllPermissions(String, Iterable)
+     * @param groupName The name of the group to assert has all of the given permissions
+     * @param permissions The permissions to assert that the group has.
+     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
+     */
+    public void assertGroupHasAllPermissions(String groupName, Iterable<String> permissions)
             throws GroupMissingPermissionException
     {
-        if(!groupHasAllPermissions(groupId, permissions))
+        if(!groupHasAllPermissions(groupName, permissions))
         {
             List<String> permissionsMissing = new ArrayList<>();
 
             for(String perm : permissions)
-                if(!groupHasPermission(groupId, perm))
+                if(!groupHasPermission(groupName, perm))
                     permissionsMissing.add(perm);
 
-            throw new GroupMissingPermissionException(groupId, permissionsMissing);
+            throw new GroupMissingPermissionException(groupName, permissionsMissing);
         }
     }
 
-    public void assertGroupHasAllPermissions(String groupId, String... permissions)
+    /**
+     * Asserts that the specified group "has" all of the given permissions.
+     * @see #groupHasAllPermissions(String, String...)
+     * @param groupName The name of the group to assert has all of the given permissions
+     * @param permissions The permissions to assert that the group has.
+     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
+     */
+    public void assertGroupHasAllPermissions(String groupName, String... permissions)
             throws GroupMissingPermissionException
-    { assertGroupHasAllPermissions(groupId, Arrays.asList(permissions)); }
+    { assertGroupHasAllPermissions(groupName, Arrays.asList(permissions)); }
 
+    /**
+     * Asserts that all of the given permissions are default.
+     * @see #areAllDefaultPermissions(Iterable)
+     * @param permissions The permissions to assert are all default.
+     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
+     */
     public void assertAllAreDefaultPermissions(Iterable<String> permissions)
             throws PermissionNotDefaultException
     {
@@ -692,6 +788,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         }
     }
 
+    /**
+     * Asserts that all of the given permissions are default.
+     * @see #areAllDefaultPermissions(String...)
+     * @param permissions The permissions to assert are all default.
+     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
+     */
     public void assertAllAreDefaultPermissions(String... permissions)
             throws PermissionNotDefaultException
     { assertAllAreDefaultPermissions(Arrays.asList(permissions)); }
@@ -699,6 +801,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region assertHasAny
 
+    /**
+     * Asserts that the specified user "has" any of the given permissions.
+     * @see #userHasAnyPermissions(Comparable, Iterable)
+     * @param userId The ID of the user to assert has any of the given permissions
+     * @param permissions The permissions to assert that the user has any of.
+     * @throws UserMissingPermissionException If the user has none of the given permissions.
+     */
     public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions)
             throws UserMissingPermissionException
     {
@@ -706,27 +815,63 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             throw new UserMissingPermissionException(userId, permissions, true);
     }
 
-    public void assertUserHasAnyPermission(ID userId, String... permissions) throws UserMissingPermissionException
+    /**
+     * Asserts that the specified user "has" any of the given permissions.
+     * @see #userHasAnyPermissions(Comparable, String...)
+     * @param userId The ID of the user to assert has any of the given permissions
+     * @param permissions The permissions to assert that the user has any of.
+     * @throws UserMissingPermissionException If the user has none of the given permissions.
+     */
+    public void assertUserHasAnyPermission(ID userId, String... permissions)
+            throws UserMissingPermissionException
     { assertUserHasAnyPermission(userId, Arrays.asList(permissions)); }
 
-    public void assertGroupHasAnyPermission(String groupId, Iterable<String> permissions)
+    /**
+     * Asserts that the specified group "has" any of the given permissions.
+     * @see #groupHasAnyPermissions(String, Iterable)
+     * @param groupName The name of the group to assert has any of the given permissions
+     * @param permissions The permissions to assert that the group has any of.
+     * @throws GroupMissingPermissionException If the group has none of the given permissions.
+     */
+    public void assertGroupHasAnyPermission(String groupName, Iterable<String> permissions)
             throws GroupMissingPermissionException
     {
-        if(!groupHasAnyPermissions(groupId, permissions))
-            throw new GroupMissingPermissionException(groupId, permissions, true);
+        if(!groupHasAnyPermissions(groupName, permissions))
+            throw new GroupMissingPermissionException(groupName, permissions, true);
     }
 
-    public void assertGroupHasAnyPermission(String groupId, String... permissions)
+    /**
+     * Asserts that the specified group "has" any of the given permissions.
+     * @see #groupHasAnyPermissions(String, String...)
+     * @param groupName The name of the group to assert has any of the given permissions
+     * @param permissions The permissions to assert that the group has any of.
+     * @throws GroupMissingPermissionException If the group has none of the given permissions.
+     */
+    public void assertGroupHasAnyPermission(String groupName, String... permissions)
             throws GroupMissingPermissionException
-    { assertGroupHasAnyPermission(groupId, Arrays.asList(permissions)); }
+    { assertGroupHasAnyPermission(groupName, Arrays.asList(permissions)); }
 
-    public void assertAnyAreDefaultPermission(Iterable<String> permissions) throws PermissionNotDefaultException
+    /**
+     * Asserts that any of the given permissions are default.
+     * @see #anyAreDefaultPermissions(Iterable)
+     * @param permissions The permissions to assert are default.
+     * @throws PermissionNotDefaultException If none of the given permissions are default.
+     */
+    public void assertAnyAreDefaultPermission(Iterable<String> permissions)
+            throws PermissionNotDefaultException
     {
         if(!anyAreDefaultPermissions(permissions))
             throw new PermissionNotDefaultException(permissions, true);
     }
 
-    public void assertAnyAreDefaultPermission(String... permissions) throws PermissionNotDefaultException
+    /**
+     * Asserts that any of the given permissions are default.
+     * @see #anyAreDefaultPermissions(String...)
+     * @param permissions The permissions to assert are default.
+     * @throws PermissionNotDefaultException If none of the given permissions are default.
+     */
+    public void assertAnyAreDefaultPermission(String... permissions)
+            throws PermissionNotDefaultException
     { assertAnyAreDefaultPermission(Arrays.asList(permissions)); }
     //endregion
 

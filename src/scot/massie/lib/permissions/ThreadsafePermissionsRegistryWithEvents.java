@@ -44,8 +44,8 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     { return inner.getUserPermissionStatus(userId, permission); }
 
     @Override
-    public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
-    { return inner.getGroupPermissionStatus(groupId, permission); }
+    public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
+    { return inner.getGroupPermissionStatus(groupName, permission); }
 
     @Override
     public PermissionStatus getDefaultPermissionStatus(String permission)

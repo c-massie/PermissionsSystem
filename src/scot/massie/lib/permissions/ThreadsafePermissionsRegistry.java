@@ -30,10 +30,10 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public PermissionStatus getGroupPermissionStatus(String groupId, String permission)
+    public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
     {
         synchronized(mainSyncLock)
-        { return getPermissionStatus(assignableGroups.get(groupId), permission, false); }
+        { return getPermissionStatus(assignableGroups.get(groupName), permission, false); }
     }
 
     @Override
