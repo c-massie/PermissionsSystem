@@ -68,8 +68,8 @@ public final class ThreadsafePermissionsRegistryWithEvents<ID extends Comparable
     { return inner.userHasPermission(userId, permission); }
 
     @Override
-    public boolean groupHasPermission(String groupId, String permission)
-    { return inner.groupHasPermission(groupId, permission); }
+    public boolean groupHasPermission(String groupName, String permission)
+    { return inner.groupHasPermission(groupName, permission); }
 
     @Override
     public boolean isDefaultPermission(String permission)

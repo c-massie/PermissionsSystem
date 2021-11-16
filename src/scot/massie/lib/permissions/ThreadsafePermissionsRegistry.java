@@ -44,13 +44,13 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public boolean groupHasPermission(String groupId, String permission)
+    public boolean groupHasPermission(String groupName, String permission)
     {
-        if("*".equals(groupId))
+        if("*".equals(groupName))
             return isDefaultPermission(permission);
 
         synchronized(mainSyncLock)
-        { return hasPermission(assignableGroups.get(groupId), permission, false); }
+        { return hasPermission(assignableGroups.get(groupName), permission, false); }
     }
 
     @Override
