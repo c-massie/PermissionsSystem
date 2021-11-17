@@ -1057,24 +1057,75 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region hasAny
+
+    /**
+     * Checks whether or not a specified user has any of the given permissions.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The ID of the user to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the user has any of the given permissions. Otherwise, false.
+     */
     public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
     { return hasAnyPermissions(permissionsForUsers.get(userId), permissions, true); }
 
+    /**
+     * Checks whether or not a specified user has any of the given permissions.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The ID of the user to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the user has any of the given permissions. Otherwise, false.
+     */
     public boolean userHasAnyPermissions(ID userId, String... permissions)
     { return hasAnyPermissions(permissionsForUsers.get(userId), Arrays.asList(permissions), true); }
 
-    public boolean groupHasAnyPermissions(String groupId, Iterable<String> permissions)
-    { return hasAnyPermissions(getGroupPermissionsGroup(groupId), permissions, false); }
+    /**
+     * Checks whether or not a specified group has any of the given permissions.
+     * @see #groupHasPermission(String, String)
+     * @param groupName The name of the group to check whether or not it has the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the group has any of the given permissions. Otherwise, false.
+     */
+    public boolean groupHasAnyPermissions(String groupName, Iterable<String> permissions)
+    { return hasAnyPermissions(getGroupPermissionsGroup(groupName), permissions, false); }
 
-    public boolean groupHasAnyPermissions(String groupId, String... permissions)
-    { return hasAnyPermissions(getGroupPermissionsGroup(groupId), Arrays.asList(permissions), false); }
+    /**
+     * Checks whether or not a specified group has any of the given permissions.
+     * @see #groupHasPermission(String, String)
+     * @param groupName The name of the group to check whether or not it has the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the group has any of the given permissions. Otherwise, false.
+     */
+    public boolean groupHasAnyPermissions(String groupName, String... permissions)
+    { return hasAnyPermissions(getGroupPermissionsGroup(groupName), Arrays.asList(permissions), false); }
 
+    /**
+     * Checks whether or not any of the given permissions are default.
+     * @see #isDefaultPermission(String)
+     * @param permissions The permissions to check for.
+     * @return True if any of the given permissions are default. Otherwise, false.
+     */
     public boolean anyAreDefaultPermissions(Iterable<String> permissions)
     { return hasAnyPermissions(defaultPermissions, permissions, false); }
 
+    /**
+     * Checks whether or not any of the given permissions are default.
+     * @see #isDefaultPermission(String)
+     * @param permissions The permissions to check for.
+     * @return True if any of the given permissions are default. Otherwise, false.
+     */
     public boolean anyAreDefaultPermissions(String... permissions)
     { return hasAnyPermissions(defaultPermissions, Arrays.asList(permissions), false); }
 
+    /**
+     * Checks whether or not a given PermissionGroup object has any of the given permissions.
+     * @see #hasPermission(PermissionGroup, String, boolean)
+     * @param permGroup The permission group object to check for the allowance of the given permissions.
+     * @param permissions The permissions to check for.
+     * @param deferToDefault Whether or not to defer to the default permission group object where the given permission
+     *                       group object is null.
+     * @return True if the given PermissionGroup object (or the default PermissionGroup object, if applicable) has any
+     *         of the given permissions. Otherwise, false.
+     */
     protected boolean hasAnyPermissions(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
     {
         if(permGroup == null)
