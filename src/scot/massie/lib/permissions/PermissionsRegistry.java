@@ -1156,7 +1156,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region has any subpermission of
 
     /**
-     * Checks whether or not a given user "has" a given permission or any subpermission thereof.
+     * Checks whether or not a specified user "has" a given permission or any subpermission thereof.
      * @see #userHasPermission(Comparable, String)
      * @param userId The user to check whether or not they have the given permission.
      * @param permission The permission to check for.
@@ -1166,9 +1166,25 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
     { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
 
+    /**
+     * Checks whether or not a specified user "has" any of the given permissions or any subpermission thereof.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The user to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the user has any of the given permissions or any subpermission thereof as defined by
+     *         {@link #userHasPermission(Comparable, String)}. Otherwise, false.
+     */
     public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
     { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permissions, true); }
 
+    /**
+     * Checks whether or not a specified user "has" any of the given permissions or any subpermission thereof.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The user to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the user has any of the given permissions or any subpermission thereof as defined by
+     *         {@link #userHasPermission(Comparable, String)}. Otherwise, false.
+     */
     public boolean userHasAnySubPermissionOf(ID userId, String... permissions)
     { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permissions, true); }
 
@@ -1183,9 +1199,25 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
     { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permission, false); }
 
+    /**
+     * Checks whether or not a specified group "has" any of the given permissions or any subpermission thereof.
+     * @see #groupHasPermission(String, String)
+     * @param groupId The id of the group to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the group has any of the given permissions or any subpermission thereof as defined by
+     *         {@link #groupHasPermission(String, String)}. Otherwise, false.
+     */
     public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
     { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permissions, false); }
 
+    /**
+     * Checks whether or not a specified group "has" any of the given permissions or any subpermission thereof.
+     * @see #groupHasPermission(String, String)
+     * @param groupId The id of the group to check whether or not they have the given permissions.
+     * @param permissions The permissions to check for.
+     * @return True if the group has any of the given permissions or any subpermission thereof as defined by
+     *         {@link #groupHasPermission(String, String)}. Otherwise, false.
+     */
     public boolean userHasAnySubPermissionOf(String groupId, String... permissions)
     { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permissions, false); }
 
@@ -1199,9 +1231,23 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public boolean isOrAnySubPermissionOfIsDefault(String permission)
     { return hasAnySubPermissionOf(defaultPermissions, permission, false); }
 
+    /**
+     * Checks whether or not the default permissions "has" any of the given permissions or any subpermission thereof.
+     * @see #isDefaultPermission(String)
+     * @param permissions The permissions to check for.
+     * @return True if the default permissions has any of the given permissions or any subpermission there as defined by
+     *         {@link #isDefaultPermission(String)}.
+     */
     public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
     { return hasAnySubPermissionOf(defaultPermissions, permissions, false); }
 
+    /**
+     * Checks whether or not the default permissions "has" any of the given permissions or any subpermission thereof.
+     * @see #isDefaultPermission(String)
+     * @param permissions The permissions to check for.
+     * @return True if the default permissions has any of the given permissions or any subpermission there as defined by
+     *         {@link #isDefaultPermission(String)}.
+     */
     public boolean isOrAnySubPermissionOfIsDefault(String... permissions)
     { return hasAnySubPermissionOf(defaultPermissions, permissions, false); }
 
@@ -1209,7 +1255,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * Checks whether or not a given PermissionGroup object "has" a given permission or any subpermission thereof.
      * @see #hasPermission(PermissionGroup, String, boolean)
      * @param permGroup The permisison group that may have the given permission or any subpermission thereof.
-     * @param permission The permission or check.
+     * @param permission The permissions to check for.
      * @param deferToDefault Whether or not to defer to the default permission group if the given one is null.
      * @return True if the given permission group has the given permission or any subpermission thereof.
      */
@@ -1221,9 +1267,27 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.hasPermissionOrAnyUnder(permission);
     }
 
+    /**
+     * Checks whether or not a given PermissionGroup object "has" any of the given permissions or any subpermission
+     * thereof.
+     * @see #hasPermission(PermissionGroup, String, boolean)
+     * @param permGroup The permisison group that may have the given permission or any subpermission thereof.
+     * @param permissions The permissions to check for.
+     * @param deferToDefault Whether or not to defer to the default permission group if the given one is null.
+     * @return True if the given permission group has any of the given permissions or any subpermission thereof.
+     */
     protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String[] permissions, boolean deferToDefault)
     { return hasAnySubPermissionOf(permGroup, Arrays.asList(permissions), deferToDefault); }
 
+    /**
+     * Checks whether or not a given PermissionGroup object "has" any of the given permissions or any subpermission
+     * thereof.
+     * @see #hasPermission(PermissionGroup, String, boolean)
+     * @param permGroup The permisison group that may have the given permission or any subpermission thereof.
+     * @param permissions The permissions to check for.
+     * @param deferToDefault Whether or not to defer to the default permission group if the given one is null.
+     * @return True if the given permission group has any of the given permissions or any subpermission thereof.
+     */
     protected boolean hasAnySubPermissionOf(PermissionGroup permGroup,
                                             Iterable<String> permissions,
                                             boolean deferToDefault)
