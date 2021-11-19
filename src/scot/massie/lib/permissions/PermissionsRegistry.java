@@ -1387,26 +1387,26 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region has
     
     /**
-     * Gets whether or not the given user is assigned a group with the given name. (directly, via an assigned group, or
-     * via the default permissions.)
-     * @param userId The user to check whether or not they have the specified group.
-     * @param groupId The name of the group to check whether or not the user has.
+     * Gets whether or not the specified user is assigned a group with the given name. (directly, via an assigned group,
+     * or via the default permissions.)
+     * @param userId The ID of the user to check whether or not they have the specified group.
+     * @param groupName The name of the group to check whether or not the user has.
      * @return True if the user, any group assigned to the user, or the default permissions, has a group by the given
      *         name. Otherwise, false.
      */
-    public boolean userHasGroup(ID userId, String groupId)
-    { return hasGroup(permissionsForUsers.get(userId), groupId, true); }
+    public boolean userHasGroup(ID userId, String groupName)
+    { return hasGroup(permissionsForUsers.get(userId), groupName, true); }
 
     /**
      * Gets whether or not one group with the specified name is assigned another, by the other specified name.
      * (directly or via another assigned group, but not via the default permissions.)
      * @param groupId The name of the group to check whether it extends from the other group specified.
-     * @param superGroupId The name of the group to check whether the other group specifies it.
+     * @param superGroupName The name of the group to check whether the other group specifies it.
      * @return True if the group or any group assigned to the group (that is, that the group is extended from), has a
      *         group assigned to it by the given name. Otherwise, false.
      */
-    public boolean groupExtendsFromGroup(String groupId, String superGroupId)
-    { return hasGroup(getGroupPermissionsGroup(groupId), superGroupId, false); }
+    public boolean groupExtendsFromGroup(String groupId, String superGroupName)
+    { return hasGroup(getGroupPermissionsGroup(groupId), superGroupName, false); }
 
     /**
      * Gets whether or not the group with the specified name is extended from by the default permissions, is assigned
@@ -1453,45 +1453,103 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     
     //region has all
-    
-    public boolean userHasAllGroups(ID userId, Iterable<String> groupIds)
-    { return hasAllGroups(permissionsForUsers.get(userId), groupIds, true); }
 
-    public boolean userHasAllGroups(ID userId, String... groupIds)
-    { return hasAllGroups(permissionsForUsers.get(userId), Arrays.asList(groupIds), true); }
+    /**
+     * Gets whether or not the specified user is assigned groups with all of the given names. (directly, via an
+     * assigned group, or via the default permissions)
+     * @param userId The ID of the user to check whether or not they have the specified group.
+     * @param groupNames The names of the groups to check whether or not the user has.
+     * @return True if the user (directly, or via any of the other groups they have, or via the default permissions) has
+     *         groups by all of the given names. Otherwise, false.
+     */
+    public boolean userHasAllGroups(ID userId, Iterable<String> groupNames)
+    { return hasAllGroups(permissionsForUsers.get(userId), groupNames, true); }
 
-    public boolean groupExtendsFromAllGroups(String groupId, Iterable<String> superGroupIds)
-    { return hasAllGroups(getGroupPermissionsGroup(groupId), superGroupIds, false); }
+    /**
+     * Gets whether or not the specified user is assigned groups with all of the given names. (directly, via an
+     * assigned group, or via the default permissions)
+     * @param userId The ID of the user to check whether or not they have the specified group.
+     * @param groupNames The names of the groups to check whether or not the user has.
+     * @return True if the user (directly, or via any of the other groups they have, or via the default permissions) has
+     *         groups by all of the given names. Otherwise, false.
+     */
+    public boolean userHasAllGroups(ID userId, String... groupNames)
+    { return hasAllGroups(permissionsForUsers.get(userId), Arrays.asList(groupNames), true); }
 
-    public boolean groupExtendsFromAllGroups(String groupId, String... superGroupIds)
-    { return hasAllGroups(getGroupPermissionsGroup(groupId), Arrays.asList(superGroupIds), false); }
-    
-    public boolean areAllDefaultGroups(Iterable<String> groupIds)
-    { return hasAllGroups(defaultPermissions, groupIds, false); }
+    /**
+     * Gets whether or not the specified group extends from all of the other specified groups. (directly, via other
+     * groups it extends from, or via the default permissions)
+     * @param groupName The name of the group to check whether it extends from all of the other groups.
+     * @param superGroupNames The names of all of the other groups to check whether or not the aforementioned group
+     *                      extends from.
+     * @return True if the group (directly, or via any of the other groups they extend from, or via the default
+     *         permissions) extends from groups by all of the given names. Otherwise, false.
+     */
+    public boolean groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
+    { return hasAllGroups(getGroupPermissionsGroup(groupName), superGroupNames, false); }
 
-    public boolean areAllDefaultGroups(String... groupIds)
-    { return hasAllGroups(defaultPermissions, Arrays.asList(groupIds), false); }
-    
-    protected boolean hasAllGroups(PermissionGroup permGroup, Iterable<String> groupIds, boolean deferToDefault)
+    /**
+     * Gets whether or not the specified group extends from all of the other specified groups. (directly, via other
+     * groups it extends from, or via the default permissions)
+     * @param groupName The name of the group to check whether it extends from all of the other groups.
+     * @param superGroupNames The names of all of the other groups to check whether or not the aforementioned group
+     *                      extends from.
+     * @return True if the group (directly, or via any of the other groups they extend from, or via the default
+     *         permissions) extends from groups by all of the given names. Otherwise, false.
+     */
+    public boolean groupExtendsFromAllGroups(String groupName, String... superGroupNames)
+    { return hasAllGroups(getGroupPermissionsGroup(groupName), Arrays.asList(superGroupNames), false); }
+
+    /**
+     * Gets whether or not all of the specified groups are default. That is, whether or not they're all included in the
+     * default permissions, whether directly or indirectly via other default groups.
+     * @param groupNames The names of the groups to check whether or not are default.
+     * @return True if the default permissions includes (directly, or via any of the other groups they extend from)
+     *         groups by all of the given names. Otherwise, false.
+     */
+    public boolean areAllDefaultGroups(Iterable<String> groupNames)
+    { return hasAllGroups(defaultPermissions, groupNames, false); }
+
+    /**
+     * Gets whether or not all of the specified groups are default. That is, whether or not they're all included in the
+     * default permissions, whether directly or indirectly via other default groups.
+     * @param groupNames The names of the groups to check whether or not are default.
+     * @return True if the default permissions includes (directly, or via any of the other groups they extend from)
+     *         groups by all of the given names. Otherwise, false.
+     */
+    public boolean areAllDefaultGroups(String... groupNames)
+    { return hasAllGroups(defaultPermissions, Arrays.asList(groupNames), false); }
+
+    /**
+     * Gets whether or not the given permission group object has groups by all of the given names.
+     * @see #hasGroup(PermissionGroup, String, boolean)
+     * @param permGroup The permission group to check whether or not has all of the given groups.
+     * @param groupNames The names of the groups to check whether or not the given permission group object has.
+     * @param deferToDefault Whether or not to check if the default permission group object references all of the
+     *                       specified group where the given permission group object is null.
+     * @return True if the given permission group object has groups by all of the given names. (directly, or via any of
+     *         the other groups it has) Otherwise, false.
+     */
+    protected boolean hasAllGroups(PermissionGroup permGroup, Iterable<String> groupNames, boolean deferToDefault)
     {
         if(permGroup == null)
         {
             if(deferToDefault)
             {
-                for(String groupId : groupIds)
+                for(String groupId : groupNames)
                     if(!defaultPermissions.hasGroup(groupId))
                         return false;
             }
             else
             {
-                for(String ignored : groupIds)
+                for(String ignored : groupNames)
                     return false;
             }
 
             return true;
         }
 
-        for(String groupId : groupIds)
+        for(String groupId : groupNames)
             if(!permGroup.hasGroup(groupId))
                 return false;
 

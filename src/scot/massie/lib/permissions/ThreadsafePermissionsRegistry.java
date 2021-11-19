@@ -88,20 +88,20 @@ public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public boolean userHasGroup(ID userId, String groupId)
+    public boolean userHasGroup(ID userId, String groupName)
     {
         synchronized(mainSyncLock)
-        { return hasGroup(permissionsForUsers.get(userId), groupId, true); }
+        { return hasGroup(permissionsForUsers.get(userId), groupName, true); }
     }
 
     @Override
-    public boolean groupExtendsFromGroup(String groupId, String superGroupId)
+    public boolean groupExtendsFromGroup(String groupId, String superGroupName)
     {
         if("*".equals(groupId))
-            return isDefaultGroup(superGroupId);
+            return isDefaultGroup(superGroupName);
 
         synchronized(mainSyncLock)
-        { return hasGroup(assignableGroups.get(groupId), superGroupId, false); }
+        { return hasGroup(assignableGroups.get(groupId), superGroupName, false); }
     }
 
     @Override
