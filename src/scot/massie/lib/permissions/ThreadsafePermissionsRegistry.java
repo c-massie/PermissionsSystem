@@ -1,335 +1,703 @@
 package scot.massie.lib.permissions;
 
-import java.io.BufferedWriter;
+import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
+import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
+import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
+
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-public class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
+public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
 {
-    protected final Object mainSyncLock = new Object();
+    protected final PermissionsRegistry<ID> inner;
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString,
                                          Function<String, ID> idFromString,
                                          Path usersFile,
                                          Path groupsFile)
-    { super(idToString, idFromString, usersFile, groupsFile); }
+    {
+        super(idToString, idFromString, usersFile, groupsFile);
+        this.inner = new PermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile);
+    }
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
-    { super(idToString, idFromString); }
+    {
+        super(idToString, idFromString);
+        this.inner = new PermissionsRegistry<>(idToString, idFromString);
+    }
+
+    public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
+    {
+        super(inner.convertIdToString, inner.parseIdFromString, inner.usersFilePath, inner.groupsFilePath);
+        this.inner = inner;
+    }
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return getPermissionStatus(permissionsForUsers.get(userId), permission, true); }
+        synchronized(inner)
+        { return inner.getUserPermissionStatus(userId, permission); }
     }
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
     {
-        synchronized(mainSyncLock)
-        { return getPermissionStatus(assignableGroups.get(groupName), permission, false); }
+        synchronized(inner)
+        { return inner.getGroupPermissionStatus(groupName, permission); }
+    }
+
+    @Override
+    public PermissionStatus getDefaultPermissionStatus(String permission)
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissionStatus(permission); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.getUserPermissionStatuses(userId, permissions); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.getUserPermissionStatuses(userId, permissions); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.getGroupPermissionStatuses(groupName, permissions); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.getGroupPermissionStatuses(groupName, permissions); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getDefaultPermissionStatuses(Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissionStatuses(permissions); }
+    }
+
+    @Override
+    public Map<String, PermissionStatus> getDefaultPermissionStatuses(String... permissions)
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissionStatuses(permissions); }
+    }
+
+    @Override
+    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertUserHasPermission(userId, permission); }
+    }
+
+    @Override
+    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertGroupHasPermission(groupName, permission); }
+    }
+
+    @Override
+    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
+    {
+        synchronized(inner)
+        { inner.assertIsDefaultPermission(permission); }
+    }
+
+    @Override
+    public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions) throws UserMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertUserHasAllPermissions(userId, permissions); }
+    }
+
+    @Override
+    public void assertUserHasAllPermissions(ID userId, String... permissions) throws UserMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertUserHasAllPermissions(userId, permissions); }
+    }
+
+    @Override
+    public void assertGroupHasAllPermissions(String groupName, Iterable<String> permissions) throws GroupMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertGroupHasAllPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public void assertGroupHasAllPermissions(String groupName, String... permissions) throws GroupMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertGroupHasAllPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public void assertAllAreDefaultPermissions(Iterable<String> permissions) throws PermissionNotDefaultException
+    {
+        synchronized(inner)
+        { inner.assertAllAreDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public void assertAllAreDefaultPermissions(String... permissions) throws PermissionNotDefaultException
+    {
+        synchronized(inner)
+        { inner.assertAllAreDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions) throws UserMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertUserHasAnyPermission(userId, permissions); }
+    }
+
+    @Override
+    public void assertUserHasAnyPermission(ID userId, String... permissions) throws UserMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertUserHasAnyPermission(userId, permissions); }
+    }
+
+    @Override
+    public void assertGroupHasAnyPermission(String groupName, Iterable<String> permissions) throws GroupMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertGroupHasAnyPermission(groupName, permissions); }
+    }
+
+    @Override
+    public void assertGroupHasAnyPermission(String groupName, String... permissions) throws GroupMissingPermissionException
+    {
+        synchronized(inner)
+        { inner.assertGroupHasAnyPermission(groupName, permissions); }
+    }
+
+    @Override
+    public void assertAnyAreDefaultPermission(Iterable<String> permissions) throws PermissionNotDefaultException
+    {
+        synchronized(inner)
+        { inner.assertAnyAreDefaultPermission(permissions); }
+    }
+
+    @Override
+    public void assertAnyAreDefaultPermission(String... permissions) throws PermissionNotDefaultException
+    {
+        synchronized(inner)
+        { inner.assertAnyAreDefaultPermission(permissions); }
     }
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return hasPermission(permissionsForUsers.get(userId), permission, true); }
+        synchronized(inner)
+        { return inner.userHasPermission(userId, permission); }
     }
 
     @Override
     public boolean groupHasPermission(String groupName, String permission)
     {
-        if("*".equals(groupName))
-            return isDefaultPermission(permission);
+        synchronized(inner)
+        { return inner.groupHasPermission(groupName, permission); }
+    }
 
-        synchronized(mainSyncLock)
-        { return hasPermission(assignableGroups.get(groupName), permission, false); }
+    @Override
+    public boolean isDefaultPermission(String permission)
+    {
+        synchronized(inner)
+        { return inner.isDefaultPermission(permission); }
+    }
+
+    @Override
+    public boolean userHasAllPermissions(ID userId, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAllPermissions(userId, permissions); }
+    }
+
+    @Override
+    public boolean userHasAllPermissions(ID userId, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAllPermissions(userId, permissions); }
+    }
+
+    @Override
+    public boolean groupHasAllPermissions(String groupName, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAllPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public boolean groupHasAllPermissions(String groupName, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAllPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public boolean areAllDefaultPermissions(Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.areAllDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public boolean areAllDefaultPermissions(String... permissions)
+    {
+        synchronized(inner)
+        { return inner.areAllDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAnyPermissions(userId, permissions); }
+    }
+
+    @Override
+    public boolean userHasAnyPermissions(ID userId, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAnyPermissions(userId, permissions); }
+    }
+
+    @Override
+    public boolean groupHasAnyPermissions(String groupName, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAnyPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public boolean groupHasAnyPermissions(String groupName, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAnyPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public boolean anyAreDefaultPermissions(Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.anyAreDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public boolean anyAreDefaultPermissions(String... permissions)
+    {
+        synchronized(inner)
+        { return inner.anyAreDefaultPermissions(permissions); }
     }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return hasAnySubPermissionOf(permissionsForUsers.get(userId), permission, true); }
+        synchronized(inner)
+        { return inner.userHasAnySubPermissionOf(userId, permission); }
+    }
+
+    @Override
+    public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAnySubPermissionOf(userId, permissions); }
+    }
+
+    @Override
+    public boolean userHasAnySubPermissionOf(ID userId, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.userHasAnySubPermissionOf(userId, permissions); }
     }
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
     {
-        if("*".equals(groupId))
-            return isOrAnySubPermissionOfIsDefault(permission);
+        synchronized(inner)
+        { return inner.groupHasAnySubPermissionOf(groupId, permission); }
+    }
 
-        synchronized(mainSyncLock)
-        { return hasAnySubPermissionOf(assignableGroups.get(groupId), permission, false); }
+    @Override
+    public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAnySubPermissionOf(groupId, permissions); }
+    }
+
+    @Override
+    public boolean groupHasAnySubPermissionOf(String groupId, String... permissions)
+    {
+        synchronized(inner)
+        { return inner.groupHasAnySubPermissionOf(groupId, permissions); }
+    }
+
+    @Override
+    public boolean isOrAnySubPermissionOfIsDefault(String permission)
+    {
+        synchronized(inner)
+        { return inner.isOrAnySubPermissionOfIsDefault(permission); }
+    }
+
+    @Override
+    public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
+    {
+        synchronized(inner)
+        { return inner.isOrAnySubPermissionOfIsDefault(permissions); }
+    }
+
+    @Override
+    public boolean isOrAnySubPermissionOfIsDefault(String... permissions)
+    {
+        synchronized(inner)
+        { return inner.isOrAnySubPermissionOfIsDefault(permissions); }
     }
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return getPermissionArg(permissionsForUsers.get(userId), permission, true); }
+        synchronized(inner)
+        { return inner.getUserPermissionArg(userId, permission); }
     }
 
     @Override
     public String getGroupPermissionArg(String groupId, String permission)
     {
-        if("*".equals(groupId))
-            return getDefaultPermissionArg(permission);
+        synchronized(inner)
+        { return inner.getGroupPermissionArg(groupId, permission); }
+    }
 
-        synchronized(mainSyncLock)
-        { return getPermissionArg(assignableGroups.get(groupId), permission, false); }
+    @Override
+    public String getDefaultPermissionArg(String permission)
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissionArg(permission); }
     }
 
     @Override
     public boolean userHasGroup(ID userId, String groupName)
     {
-        synchronized(mainSyncLock)
-        { return hasGroup(permissionsForUsers.get(userId), groupName, true); }
+        synchronized(inner)
+        { return inner.userHasGroup(userId, groupName); }
     }
 
     @Override
     public boolean groupExtendsFromGroup(String groupId, String superGroupName)
     {
-        if("*".equals(groupId))
-            return isDefaultGroup(superGroupName);
+        synchronized(inner)
+        { return inner.groupExtendsFromGroup(groupId, superGroupName); }
+    }
 
-        synchronized(mainSyncLock)
-        { return hasGroup(assignableGroups.get(groupId), superGroupName, false); }
+    @Override
+    public boolean isDefaultGroup(String groupId)
+    {
+        synchronized(inner)
+        { return inner.isDefaultGroup(groupId); }
+    }
+
+    @Override
+    public boolean userHasAllGroups(ID userId, Iterable<String> groupNames)
+    {
+        synchronized(inner)
+        { return inner.userHasAllGroups(userId, groupNames); }
+    }
+
+    @Override
+    public boolean userHasAllGroups(ID userId, String... groupNames)
+    {
+        synchronized(inner)
+        { return inner.userHasAllGroups(userId, groupNames); }
+    }
+
+    @Override
+    public boolean groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
+    {
+        synchronized(inner)
+        { return inner.groupExtendsFromAllGroups(groupName, superGroupNames); }
+    }
+
+    @Override
+    public boolean groupExtendsFromAllGroups(String groupName, String... superGroupNames)
+    {
+        synchronized(inner)
+        { return inner.groupExtendsFromAllGroups(groupName, superGroupNames); }
+    }
+
+    @Override
+    public boolean areAllDefaultGroups(Iterable<String> groupNames)
+    {
+        synchronized(inner)
+        { return inner.areAllDefaultGroups(groupNames); }
+    }
+
+    @Override
+    public boolean areAllDefaultGroups(String... groupNames)
+    {
+        synchronized(inner)
+        { return inner.areAllDefaultGroups(groupNames); }
+    }
+
+    @Override
+    public boolean userHasAnyGroups(ID userId, Iterable<String> groupNames)
+    {
+        synchronized(inner)
+        { return inner.userHasAnyGroups(userId, groupNames); }
+    }
+
+    @Override
+    public boolean userHasAnyGroups(ID userId, String... groupNames)
+    {
+        synchronized(inner)
+        { return inner.userHasAnyGroups(userId, groupNames); }
+    }
+
+    @Override
+    public boolean groupExtendsFromAnyGroups(String groupName, Iterable<String> superGroupNames)
+    {
+        synchronized(inner)
+        { return inner.groupExtendsFromAnyGroups(groupName, superGroupNames); }
+    }
+
+    @Override
+    public boolean groupExtendsFromAnyGroups(String groupName, String... superGroupNames)
+    {
+        synchronized(inner)
+        { return inner.groupExtendsFromAnyGroups(groupName, superGroupNames); }
+    }
+
+    @Override
+    public boolean anyAreDefaultGroups(Iterable<String> groupNames)
+    {
+        synchronized(inner)
+        { return inner.anyAreDefaultGroups(groupNames); }
+    }
+
+    @Override
+    public boolean anyAreDefaultGroups(String... groupNames)
+    {
+        synchronized(inner)
+        { return inner.anyAreDefaultGroups(groupNames); }
+    }
+
+    @Override
+    public boolean hasBeenDifferentiatedFromFiles()
+    {
+        synchronized(inner)
+        { return inner.hasBeenDifferentiatedFromFiles(); }
     }
 
     @Override
     public Collection<String> getGroupNames()
-    { synchronized(mainSyncLock) { return new HashSet<>(assignableGroups.keySet()); } }
+    {
+        synchronized(inner)
+        { return inner.getGroupNames(); }
+    }
 
     @Override
     public Collection<ID> getUsers()
-    { synchronized(mainSyncLock) { return new HashSet<>(permissionsForUsers.keySet()); } }
+    {
+        synchronized(inner)
+        { return inner.getUsers(); }
+    }
 
     @Override
     public List<String> getUserPermissions(ID userId)
     {
-        synchronized(mainSyncLock)
-        { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
+        synchronized(inner)
+        { return inner.getUserPermissions(userId); }
     }
 
     @Override
     public List<String> getGroupPermissions(String groupdId)
     {
-        if("*".equals(groupdId))
-            return getDefaultPermissions();
+        synchronized(inner)
+        { return inner.getGroupPermissions(groupdId); }
+    }
 
-        synchronized(mainSyncLock)
-        { return getPermissions(assignableGroups.get(groupdId)); }
+    @Override
+    public List<String> getDefaultPermissions()
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissions(); }
     }
 
     @Override
     public List<String> getGroupsOfUser(ID userId)
     {
-        synchronized(mainSyncLock)
-        { return getGroupsOf(permissionsForUsers.getOrDefault(userId, null)); }
+        synchronized(inner)
+        { return inner.getGroupsOfUser(userId); }
     }
 
     @Override
     public List<String> getGroupsOfGroup(String groupId)
     {
-        if("*".equals(groupId))
-            return getDefaultGroups();
-
-        synchronized(mainSyncLock)
-        { return getGroupsOf(assignableGroups.get(groupId)); }
+        synchronized(inner)
+        { return inner.getGroupsOfGroup(groupId); }
     }
 
-
+    @Override
+    public List<String> getDefaultGroups()
+    {
+        synchronized(inner)
+        { return inner.getDefaultGroups(); }
+    }
 
     @Override
     public Permission assignUserPermission(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return assignPermission(getUserPermissionsGroupOrNew(userId), permission); }
+        synchronized(inner)
+        { return inner.assignUserPermission(userId, permission); }
     }
 
     @Override
     public Permission assignGroupPermission(String groupId, String permission)
     {
-        if("*".equals(groupId))
-            return assignDefaultPermission(permission);
-        else
-            synchronized(mainSyncLock)
-            { return assignPermission(getGroupPermissionsGroupOrNew(groupId), permission); }
+        synchronized(inner)
+        { return inner.assignGroupPermission(groupId, permission); }
+    }
+
+    @Override
+    public Permission assignDefaultPermission(String permission)
+    {
+        synchronized(inner)
+        { return inner.assignDefaultPermission(permission); }
     }
 
     @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
-        synchronized(mainSyncLock)
-        { return revokePermission(permissionsForUsers.get(userId), permission); }
+        synchronized(inner)
+        { return inner.revokeUserPermission(userId, permission); }
     }
 
     @Override
     public Permission revokeGroupPermission(String groupId, String permission)
     {
-        if("*".equals(groupId))
-            return revokeDefaultPermission(permission);
+        synchronized(inner)
+        { return inner.revokeGroupPermission(groupId, permission); }
+    }
 
-        synchronized(mainSyncLock)
-        { return revokePermission(assignableGroups.get(groupId), permission); }
+    @Override
+    public Permission revokeDefaultPermission(String permission)
+    {
+        synchronized(inner)
+        { return inner.revokeDefaultPermission(permission); }
     }
 
     @Override
     public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
     {
-        synchronized(mainSyncLock)
-        {
-            PermissionGroup userPermGroup = getUserPermissionsGroupOrNew(userId);
-            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
-            markAsModified();
-            userPermGroup.addPermissionGroup(permGroupBeingAssigned);
-        }
+        synchronized(inner)
+        { inner.assignGroupToUser(userId, groupIdBeingAssigned); }
     }
 
     @Override
     public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
     {
-        if("*".equals(groupId))
-            assignDefaultGroup(groupIdBeingAssigned);
-
-        synchronized(mainSyncLock)
-        {
-            PermissionGroup permGroup = getGroupPermissionsGroupOrNew(groupId);
-            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
-            assertNotCircular(permGroup, permGroupBeingAssigned);
-            markAsModified();
-            permGroup.addPermissionGroup(permGroupBeingAssigned);
-        }
+        synchronized(inner)
+        { inner.assignGroupToGroup(groupId, groupIdBeingAssigned); }
     }
 
     @Override
     public void assignDefaultGroup(String groupIdBeingAssigned)
     {
-        synchronized(mainSyncLock)
-        {
-            PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
-            assertNotCircular(defaultPermissions, permGroupBeingAssigned);
-            markAsModified();
-            defaultPermissions.addPermissionGroup(permGroupBeingAssigned);
-        }
+        synchronized(inner)
+        { inner.assignDefaultGroup(groupIdBeingAssigned); }
     }
-
-    @Override
-    protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
-    { throw new UnsupportedOperationException("Variants implemented separately."); }
 
     @Override
     public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
     {
-        synchronized(mainSyncLock)
-        { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
+        synchronized(inner)
+        { return inner.revokeGroupFromUser(userId, groupIdBeingRevoked); }
     }
 
     @Override
     public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
     {
-        if("*".equals(groupId))
-            return revokeDefaultGroup(groupIdBeingRevoked);
-
-        synchronized(mainSyncLock)
-        { return revokeGroupFrom(assignableGroups.get(groupId), groupIdBeingRevoked); }
+        synchronized(inner)
+        { return inner.revokeGroupFromGroup(groupId, groupIdBeingRevoked); }
     }
 
     @Override
     public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
-
-    @Override
-    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
     {
-        if(permGroup == null)
-            return false;
-
-        synchronized(mainSyncLock)
-        {
-            PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
-
-            if(permGroupBeingRevoked == null)
-                return false;
-
-            markAsModified();
-            return permGroup.removePermissionGroup(permGroupBeingRevoked);
-        }
+        synchronized(inner)
+        { return inner.revokeDefaultGroup(groupIdBeingRevoked); }
     }
 
     @Override
     public void clear()
     {
-        synchronized(mainSyncLock)
-        {
-            permissionsForUsers.clear();
-            assignableGroups.clear();
-            defaultPermissions.clear();
-        }
+        synchronized(inner)
+        { inner.clear(); }
     }
 
     @Override
     public String usersToSaveString()
     {
-        StringWriter sw = new StringWriter();
-
-        try(BufferedWriter writer = new BufferedWriter(sw))
-        {
-            synchronized(mainSyncLock)
-            { saveUsers(writer); }
-        }
-        catch(IOException e)
-        { e.printStackTrace(); }
-
-        return sw.toString();
+        synchronized(inner)
+        { return inner.usersToSaveString(); }
     }
 
     @Override
     public String groupsToSaveString()
     {
-        StringWriter sw = new StringWriter();
-
-        try(BufferedWriter writer = new BufferedWriter(sw))
-        {
-            synchronized(mainSyncLock)
-            { saveGroups(writer); }
-        }
-        catch(IOException e)
-        { e.printStackTrace(); }
-
-        return sw.toString();
+        synchronized(inner)
+        { return inner.groupsToSaveString(); }
     }
 
     @Override
     public void save() throws IOException
     {
-        synchronized(mainSyncLock)
-        {
-            saveUsers();
-            saveGroups();
-            hasBeenDifferentiatedFromFiles = false;
-        }
+        synchronized(inner)
+        { inner.save(); }
     }
 
     @Override
     public void load() throws IOException
     {
-        synchronized(mainSyncLock)
-        {
-            permissionsForUsers.clear();
-            assignableGroups.clear();
-            defaultPermissions.clear();
-            loadGroups();
-            loadUsers();
-            hasBeenDifferentiatedFromFiles = false;
-        }
+        synchronized(inner)
+        { inner.load(); }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        synchronized(inner)
+        { return inner.hashCode(); }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        synchronized(inner)
+        { return inner.equals(obj); }
+    }
+
+    @Override
+    public String toString()
+    {
+        synchronized(inner)
+        { return inner.toString(); }
     }
 }

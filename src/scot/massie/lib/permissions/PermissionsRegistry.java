@@ -1218,7 +1218,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @return True if the group has any of the given permissions or any subpermission thereof as defined by
      *         {@link #groupHasPermission(String, String)}. Otherwise, false.
      */
-    public boolean userHasAnySubPermissionOf(String groupId, String... permissions)
+    public boolean groupHasAnySubPermissionOf(String groupId, String... permissions)
     { return hasAnySubPermissionOf(getGroupPermissionsGroup(groupId), permissions, false); }
 
     /**
