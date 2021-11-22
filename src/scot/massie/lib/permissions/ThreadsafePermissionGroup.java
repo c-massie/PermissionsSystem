@@ -5,6 +5,7 @@ import scot.massie.lib.functionalinterfaces.Procedure;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -168,6 +169,23 @@ public class ThreadsafePermissionGroup extends PermissionGroup
             result.sort(priorityComparatorHighestFirst);
             return result;
         }
+    }
+
+    @Override
+    public Collection<PermissionStatus> getPermissionStatuses()
+    {
+        Collection<PermissionStatus> result = new HashSet<>();
+
+        synchronized(mainSyncLock)
+        {
+            for(String permPath : permissionSet.getPermissionsAsStrings(false))
+            {
+                Permission perm = permissionSet.getPermission(permPath);
+                result.add(new PermissionStatus(permPath, perm.permits(), perm.getArg()));
+            }
+        }
+
+        return result;
     }
 
     @Override

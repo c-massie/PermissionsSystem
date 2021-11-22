@@ -419,6 +419,24 @@ public class PermissionGroup
     }
 
     /**
+     * Gets permission statuses for all of the permissions directly in this permission group. Does not include
+     * permissions in referenced permission groups or the default permission group.
+     * @return Permission statuses for all of the permissions directly in this permission group.
+     */
+    public Collection<PermissionStatus> getPermissionStatuses()
+    {
+        Collection<PermissionStatus> result = new HashSet<>();
+
+        for(String permPath : permissionSet.getPermissionsAsStrings(false))
+        {
+            Permission perm = permissionSet.getPermission(permPath);
+            result.add(new PermissionStatus(permPath, perm.permits(), perm.getArg()));
+        }
+
+        return result;
+    }
+
+    /**
      * Gets the permission groups referenced by this permission.
      * @return A list of the permission groups referenced by this permission, in order from highest priority to lowest.
      */

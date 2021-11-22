@@ -1711,8 +1711,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>The string representations of the permissions of the user returned do not include permission arguments.</p>
      * @param userId The ID of the user to get the permissions of.
-     * @return A sorted list of all permissions of the specified user, not including assigned groups, and not including
-     *         permission arguments.
+     * @return A sorted list of all permissions of the specified user, not including referenced groups or the default
+     *         permissions, and not including permission arguments.
      */
     public List<String> getUserPermissions(ID userId)
     { return getPermissions(permissionsForUsers.getOrDefault(userId, null)); }
@@ -1725,8 +1725,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>The string representations of the permissions of the group returned do not include permission arguments.</p>
      * @param groupdId The name of the group to get the permissions of.
-     * @return A sorted list of all the permissions of the specified group, not including assigned groups, and not
-     *         including permission arguments.
+     * @return A sorted list of all the permissions of the specified group, not including referenced groups or the
+     *         default permissions, and not including permission arguments.
      */
     public List<String> getGroupPermissions(String groupdId)
     { return getPermissions(getGroupPermissionsGroup(groupdId)); }
@@ -1753,8 +1753,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>The string representations returned do not include permission arguments.</p>
      * @param permGroup The permission group object to get the permissions of.
-     * @return A sorted list of all permissions of the given permissions group object, not including assigned groups,
-     *         and not including permission arguments.
+     * @return A sorted list of all permissions of the given permission group object, not including referenced groups or
+     *         the default permissions, and not including permission arguments.
      */
     protected List<String> getPermissions(PermissionGroup permGroup)
     {
@@ -1762,6 +1762,48 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
             return Collections.emptyList();
 
         return permGroup.getPermissionsAsStrings(false);
+    }
+    //endregion
+
+    //region permissions and statuses
+
+    /**
+     * Gets all of a user's permissions and their statuses.
+     * @param userId The ID of the user.
+     * @return A collection of permission statuses for all permissions of the specified user, not including referenced
+     *         groups or the default permissions.
+     */
+    public Collection<PermissionStatus> getAllUserPermissionStatuses(ID userId)
+    { return getAllPermissionsStatuses(permissionsForUsers.getOrDefault(userId, null)); }
+
+    /**
+     * Gets all of a group's permissions and their statuses.
+     * @param groupName The name of the group.
+     * @return A collection of permission statuses for all permissions of the specified group, not including referenced
+     *         groups or the default permissions.
+     */
+    public Collection<PermissionStatus> getAllGroupPermissionStatuses(String groupName)
+    { return getAllPermissionsStatuses(getGroupPermissionsGroup(groupName)); }
+
+    /**
+     * Gets all of the default permissions and their statuses.
+     * @return A collection of permission statuses for all default permissions, not including those of default groups.
+     */
+    public Collection<PermissionStatus> getAllDefaultPermissionStatuses()
+    { return getAllPermissionsStatuses(defaultPermissions); }
+
+    /**
+     * Gets the permissions and their status associated directly with a permission group object.
+     * @param permGroup The permission group object to get the permission statuses of.
+     * @return A collection of permission statuses for all permissions of the given permission group object, not
+     *         including referenced groups of the default permissions.
+     */
+    protected Collection<PermissionStatus> getAllPermissionsStatuses(PermissionGroup permGroup)
+    {
+        if(permGroup == null)
+            return Collections.emptyList();
+
+        return permGroup.getPermissionStatuses();
     }
     //endregion
 

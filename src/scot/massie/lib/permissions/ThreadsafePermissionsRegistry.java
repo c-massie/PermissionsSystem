@@ -541,6 +541,27 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public Collection<PermissionStatus> getAllUserPermissionStatuses(ID userId)
+    {
+        synchronized(inner)
+        { return inner.getAllUserPermissionStatuses(userId); }
+    }
+
+    @Override
+    public Collection<PermissionStatus> getAllGroupPermissionStatuses(String groupName)
+    {
+        synchronized(inner)
+        { return inner.getAllGroupPermissionStatuses(groupName); }
+    }
+
+    @Override
+    public Collection<PermissionStatus> getAllDefaultPermissionStatuses()
+    {
+        synchronized(inner)
+        { return inner.getAllDefaultPermissionStatuses(); }
+    }
+
+    @Override
     public List<String> getGroupsOfUser(ID userId)
     {
         synchronized(inner)
