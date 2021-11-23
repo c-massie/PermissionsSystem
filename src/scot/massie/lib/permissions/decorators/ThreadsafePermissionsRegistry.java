@@ -1,5 +1,8 @@
-package scot.massie.lib.permissions;
+package scot.massie.lib.permissions.decorators;
 
+import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.PermissionStatus;
+import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
 import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
@@ -32,7 +35,11 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
 
     public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
     {
-        super(inner.convertIdToString, inner.parseIdFromString, inner.usersFilePath, inner.groupsFilePath);
+        super(inner.getIdToStringFunction(),
+              inner.getIdFromStringFunction(),
+              inner.getUsersFilePath(),
+              inner.getGroupsFilePath());
+
         this.inner = inner;
     }
 

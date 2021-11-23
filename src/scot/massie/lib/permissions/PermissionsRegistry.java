@@ -1699,6 +1699,34 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     public Collection<ID> getUsers()
     { return new HashSet<>(permissionsForUsers.keySet()); }
+
+    /**
+     * Gets the path of this registry's users file.
+     * @return The path of this registry's users file, or null if this registry has no users file.
+     */
+    public Path getUsersFilePath()
+    { return usersFilePath; }
+
+    /**
+     * Gets the path of this registry's groups file.
+     * @return The path of this registry's groups file, or null if this registry has no groups file.
+     */
+    public Path getGroupsFilePath()
+    { return groupsFilePath; }
+
+    /**
+     * Gets the function responsible for creating string representations of user IDs.
+     * @return The function used for converting user IDs into strings.
+     */
+    public Function<ID, String> getIdToStringFunction()
+    { return convertIdToString; }
+
+    /**
+     * Gets the function responsible for parsing user IDs from their string representations.
+     * @return The function used for converting string representations of user IDs into user IDs.
+     */
+    public Function<String, ID> getIdFromStringFunction()
+    { return parseIdFromString; }
     //endregion
 
     //region permissions
