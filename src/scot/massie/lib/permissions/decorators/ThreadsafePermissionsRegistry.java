@@ -3,6 +3,7 @@ package scot.massie.lib.permissions.decorators;
 import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.PermissionsRegistry;
+import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
 import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
@@ -14,24 +15,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
+public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>>
+        extends PermissionsRegistryDecorator<ID>
 {
-    protected final PermissionsRegistry<ID> inner;
-
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString,
                                          Function<String, ID> idFromString,
                                          Path usersFile,
                                          Path groupsFile)
-    {
-        super(idToString, idFromString, usersFile, groupsFile);
-        this.inner = new PermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile);
-    }
+    { super(idToString, idFromString, usersFile, groupsFile); }
 
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
-    {
-        super(idToString, idFromString);
-        this.inner = new PermissionsRegistry<>(idToString, idFromString);
-    }
+    { super(idToString, idFromString); }
 
     public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
     {
@@ -39,8 +33,6 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
               inner.getIdFromStringFunction(),
               inner.getUsersFilePath(),
               inner.getGroupsFilePath());
-
-        this.inner = inner;
     }
 
     @Override

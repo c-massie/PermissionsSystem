@@ -2482,7 +2482,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws InvalidGroupNameException If any of the groups to be assigned to a permission group objects has an
      *                                   invalid name.
      */
-    protected void loadPerms(PermissionsLineReader reader,
+    private void loadPerms(PermissionsLineReader reader,
                              Function<String, PermissionGroup> createEntityFromHeader,
                              boolean isForGroups)
             throws IOException
@@ -2528,7 +2528,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
      * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
-    protected void loadUsers(PermissionsLineReader reader) throws IOException
+    private void loadUsers(PermissionsLineReader reader) throws IOException
     { loadPerms(reader, this::getUserPermissionsGroupFromSaveString, false); }
 
     /**
@@ -2539,7 +2539,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @throws IOException If an IO exception was thrown while reading from the provided reader.
      * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
-    protected void loadGroups(PermissionsLineReader reader) throws IOException
+    private void loadGroups(PermissionsLineReader reader) throws IOException
     { loadPerms(reader, this::getGroupPermissionsGroupFromSaveString, false); }
 
     /**
