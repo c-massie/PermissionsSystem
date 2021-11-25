@@ -1,10 +1,12 @@
-package scot.massie.lib.permissions;
+package scot.massie.lib.permissions.decorators;
 
 import org.junit.jupiter.api.Test;
+import scot.massie.lib.permissions.PermissionsRegistry;
+import scot.massie.lib.permissions.PermissionsRegistryTest;
+import scot.massie.lib.permissions.decorators.PermissionsRegistryWithEvents;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
 
 public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest

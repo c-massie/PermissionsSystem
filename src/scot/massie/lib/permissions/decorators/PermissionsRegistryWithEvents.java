@@ -1,9 +1,11 @@
-package scot.massie.lib.permissions;
+package scot.massie.lib.permissions.decorators;
 
 import scot.massie.lib.events.Event;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.ProtectedEvent;
 import scot.massie.lib.events.SetEvent;
+import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.events.args.*;
 
 import java.io.IOException;

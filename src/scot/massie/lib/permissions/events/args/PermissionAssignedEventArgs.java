@@ -1,7 +1,7 @@
 package scot.massie.lib.permissions.events.args;
 
 import scot.massie.lib.permissions.Permission;
-import scot.massie.lib.permissions.PermissionsRegistryWithEvents;
+import scot.massie.lib.permissions.decorators.PermissionsRegistryWithEvents;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 
 /**
