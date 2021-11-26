@@ -6,6 +6,7 @@ import scot.massie.lib.events.ProtectedEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionsRegistry;
+import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 import scot.massie.lib.permissions.events.args.*;
 
 import java.io.IOException;
@@ -13,12 +14,13 @@ import java.nio.file.Path;
 import java.util.function.Function;
 
 /**
- * <p>A {@link PermissionsRegistry permissions registry} with events for when the contents of the registry change.</p>
+ * <p>A {@link PermissionsRegistry permissions registry} decorator with events for when the contents of the registry
+ * change.</p>
  *
  * @see scot.massie.lib.permissions.PermissionsRegistry
  * @param <ID>The type of the unique identifier used to represent users.
  */
-public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
+public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
     //region events
     //region internal events
@@ -125,29 +127,36 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
      */
     public final Event<PermissionsChangedEventArgs<ID>> contentsChanged
             = new ProtectedEvent<>(contentsChanged_internal);
+
     //endregion
     //endregion
 
     //region initialisation
+
     /**
-     * Creates a new permissions registry with the ability to save and load to and from files.
+     * Creates a new permissions registry with events, with the ability to save to/load from files.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      * @param usersFile The filepath of the users permissions save file.
      * @param groupsFile The filepath of the groups permissions save file.
      */
-    public PermissionsRegistryWithEvents(Function<ID, String> idToString, Function<String, ID> idFromString,
-                                         Path usersFile,
-                                         Path groupsFile)
+    public PermissionsRegistryWithEvents(Function<ID, String> idToString, Function<String, ID> idFromString, Path usersFile, Path groupsFile)
     { super(idToString, idFromString, usersFile, groupsFile); }
 
     /**
-     * Creates a new permissions registry without the ability to save and load to and from files.
+     * Creates a new permissions registry with events, without the ability to save to/load from files.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */
     public PermissionsRegistryWithEvents(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(idToString, idFromString); }
+
+    /**
+     * Wraps an existing permissions registry in a permissions registry with events, which will fire as appropriate.
+     * @param inner The wrapped permissions registry.
+     */
+    public PermissionsRegistryWithEvents(PermissionsRegistry<ID> inner)
+    { super(inner); }
     //endregion
 
     //region methods
