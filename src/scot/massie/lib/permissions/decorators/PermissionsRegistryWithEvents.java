@@ -17,6 +17,10 @@ import java.util.function.Function;
  * <p>A {@link PermissionsRegistry permissions registry} decorator with events for when the contents of the registry
  * change.</p>
  *
+ * @apiNote If used in conjunction with {@link ThreadsafePermissionsRegistry}, this should wrap an instance of that
+ *          class, rather than vice versa - so that events are fired outwith that class' synchronisation locks. As
+ *          ThreadsafePermissionsRegistry doesn't add any of its own methods, this also means not having to keep two
+ *          separate decorated references to your {@link PermissionsRegistry}.
  * @see scot.massie.lib.permissions.PermissionsRegistry
  * @param <ID>The type of the unique identifier used to represent users.
  */

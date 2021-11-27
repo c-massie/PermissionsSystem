@@ -15,18 +15,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * <p>A {@link PermissionsRegistry permissions registry} decorator providing synchronous access.</p>
+ * @see scot.massie.lib.permissions.PermissionsRegistry
+ * @param <ID>The type of the unique identifier used to represent users.
+ */
 public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>>
         extends PermissionsRegistryDecorator<ID>
 {
+    /**
+     * Creates a new threadsafe permissions registry, with the ability to save to/load from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     * @param usersFile The filepath of the users permissions save file.
+     * @param groupsFile The filepath of the groups permissions save file.
+     */
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString,
                                          Function<String, ID> idFromString,
                                          Path usersFile,
                                          Path groupsFile)
     { super(idToString, idFromString, usersFile, groupsFile); }
 
+    /**
+     * Creates a new threadsafe permissions registry, without the ability to save to/load from files.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     */
     public ThreadsafePermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(idToString, idFromString); }
 
+    /**
+     * Wraps an existing permissions registry in a threadsafe permissions registry, providing synchronous access to it.
+     * @param inner The wrapped permissions registry.
+     */
     public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
     {
         super(inner.getIdToStringFunction(),
