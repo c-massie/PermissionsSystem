@@ -1,5 +1,11 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.events.Event;
+import scot.massie.lib.events.EventListener;
+import scot.massie.lib.events.InvokableEvent;
+import scot.massie.lib.events.SetEvent;
+import scot.massie.lib.events.args.predefined.ValueReassignedEventArgs;
+
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Predicate;
@@ -10,18 +16,6 @@ import java.util.function.Predicate;
  */
 public class PermissionGroup
 {
-    //region inner classes
-    protected static final class PriorityChangeCallback
-    {
-        public PriorityChangeCallback(PermissionGroup source)
-        { this.source = source; }
-
-        private final PermissionGroup source;
-
-        public void onPriorityChange() { source.sortPermissionGroups(); }
-    }
-    //endregion
-
     //region public static final fields
 
     /**
@@ -164,16 +158,19 @@ public class PermissionGroup
     PermissionGroup defaultPermissions;
 
     /**
-     * Callback that alerts this permission group when the priority of a permission group this group references changes
-     * its priority, which may require re-sorting the list of referenced groups.
+     * This PermissionGroup's listener for other PermissionGroup's priorities being changed.
      */
-    protected final PriorityChangeCallback priorityChangeCallback = new PriorityChangeCallback(this);
+    EventListener<ValueReassignedEventArgs<Double>> priorityChangedListener
+            = args -> PermissionGroup.this.sortPermissionGroups();
+
+    //endregion
+
+    //region events
 
     /**
-     * The callbacks to call when this permission group's priority is changed. These should be the callbacks provided
-     * by all permission groups that reference this one.
+     * Event for when this event's priority changes.
      */
-    protected final Collection<PriorityChangeCallback> callbacksToCallOnPriorityChange = new HashSet<>();
+    protected final InvokableEvent<ValueReassignedEventArgs<Double>> priorityChanged = new SetEvent<>();
     //endregion
 
     //region initialisation
@@ -735,7 +732,7 @@ public class PermissionGroup
 
         index = (index + 1) * -1;
         referencedGroups.add(index, permGroup);
-        permGroup.registerPriorityChangeCallback(priorityChangeCallback);
+        permGroup.priorityChanged.register(priorityChangedListener);
     }
 
     /**
@@ -756,7 +753,7 @@ public class PermissionGroup
     {
         if(referencedGroups.remove(permissionGroup))
         {
-            permissionGroup.deregisterPriorityChangeCallback(priorityChangeCallback);
+            permissionGroup.priorityChanged.deregister(priorityChangedListener);
             return true;
         }
         else
@@ -772,12 +769,11 @@ public class PermissionGroup
      */
     public void reassignPriority(long newPriority)
     {
+        double oldPriority = priority;
         priority = newPriority;
         priorityAsLong = newPriority;
         priorityIsLong = true;
-
-        for(PriorityChangeCallback callback : callbacksToCallOnPriorityChange)
-            callback.onPriorityChange();
+        priorityChanged.invoke(new ValueReassignedEventArgs<>(oldPriority, priority));
     }
 
     /**
@@ -786,27 +782,12 @@ public class PermissionGroup
      */
     public void reassignPriority(double newPriority)
     {
+        double oldPriority = priority;
         this.priority = newPriority;
         this.priorityAsLong = ((Double)newPriority).longValue();
         this.priorityIsLong = false;
-
-        for(PriorityChangeCallback callback : callbacksToCallOnPriorityChange)
-            callback.onPriorityChange();
+        priorityChanged.invoke(new ValueReassignedEventArgs<>(oldPriority, newPriority));
     }
-
-    /**
-     * Adds a callback to call when this permission group's priority changes.
-     * @param callback The callback to call
-     */
-    protected void registerPriorityChangeCallback(PriorityChangeCallback callback)
-    { callbacksToCallOnPriorityChange.add(callback); }
-
-    /**
-     * Removes a callback to call when this permission group's priority changes, it will no longer be called.
-     * @param callback The callback to no longer call.
-     */
-    protected void deregisterPriorityChangeCallback(PriorityChangeCallback callback)
-    { callbacksToCallOnPriorityChange.remove(callback); }
     //endregion
 
     /**
@@ -817,7 +798,7 @@ public class PermissionGroup
         permissionSet.clear();
 
         for(PermissionGroup group : referencedGroups)
-            group.deregisterPriorityChangeCallback(priorityChangeCallback);
+            group.priorityChanged.deregister(priorityChangedListener);
 
         referencedGroups.clear();
     }

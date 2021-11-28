@@ -15,6 +15,10 @@ public class MissingPermissionException extends Exception
      */
     final List<String> permissionsMissing;
 
+    /**
+     * Whether or not this exception is for a missing group of permissions where any one of them being present would
+     * have meant that the check would have been passed.
+     */
     final boolean isForAnyPermissions;
 
     /**

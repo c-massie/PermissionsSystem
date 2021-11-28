@@ -363,14 +363,6 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     }
 
     @Override
-    protected void registerPriorityChangeCallback(PriorityChangeCallback callback)
-    { throw new RuntimeException("ThreadsafePermissionGroup does not support priority change callbacks."); }
-
-    @Override
-    protected void deregisterPriorityChangeCallback(PriorityChangeCallback callback)
-    { throw new RuntimeException("ThreadsafePermissionGroup does not support priority change callbacks."); }
-
-    @Override
     public void clear()
     {
         synchronized(mainSyncLock)
