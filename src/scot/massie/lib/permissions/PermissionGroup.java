@@ -26,7 +26,7 @@ public class PermissionGroup
     public static final Comparator<PermissionGroup> priorityComparatorHighestFirst = (a, b) ->
     {
         int result = a.priorityIsLong ? (-Long  .compare(a.priorityAsLong, b.priorityAsLong))
-                             : (-Double.compare(a.priority,       b.priority      ));
+                                      : (-Double.compare(a.priority,       b.priority      ));
 
         if(result != 0)
             return result;

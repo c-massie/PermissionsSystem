@@ -453,6 +453,38 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getGroupsOf(permGroup); }
 
     @Override
+    PermissionGroup getGroupPermissionsGroup(String groupId)
+    { return inner.getGroupPermissionsGroup(groupId); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId)
+    { return inner.getGroupPermissionsGroupOrNew(groupId); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, long priority)
+    { return inner.getGroupPermissionsGroupOrNew(groupId, priority); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, double priority)
+    { return inner.getGroupPermissionsGroupOrNew(groupId, priority); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString) throws InvalidPriorityException
+    { return inner.getGroupPermissionsGroupOrNew(groupId, priorityAsString); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupFromSaveString(String saveString)
+    { return inner.getGroupPermissionsGroupFromSaveString(saveString); }
+
+    @Override
+    PermissionGroup getUserPermissionsGroupOrNew(ID userId)
+    { return inner.getUserPermissionsGroupOrNew(userId); }
+
+    @Override
+    PermissionGroup getUserPermissionsGroupFromSaveString(String saveString)
+    { return inner.getUserPermissionsGroupFromSaveString(saveString); }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     { return inner.assignUserPermission(userId, permission); }
 
