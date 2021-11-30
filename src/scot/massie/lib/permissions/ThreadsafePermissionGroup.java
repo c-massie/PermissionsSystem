@@ -23,11 +23,14 @@ import java.util.function.Predicate;
  */
 public class ThreadsafePermissionGroup extends PermissionGroup
 {
+    //region Synchronisation locks
     /**
      * The main synchronisation lock.
      */
     protected static final Object mainSyncLock = new Object();
+    //endregion
 
+    //region Initialisation
     /**
      * Creates a new threadsafe permission group object.
      * @param name The name of the permission group.
@@ -83,7 +86,10 @@ public class ThreadsafePermissionGroup extends PermissionGroup
      */
     public ThreadsafePermissionGroup(String name, PermissionGroup defaultPermissions, double priority)
     { super(name, defaultPermissions, priority); }
+    //endregion
 
+    //region Methods
+    //region Perform operations synchronously
     /**
      * Performs an operation within this ThreadsafePermissionGroup's synchronisation lock.
      * @param thingToDo The operation to perform.
@@ -93,7 +99,9 @@ public class ThreadsafePermissionGroup extends PermissionGroup
         synchronized(mainSyncLock)
         { thingToDo.run(); }
     }
+    //endregion
 
+    //region Overrides
     @Override
     public double getPriority()
     { synchronized(mainSyncLock) { return priority; } }
@@ -371,4 +379,6 @@ public class ThreadsafePermissionGroup extends PermissionGroup
             referencedGroups.clear();
         }
     }
+    //endregion
+    //endregion
 }

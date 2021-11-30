@@ -23,6 +23,7 @@ import java.util.function.Function;
 public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>>
         extends PermissionsRegistryDecorator<ID>
 {
+    //region Initialisation
     /**
      * Creates a new threadsafe permissions registry, with the ability to save to/load from files.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
@@ -55,7 +56,9 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
               inner.getUsersFilePath(),
               inner.getGroupsFilePath());
     }
+    //endregion
 
+    //region Methods
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
     {
@@ -741,4 +744,5 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
         synchronized(inner)
         { return inner.toString(); }
     }
+    //endregion
 }

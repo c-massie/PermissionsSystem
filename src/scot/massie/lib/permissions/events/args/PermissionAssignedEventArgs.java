@@ -13,12 +13,16 @@ import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
         extends PermissionEventArgs<ID>
 {
+    //region Instance fields
     /**
      * A permission object representing the permission previously assigned to the target at the given path. Null if
      * there was no previously assigned permission to the target at the given path.
      */
     protected final Permission previousPermissionObject;
+    //endregion
 
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new event args object.
      *
@@ -40,7 +44,9 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
         super(registry, target, userTargeted, groupTargeted, permission);
         this.previousPermissionObject = previousPermissionObject;
     }
+    //endregion
 
+    //region Static initialisation methods
     /**
      * Creates a new event args object, for where a permission is added to the default permissions.
      *
@@ -105,7 +111,10 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
                                                  permissionAssigned,
                                                  previousPermissionObject);
     }
+    //endregion
+    //endregion
 
+    //region Methods
     /**
      * Gets whether the permission being assigned is a negating permission.
      * @return True if the permission being assigned is a negating permission. Otherwise, false.
@@ -181,4 +190,5 @@ public class PermissionAssignedEventArgs<ID extends Comparable<? super ID>>
      */
     public String getPreviousPermissionArg()
     { return previousPermissionObject == null ? null : previousPermissionObject.getArg(); }
+    //endregion
 }

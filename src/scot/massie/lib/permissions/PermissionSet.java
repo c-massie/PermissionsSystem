@@ -20,8 +20,7 @@ import java.util.stream.Stream;
  */
 public final class PermissionSet
 {
-    //region Inner static classes
-
+    //region Inner classes
     /**
      * <p>A pairing of a permission with the path leading to that permission.</p>
      *
@@ -66,7 +65,7 @@ public final class PermissionSet
     }
     //endregion
 
-    //region Static final values
+    //region Constants
     /**
      * <p>Comparator that compares paths.</p>
      *
@@ -100,7 +99,7 @@ public final class PermissionSet
     };
     //endregion
 
-    //region fields
+    //region Instance fields
     /**
      * <p>The tree of exact permissions. Permissions in this tree cover only themselves exactly.</p>
      *
@@ -116,7 +115,9 @@ public final class PermissionSet
     final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
     //endregion
 
-    //region static string manipulation methods
+    //region Methods
+    //region Static utils
+    //region String manipulation
     static String[] splitPath(String permissionPath)
     { return permissionPath.split("\\.", -1); }
 
@@ -142,10 +143,10 @@ public final class PermissionSet
     static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
     { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
     //endregion
+    //endregion
 
     //region Accessors
-    //region tests as a whole
-
+    //region Tests as a whole
     /**
      * Checks whether or not this permission set contains any permissions at all.
      * @return True if this contains any permissions. Otherwise, false.
@@ -161,8 +162,7 @@ public final class PermissionSet
     { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
     //endregion
 
-    //region getters
-
+    //region Getters
     /**
      * Gets the {@link Permission} in this permission set that applies to the provided path, paired with the path it's
      * at.
@@ -256,8 +256,7 @@ public final class PermissionSet
     { return getPermission(Arrays.asList(permissionPath)); }
     //endregion
 
-    //region test permissions
-
+    //region Check permissions
     /**
      * Checks if the permissions in this permission set allow the provided permission.
      * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
@@ -494,8 +493,7 @@ public final class PermissionSet
     }
     //endregion
 
-    //region conversion to savestrings
-
+    //region Conversion to strings
     /**
      * <p>Gets a string representation of the permission at the given path.</p>
      *
@@ -635,7 +633,6 @@ public final class PermissionSet
     //endregion
 
     //region Mutators
-
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set.</p>
      *
@@ -794,5 +791,6 @@ public final class PermissionSet
         exactPermissionTree.clear();
         descendantPermissionTree.clear();
     }
+    //endregion
     //endregion
 }

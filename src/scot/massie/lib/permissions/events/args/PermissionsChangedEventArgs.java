@@ -12,6 +12,7 @@ import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
  */
 public class PermissionsChangedEventArgs<ID extends Comparable<? super ID>> implements EventArgs
 {
+    //region Instance fields
     /**
      * The registry this event belongs to. This event represents a change in the contents of this registry.
      */
@@ -33,7 +34,9 @@ public class PermissionsChangedEventArgs<ID extends Comparable<? super ID>> impl
      * by this change, this should always be null.
      */
     final String groupTargeted;
+    //endregion
 
+    //region Initialisation
     /**
      * Creates a new event args object.
      *
@@ -54,7 +57,9 @@ public class PermissionsChangedEventArgs<ID extends Comparable<? super ID>> impl
         this.userTargeted = userTargeted;
         this.groupTargeted = groupTargeted;
     }
+    //endregion
 
+    //region Methods
     /**
      * Gets the type of entry of the registry that was targeted in the action that raised this event.
      *
@@ -107,4 +112,5 @@ public class PermissionsChangedEventArgs<ID extends Comparable<? super ID>> impl
         // target == PermissionsChangedTarget.GROUP
         return registry.userHasGroup(userId, groupTargeted);
     }
+    //endregion
 }

@@ -1,13 +1,17 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.events.Event;
 import scot.massie.lib.events.EventListener;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.predefined.ValueReassignedEventArgs;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -16,8 +20,7 @@ import java.util.function.Predicate;
  */
 public class PermissionGroup
 {
-    //region public static final fields
-
+    //region Constants
     /**
      * <p>Comparator that sorts permission groups in order of priority, in order from highest to lowest.</p>
      *
@@ -106,7 +109,7 @@ public class PermissionGroup
     };
     //endregion
 
-    //region instance fields
+    //region Instance fields
     /**
      * The name, possibly used as a unique identifier, of the permission group.
      */
@@ -162,19 +165,16 @@ public class PermissionGroup
      */
     EventListener<ValueReassignedEventArgs<Double>> priorityChangedListener
             = args -> PermissionGroup.this.sortPermissionGroups();
-
     //endregion
 
-    //region events
-
+    //region Events
     /**
      * Event for when this event's priority changes.
      */
     protected final InvokableEvent<ValueReassignedEventArgs<Double>> priorityChanged = new SetEvent<>();
     //endregion
 
-    //region initialisation
-
+    //region Initialisation
     /**
      * <p>Creates a new permission group.</p>
      *
@@ -244,10 +244,9 @@ public class PermissionGroup
     }
     //endregion
 
-    //region methods
-    //region accessors
-    //region getters
-
+    //region Methods
+    //region Accessors
+    //region Getters
     /**
      * Gets this name of this permission group. This may be used as a unique identifier.
      * @return The name of this permission group.
@@ -454,8 +453,7 @@ public class PermissionGroup
     { return permissionSet.getPermissionsAsStrings(includeArgs); }
     //endregion
 
-    //region state
-
+    //region State
     /**
      * <p>Checks whether this group has the given permission.</p>
      *
@@ -647,6 +645,7 @@ public class PermissionGroup
     { return permissionSet.isEmpty() && referencedGroups.isEmpty(); }
     //endregion
 
+    //region String conversion
     /**
      * <p>Gets a multi-line string representation of this permission group.</p>
      *
@@ -680,10 +679,10 @@ public class PermissionGroup
     @Override public String toString()
     { return (priority == 0) ? (name) : (name + ": " + getPriorityAsString()); }
     //endregion
+    //endregion
 
-    //region mutators
-    //region permissions
-
+    //region Mutators
+    //region Permissions
     /**
      * Adds a permission to this permission group.
      * @param permissionAsString The permission to add.
@@ -716,8 +715,7 @@ public class PermissionGroup
     { return permissionSet.remove(permissionPath); }
     //endregion
 
-    //region permission groups
-
+    //region Permission groups
     /**
      * Adds a permission group to be referenced to this group. This will allow this permission group to query the
      * given permission group for permissions that this permission does not cover itself.
@@ -761,8 +759,7 @@ public class PermissionGroup
     }
     //endregion
 
-    //region priority
-
+    //region Priority
     /**
      * Changes the priority of this permission group to the given priority.
      * @param newPriority The value to set this permission group's priority to.
@@ -790,6 +787,7 @@ public class PermissionGroup
     }
     //endregion
 
+    //region Clear
     /**
      * Removes all permissions and referenced groups from this permission group. Does not affect the default group.
      */
@@ -802,6 +800,7 @@ public class PermissionGroup
 
         referencedGroups.clear();
     }
+    //endregion
     //endregion
     //endregion
 }

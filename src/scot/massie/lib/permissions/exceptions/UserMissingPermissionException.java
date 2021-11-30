@@ -9,11 +9,15 @@ import java.util.Collections;
 @SuppressWarnings("rawtypes") // As this is an exception, I can't be more specific about the ID of the user.
 public class UserMissingPermissionException extends MissingPermissionException
 {
+    //region Instance fields
     /**
      * The ID of the user missing the permission.
      */
     Comparable userMissingPermissionId;
+    //endregion
 
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new UserMissingPermissionException
      * @param userId The ID of the user missing the permission.
@@ -140,7 +144,9 @@ public class UserMissingPermissionException extends MissingPermissionException
         super(permissions, message, isForAnyPermissions);
         userMissingPermissionId = userId;
     }
+    //endregion
 
+    //region Static util methods for initialisation
     /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
@@ -193,11 +199,15 @@ public class UserMissingPermissionException extends MissingPermissionException
 
         return "The user with the ID " + userId + " was missing the permissions: " + resultBuilder;
     }
+    //endregion
+    //endregion
 
+    //region Methods
     /**
      * Gets the ID of the user missing the permission.
      * @return The ID of the user missing the permission.
      */
     public Comparable getUserId()
     { return userMissingPermissionId; }
+    //endregion
 }

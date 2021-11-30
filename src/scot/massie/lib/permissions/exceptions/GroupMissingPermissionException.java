@@ -8,11 +8,15 @@ import java.util.Collections;
  */
 public class GroupMissingPermissionException extends MissingPermissionException
 {
+    //region Instance fields
     /**
      * The name of the group missing the permission.
      */
     String groupMissingPermissionName;
+    //endregion
 
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new GroupMissingPermissionException.
      * @param groupName The name of the group missing the permission.
@@ -139,7 +143,9 @@ public class GroupMissingPermissionException extends MissingPermissionException
         super(permissions, message, isForAnyPermissions);
         groupMissingPermissionName = groupName;
     }
+    //endregion
 
+    //region Static util methods for initialisation
     /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
@@ -192,11 +198,15 @@ public class GroupMissingPermissionException extends MissingPermissionException
 
         return "The group with the name " + groupName + " was missing the permissions: " + resultBuilder;
     }
+    //endregion
+    //endregion
 
+    //region Methods
     /**
      * Gets the name of the group missing the permission.
      * @return The name of the group missing the permission.
      */
     public String getGroupName()
     { return groupMissingPermissionName; }
+    //endregion
 }

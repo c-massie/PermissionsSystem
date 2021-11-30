@@ -26,8 +26,8 @@ import java.util.function.Function;
  */
 public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
-    //region events
-    //region internal events
+    //region Events
+    //region Internal events
     /**
      * Fired when a permission is assigned to something.
      */
@@ -82,7 +82,7 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
     //endregion
 
-    //region public-facing events
+    //region Public-facing events
     /**
      * Fired when a permission is assigned to something.
      */
@@ -131,12 +131,10 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
      */
     public final Event<PermissionsChangedEventArgs<ID>> contentsChanged
             = new ProtectedEvent<>(contentsChanged_internal);
-
     //endregion
     //endregion
 
-    //region initialisation
-
+    //region Initialisation
     /**
      * Creates a new permissions registry with events, with the ability to save to/load from files.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
@@ -163,7 +161,7 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     { super(inner); }
     //endregion
 
-    //region methods
+    //region Methods
     @Override
     public Permission assignUserPermission(ID userId, String permission)
     {

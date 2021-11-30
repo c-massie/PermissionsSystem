@@ -8,6 +8,8 @@ import java.util.Collections;
  */
 public class PermissionNotDefaultException extends MissingPermissionException
 {
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new PermissionNotDefaultException
      * @param permission The permission that's not default.
@@ -86,7 +88,9 @@ public class PermissionNotDefaultException extends MissingPermissionException
      */
     public PermissionNotDefaultException(Collection<String> permissions, String message, boolean isForAnyPermissions)
     { super(permissions, message, isForAnyPermissions); }
+    //endregion
 
+    //region Static util methods for initialisation
     /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
@@ -138,4 +142,6 @@ public class PermissionNotDefaultException extends MissingPermissionException
 
         return "The default permissions were missing the permissions: " + resultBuilder;
     }
+    //endregion
+    //endregion
 }

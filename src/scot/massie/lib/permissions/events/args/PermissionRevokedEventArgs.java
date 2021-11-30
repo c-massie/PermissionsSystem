@@ -13,8 +13,12 @@ import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
         extends PermissionEventArgs<ID>
 {
+    //region Instance fields
     protected final Permission permissionObjectRemoved;
+    //endregion
 
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new event args object.
      *
@@ -36,7 +40,9 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
         super(registry, target, userTargeted, groupTargeted, permission);
         this.permissionObjectRemoved = permissionObjectRemoved;
     }
+    //endregion
 
+    //region Static initialisation methods
     /**
      * Creates a new event args object, for where a permission is removed from the default permissions.
      *
@@ -103,7 +109,10 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
                                                 permissionAssigned,
                                                 permissionObjectRemoved);
     }
+    //endregion
+    //endregion
 
+    //region Methods
     /**
      * Gets the Permission object returned by the revocation call that triggered this event.
      * @return The permission object returned by the revocation call that triggered this event, or null if no permission
@@ -140,4 +149,5 @@ public class PermissionRevokedEventArgs<ID extends Comparable<? super ID>>
      */
     public boolean removedPermissionWasNegating()
     { return permissionObjectRemoved != null && permissionObjectRemoved.negates(); }
+    //endregion
 }

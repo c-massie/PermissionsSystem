@@ -65,9 +65,8 @@ import java.util.stream.Stream;
  */
 public class PermissionsRegistry<ID extends Comparable<? super ID>>
 {
-    //region inner static classes
-    //region exceptions
-
+    //region Inner classes
+    //region Exceptions
     /**
      * Base exception for PermissionsRegistry-related exceptions.
      */
@@ -239,8 +238,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region text parsing
-
+    //region Text parsing
     /**
      * <p>Reader for parsing text in the registry's save string format.</p>
      *
@@ -377,8 +375,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region instance variables
-
+    //region Instance fields
     /**
      * The permission groups for users, mapped against the IDs of the users they're permissions for.
      */
@@ -416,13 +413,14 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      */
     protected final Path groupsFilePath;
 
+
     /**
      * Flag indicating whether or not the permissions registry has been modified since it was last saved or loaded.
      */
     protected boolean hasBeenDifferentiatedFromFiles = false;
     //endregion
 
-    //region initialisation
+    //region Initialisation
     protected PermissionsRegistry(PermissionGroup defaultPermissions,
                                   Function<ID, String> idToString,
                                   Function<String, ID> idFromString,
@@ -464,9 +462,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { this(new PermissionGroup("*"), idToString, idFromString, null, null); }
     //endregion
 
-    //region methods
-    //region static utils
-
+    //region Methods
+    //region Static utils
     /**
      * Asserts that a string is a valid name for a group.
      * @param groupName The string to assert is a valid group name.
@@ -493,10 +490,227 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region accessors
-    //region permission queries
-    //region get status
-    //region single
+    //region Assertions
+    //region Permissions
+    //region Has
+    /**
+     * Asserts that a specified user "has" a given permission.
+     * @see #userHasPermission(Comparable, String)
+     * @param userId The ID of the user to assert has the given permission.
+     * @param permission The permission to assert that the user has.
+     * @throws UserMissingPermissionException If the user does not have the given permission.
+     */
+    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
+    {
+        if(!userHasPermission(userId, permission))
+            throw new UserMissingPermissionException(userId, permission);
+    }
+
+    /**
+     * Asserts that a specified group "has" a given permission.
+     * @see #groupHasPermission(String, String)
+     * @param groupName The name of the group to assert has the given permission
+     * @param permission The permission to assert that the group has.
+     * @throws GroupMissingPermissionException If the group does not have the given permission.
+     */
+    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
+    {
+        if(!groupHasPermission(groupName, permission))
+            throw new GroupMissingPermissionException(groupName, permission);
+    }
+
+    /**
+     * Asserts that a given permission is part of the default permissions.
+     * @param permission The permission to assert is default.
+     * @throws PermissionNotDefaultException If the default permissions does not include the given permission.
+     */
+    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
+    {
+        if(!isDefaultPermission(permission))
+            throw new PermissionNotDefaultException(permission);
+    }
+    //endregion
+
+    //region Has all
+    /**
+     * Asserts that the specified user "has" all of the given permissions.
+     * @see #userHasAllPermissions(Comparable, Iterable)
+     * @param userId The ID of the user to assert has all of the given permissions
+     * @param permissions The permissions to assert that the user has.
+     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
+     */
+    public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        if(!userHasAllPermissions(userId, permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!userHasPermission(userId, perm))
+                    permissionsMissing.add(perm);
+
+            throw new UserMissingPermissionException(userId, permissionsMissing);
+        }
+    }
+
+    /**
+     * Asserts that the specified user "has" all of the given permissions.
+     * @see #userHasAllPermissions(Comparable, String...)
+     * @param userId The ID of the user to assert has all of the given permissions
+     * @param permissions The permissions to assert that the user has.
+     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
+     */
+    public void assertUserHasAllPermissions(ID userId, String... permissions)
+            throws UserMissingPermissionException
+    { assertUserHasAllPermissions(userId, Arrays.asList(permissions)); }
+
+    /**
+     * Asserts that the specified group "has" all of the given permissions.
+     * @see #groupHasAllPermissions(String, Iterable)
+     * @param groupName The name of the group to assert has all of the given permissions
+     * @param permissions The permissions to assert that the group has.
+     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
+     */
+    public void assertGroupHasAllPermissions(String groupName, Iterable<String> permissions)
+            throws GroupMissingPermissionException
+    {
+        if(!groupHasAllPermissions(groupName, permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!groupHasPermission(groupName, perm))
+                    permissionsMissing.add(perm);
+
+            throw new GroupMissingPermissionException(groupName, permissionsMissing);
+        }
+    }
+
+    /**
+     * Asserts that the specified group "has" all of the given permissions.
+     * @see #groupHasAllPermissions(String, String...)
+     * @param groupName The name of the group to assert has all of the given permissions
+     * @param permissions The permissions to assert that the group has.
+     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
+     */
+    public void assertGroupHasAllPermissions(String groupName, String... permissions)
+            throws GroupMissingPermissionException
+    { assertGroupHasAllPermissions(groupName, Arrays.asList(permissions)); }
+
+    /**
+     * Asserts that all of the given permissions are default.
+     * @see #areAllDefaultPermissions(Iterable)
+     * @param permissions The permissions to assert are all default.
+     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
+     */
+    public void assertAllAreDefaultPermissions(Iterable<String> permissions)
+            throws PermissionNotDefaultException
+    {
+        if(!areAllDefaultPermissions(permissions))
+        {
+            List<String> permissionsMissing = new ArrayList<>();
+
+            for(String perm : permissions)
+                if(!isDefaultPermission(perm))
+                    permissionsMissing.add(perm);
+
+            throw new PermissionNotDefaultException(permissionsMissing);
+        }
+    }
+
+    /**
+     * Asserts that all of the given permissions are default.
+     * @see #areAllDefaultPermissions(String...)
+     * @param permissions The permissions to assert are all default.
+     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
+     */
+    public void assertAllAreDefaultPermissions(String... permissions)
+            throws PermissionNotDefaultException
+    { assertAllAreDefaultPermissions(Arrays.asList(permissions)); }
+    //endregion
+
+    //region Has any
+    /**
+     * Asserts that the specified user "has" any of the given permissions.
+     * @see #userHasAnyPermissions(Comparable, Iterable)
+     * @param userId The ID of the user to assert has any of the given permissions
+     * @param permissions The permissions to assert that the user has any of.
+     * @throws UserMissingPermissionException If the user has none of the given permissions.
+     */
+    public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions)
+            throws UserMissingPermissionException
+    {
+        if(!userHasAnyPermissions(userId, permissions))
+            throw new UserMissingPermissionException(userId, permissions, true);
+    }
+
+    /**
+     * Asserts that the specified user "has" any of the given permissions.
+     * @see #userHasAnyPermissions(Comparable, String...)
+     * @param userId The ID of the user to assert has any of the given permissions
+     * @param permissions The permissions to assert that the user has any of.
+     * @throws UserMissingPermissionException If the user has none of the given permissions.
+     */
+    public void assertUserHasAnyPermission(ID userId, String... permissions)
+            throws UserMissingPermissionException
+    { assertUserHasAnyPermission(userId, Arrays.asList(permissions)); }
+
+    /**
+     * Asserts that the specified group "has" any of the given permissions.
+     * @see #groupHasAnyPermissions(String, Iterable)
+     * @param groupName The name of the group to assert has any of the given permissions
+     * @param permissions The permissions to assert that the group has any of.
+     * @throws GroupMissingPermissionException If the group has none of the given permissions.
+     */
+    public void assertGroupHasAnyPermission(String groupName, Iterable<String> permissions)
+            throws GroupMissingPermissionException
+    {
+        if(!groupHasAnyPermissions(groupName, permissions))
+            throw new GroupMissingPermissionException(groupName, permissions, true);
+    }
+
+    /**
+     * Asserts that the specified group "has" any of the given permissions.
+     * @see #groupHasAnyPermissions(String, String...)
+     * @param groupName The name of the group to assert has any of the given permissions
+     * @param permissions The permissions to assert that the group has any of.
+     * @throws GroupMissingPermissionException If the group has none of the given permissions.
+     */
+    public void assertGroupHasAnyPermission(String groupName, String... permissions)
+            throws GroupMissingPermissionException
+    { assertGroupHasAnyPermission(groupName, Arrays.asList(permissions)); }
+
+    /**
+     * Asserts that any of the given permissions are default.
+     * @see #anyAreDefaultPermissions(Iterable)
+     * @param permissions The permissions to assert are default.
+     * @throws PermissionNotDefaultException If none of the given permissions are default.
+     */
+    public void assertAnyAreDefaultPermission(Iterable<String> permissions)
+            throws PermissionNotDefaultException
+    {
+        if(!anyAreDefaultPermissions(permissions))
+            throw new PermissionNotDefaultException(permissions, true);
+    }
+
+    /**
+     * Asserts that any of the given permissions are default.
+     * @see #anyAreDefaultPermissions(String...)
+     * @param permissions The permissions to assert are default.
+     * @throws PermissionNotDefaultException If none of the given permissions are default.
+     */
+    public void assertAnyAreDefaultPermission(String... permissions)
+            throws PermissionNotDefaultException
+    { assertAnyAreDefaultPermission(Arrays.asList(permissions)); }
+    //endregion
+    //endregion
+    //endregion
+
+    //region Accessors
+    //region Permission queries
+    //region Get status
+    //region Single
     /**
      * Gets all the status information pertaining to the direct relationship between the specified user and the given
      * permission.
@@ -549,8 +763,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region multiple
-
+    //region Multiple
     /**
      * Gets all the status information pertaining to the direct relationship between the specified user and each of the
      * given permissions.
@@ -659,223 +872,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region assertHas
-
-    /**
-     * Asserts that a specified user "has" a given permission.
-     * @see #userHasPermission(Comparable, String)
-     * @param userId The ID of the user to assert has the given permission.
-     * @param permission The permission to assert that the user has.
-     * @throws UserMissingPermissionException If the user does not have the given permission.
-     */
-    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
-    {
-        if(!userHasPermission(userId, permission))
-            throw new UserMissingPermissionException(userId, permission);
-    }
-
-    /**
-     * Asserts that a specified group "has" a given permission.
-     * @see #groupHasPermission(String, String)
-     * @param groupName The name of the group to assert has the given permission
-     * @param permission The permission to assert that the group has.
-     * @throws GroupMissingPermissionException If the group does not have the given permission.
-     */
-    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
-    {
-        if(!groupHasPermission(groupName, permission))
-            throw new GroupMissingPermissionException(groupName, permission);
-    }
-
-    /**
-     * Asserts that a given permission is part of the default permissions.
-     * @param permission The permission to assert is default.
-     * @throws PermissionNotDefaultException If the default permissions does not include the given permission.
-     */
-    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
-    {
-        if(!isDefaultPermission(permission))
-            throw new PermissionNotDefaultException(permission);
-    }
-    //endregion
-
-    //region assertHasAll
-
-    /**
-     * Asserts that the specified user "has" all of the given permissions.
-     * @see #userHasAllPermissions(Comparable, Iterable)
-     * @param userId The ID of the user to assert has all of the given permissions
-     * @param permissions The permissions to assert that the user has.
-     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
-     */
-    public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions)
-            throws UserMissingPermissionException
-    {
-        if(!userHasAllPermissions(userId, permissions))
-        {
-            List<String> permissionsMissing = new ArrayList<>();
-
-            for(String perm : permissions)
-                if(!userHasPermission(userId, perm))
-                    permissionsMissing.add(perm);
-
-            throw new UserMissingPermissionException(userId, permissionsMissing);
-        }
-    }
-
-    /**
-     * Asserts that the specified user "has" all of the given permissions.
-     * @see #userHasAllPermissions(Comparable, String...)
-     * @param userId The ID of the user to assert has all of the given permissions
-     * @param permissions The permissions to assert that the user has.
-     * @throws UserMissingPermissionException If the user is missing any of the given permissions.
-     */
-    public void assertUserHasAllPermissions(ID userId, String... permissions)
-            throws UserMissingPermissionException
-    { assertUserHasAllPermissions(userId, Arrays.asList(permissions)); }
-
-    /**
-     * Asserts that the specified group "has" all of the given permissions.
-     * @see #groupHasAllPermissions(String, Iterable)
-     * @param groupName The name of the group to assert has all of the given permissions
-     * @param permissions The permissions to assert that the group has.
-     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
-     */
-    public void assertGroupHasAllPermissions(String groupName, Iterable<String> permissions)
-            throws GroupMissingPermissionException
-    {
-        if(!groupHasAllPermissions(groupName, permissions))
-        {
-            List<String> permissionsMissing = new ArrayList<>();
-
-            for(String perm : permissions)
-                if(!groupHasPermission(groupName, perm))
-                    permissionsMissing.add(perm);
-
-            throw new GroupMissingPermissionException(groupName, permissionsMissing);
-        }
-    }
-
-    /**
-     * Asserts that the specified group "has" all of the given permissions.
-     * @see #groupHasAllPermissions(String, String...)
-     * @param groupName The name of the group to assert has all of the given permissions
-     * @param permissions The permissions to assert that the group has.
-     * @throws GroupMissingPermissionException If the group is missing any of the given permissions.
-     */
-    public void assertGroupHasAllPermissions(String groupName, String... permissions)
-            throws GroupMissingPermissionException
-    { assertGroupHasAllPermissions(groupName, Arrays.asList(permissions)); }
-
-    /**
-     * Asserts that all of the given permissions are default.
-     * @see #areAllDefaultPermissions(Iterable)
-     * @param permissions The permissions to assert are all default.
-     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
-     */
-    public void assertAllAreDefaultPermissions(Iterable<String> permissions)
-            throws PermissionNotDefaultException
-    {
-        if(!areAllDefaultPermissions(permissions))
-        {
-            List<String> permissionsMissing = new ArrayList<>();
-
-            for(String perm : permissions)
-                if(!isDefaultPermission(perm))
-                    permissionsMissing.add(perm);
-
-            throw new PermissionNotDefaultException(permissionsMissing);
-        }
-    }
-
-    /**
-     * Asserts that all of the given permissions are default.
-     * @see #areAllDefaultPermissions(String...)
-     * @param permissions The permissions to assert are all default.
-     * @throws PermissionNotDefaultException If the default permissions does not cover any of the given permissions.
-     */
-    public void assertAllAreDefaultPermissions(String... permissions)
-            throws PermissionNotDefaultException
-    { assertAllAreDefaultPermissions(Arrays.asList(permissions)); }
-    //endregion
-
-    //region assertHasAny
-
-    /**
-     * Asserts that the specified user "has" any of the given permissions.
-     * @see #userHasAnyPermissions(Comparable, Iterable)
-     * @param userId The ID of the user to assert has any of the given permissions
-     * @param permissions The permissions to assert that the user has any of.
-     * @throws UserMissingPermissionException If the user has none of the given permissions.
-     */
-    public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions)
-            throws UserMissingPermissionException
-    {
-        if(!userHasAnyPermissions(userId, permissions))
-            throw new UserMissingPermissionException(userId, permissions, true);
-    }
-
-    /**
-     * Asserts that the specified user "has" any of the given permissions.
-     * @see #userHasAnyPermissions(Comparable, String...)
-     * @param userId The ID of the user to assert has any of the given permissions
-     * @param permissions The permissions to assert that the user has any of.
-     * @throws UserMissingPermissionException If the user has none of the given permissions.
-     */
-    public void assertUserHasAnyPermission(ID userId, String... permissions)
-            throws UserMissingPermissionException
-    { assertUserHasAnyPermission(userId, Arrays.asList(permissions)); }
-
-    /**
-     * Asserts that the specified group "has" any of the given permissions.
-     * @see #groupHasAnyPermissions(String, Iterable)
-     * @param groupName The name of the group to assert has any of the given permissions
-     * @param permissions The permissions to assert that the group has any of.
-     * @throws GroupMissingPermissionException If the group has none of the given permissions.
-     */
-    public void assertGroupHasAnyPermission(String groupName, Iterable<String> permissions)
-            throws GroupMissingPermissionException
-    {
-        if(!groupHasAnyPermissions(groupName, permissions))
-            throw new GroupMissingPermissionException(groupName, permissions, true);
-    }
-
-    /**
-     * Asserts that the specified group "has" any of the given permissions.
-     * @see #groupHasAnyPermissions(String, String...)
-     * @param groupName The name of the group to assert has any of the given permissions
-     * @param permissions The permissions to assert that the group has any of.
-     * @throws GroupMissingPermissionException If the group has none of the given permissions.
-     */
-    public void assertGroupHasAnyPermission(String groupName, String... permissions)
-            throws GroupMissingPermissionException
-    { assertGroupHasAnyPermission(groupName, Arrays.asList(permissions)); }
-
-    /**
-     * Asserts that any of the given permissions are default.
-     * @see #anyAreDefaultPermissions(Iterable)
-     * @param permissions The permissions to assert are default.
-     * @throws PermissionNotDefaultException If none of the given permissions are default.
-     */
-    public void assertAnyAreDefaultPermission(Iterable<String> permissions)
-            throws PermissionNotDefaultException
-    {
-        if(!anyAreDefaultPermissions(permissions))
-            throw new PermissionNotDefaultException(permissions, true);
-    }
-
-    /**
-     * Asserts that any of the given permissions are default.
-     * @see #anyAreDefaultPermissions(String...)
-     * @param permissions The permissions to assert are default.
-     * @throws PermissionNotDefaultException If none of the given permissions are default.
-     */
-    public void assertAnyAreDefaultPermission(String... permissions)
-            throws PermissionNotDefaultException
-    { assertAnyAreDefaultPermission(Arrays.asList(permissions)); }
-    //endregion
-
-    //region has
+    //region Has
 
     /**
      * <p>Checks whether or not a specified user "has" a given permission.</p>
@@ -959,7 +956,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region hasAll
+    //region Has all
 
     /**
      * Checks whether or not a specified user has all of the given permissions.
@@ -1056,7 +1053,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region hasAny
+    //region Has any
 
     /**
      * Checks whether or not a specified user has any of the given permissions.
@@ -1153,7 +1150,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region has any subpermission of
+    //region Has any subpermission of
 
     /**
      * Checks whether or not a specified user "has" a given permission or any subpermission thereof.
@@ -1313,8 +1310,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region args
-
+    //region Args
     /**
      * <p>Gets the argument associated with the given permission for the given user.</p>
      *
@@ -1383,9 +1379,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region group queries
-    //region has
-    
+    //region Group queries
+    //region Has
     /**
      * Gets whether or not the specified user is assigned a group with the given name. (directly, via an assigned group,
      * or via the default permissions.)
@@ -1452,8 +1447,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
     
-    //region has all
-
+    //region Has all
     /**
      * Gets whether or not the specified user is assigned groups with all of the given names. (directly, via an
      * assigned group, or via the default permissions)
@@ -1563,8 +1557,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
     
-    //region has any
-
+    //region Has any
     /**
      * Gets whether or not the specified user is assigned groups with any of the given names. (directly, via an
      * assigned group, or via the default permissions)
@@ -1670,8 +1663,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region check general state
-
+    //region State
     /**
      * Gets whether or not the permissions registry has had its values modified since the last time it was saved or
      * loaded.
@@ -1681,9 +1673,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return hasBeenDifferentiatedFromFiles; }
     //endregion
 
-    //region getters
-    //region members
-
+    //region Getters
+    //region Members
     /**
      * Gets the names of all groups registered with the permissions registry. This includes groups that don't have any
      * given permissions and aren't assigned to any users or other groups.
@@ -1729,8 +1720,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return parseIdFromString; }
     //endregion
 
-    //region permissions
-
+    //region Permissions
     /**
      * <p>Gets a list of the permissions directly assigned to the specified user.</p>
      *
@@ -1793,8 +1783,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region permissions and statuses
-
+    //region Permissions and statuses
     /**
      * Gets all of a user's permissions and their statuses.
      * @param userId The ID of the user.
@@ -1835,8 +1824,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region groups
-
+    //region Groups
     /**
      * Gets the names of all groups the specified user is assigned.
      * @param userId The ID of the user to get the groups of.
@@ -2111,9 +2099,9 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region mutators
-    //region permissions
-    //region assign
+    //region Mutators
+    //region Permissions
+    //region Assign
 
     /**
      * Assigns a permission to a user.
@@ -2159,8 +2147,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region revoke
-
+    //region Revoke
     /**
      * Removes a permission from a user.
      * @param userId The ID of the user to remove a permission from.
@@ -2208,9 +2195,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region groups
-    //region assign
-
+    //region Groups
+    //region Assign
     /**
      * Assigns a group to a user.
      * @param userId The ID of the user to assign a group to.
@@ -2255,8 +2241,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region revoke
-
+    //region Revoke
     /**
      * Deässigns a group from a user.
      * @param userId The ID of the user to deässign a group from.
@@ -2305,8 +2290,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region clear
-
+    //region Clear
     /**
      * Removes all users, groups, and permissions from this registry.
      */
@@ -2318,8 +2302,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region set flags
-
+    //region Set flags
     /**
      * Marks this registry as having been modified.
      */
@@ -2328,9 +2311,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
     //endregion
 
-    //region saving & loading
-    //region saving
-
+    //region Saving & loading
+    //region Saving
     /**
      * Writes reversible string representations of permission group objects to the provided writer object.
      * @param writer The writer to write to.
@@ -2470,8 +2452,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region loading
-
+    //region Loading
     /**
      * Reads lines from the reader provided, parses them into permission group objects or permissions for those groups,
      * and records the information parsed.

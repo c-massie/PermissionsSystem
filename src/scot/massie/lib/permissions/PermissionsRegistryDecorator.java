@@ -18,11 +18,14 @@ import java.util.function.Function;
  */
 public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
 {
+    //region Instance fields
     /**
      * The permissions registry being decorated.
      */
     protected final PermissionsRegistry<ID> inner;
+    //endregion
 
+    //region Initialisation
     /**
      * Creates a new decorator, decorating a fresh instance of {@link PermissionsRegistry}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
@@ -63,7 +66,9 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
 
         this.inner = inner;
     }
+    //endregion
 
+    //region Methods
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
     { return inner.getUserPermissionStatus(userId, permission); }
@@ -616,4 +621,5 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public String toString()
     { return inner.toString(); }
+    //endregion
 }

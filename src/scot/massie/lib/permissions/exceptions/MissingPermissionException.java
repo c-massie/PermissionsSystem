@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class MissingPermissionException extends Exception
 {
+    //region Instance fields
     /**
      * The permissions missing.
      */
@@ -20,7 +21,10 @@ public class MissingPermissionException extends Exception
      * have meant that the check would have been passed.
      */
     final boolean isForAnyPermissions;
+    //endregion
 
+    //region Initialisation
+    //region Constructors
     /**
      * Creates a new MissingPermissionException.
      * @param permission The permission missing.
@@ -116,7 +120,9 @@ public class MissingPermissionException extends Exception
         this.permissionsMissing = Collections.unmodifiableList(new ArrayList<>(permissions));
         this.isForAnyPermissions = isForAnyPermissions;
     }
+    //endregion
 
+    //region Static util methods for initialisation
     /**
      * Gets the default exception message for a given iterable of permissions.
      * @param permissions The permissions to get the default exception message for.
@@ -163,7 +169,10 @@ public class MissingPermissionException extends Exception
 
         return "Missing the permissions: " + resultBuilder;
     }
+    //endregion
+    //endregion
 
+    //region Methods
     /**
      * Gets the single permission that was missing.
      * @return The permission that was missing. If multiple permissions were missing, returns one of them.
@@ -192,4 +201,5 @@ public class MissingPermissionException extends Exception
      */
     public boolean anySinglePermissionWouldHavePassedPermissionCheck()
     { return isForAnyPermissions; }
+    //endregion
 }
