@@ -20,92 +20,39 @@ public class PermissionsRegistryTest
     protected PermissionsRegistry<String> getNewPermissionsRegistry()
     { return new PermissionsRegistry<>(s -> s, s -> s); }
 
-    //region assignPermission
-    @Test
-    public void assignPermission()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignUserPermission("user1", "some.other.permission");
 
-        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
 
-    @Test
-    public void assignPermission_negating()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "-some.permission.doot");
-        reg.assignUserPermission("user1", "some.other.permission");
+    //region Method tests
+    //region Assertions
+    //region Permissions
+    //region Has
 
-        String expectedResult = "user1\n    some.other.permission\n    -some.permission.doot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
-
-    @Test
-    public void assignPermission_wildcard()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot.*");
-        reg.assignUserPermission("user1", "some.other.permission");
-
-        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot.*";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
-
-    @Test
-    public void assignPermission_universal()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignUserPermission("user1", "*");
-        reg.assignUserPermission("user1", "some.other.permission");
-
-        String expectedResult = "user1\n    *\n    some.other.permission\n    some.permission.doot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
-
-    @Test
-    public void assignPermission_universalNegating()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignUserPermission("user1", "-*");
-        reg.assignUserPermission("user1", "some.other.permission");
-
-        String expectedResult = "user1\n    -*\n    some.other.permission\n    some.permission.doot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
-
-    @Test
-    public void assignPermissionToGroup()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupPermission("group1", "some.permission.doot");
-        reg.assignGroupPermission("group1", "some.other.permission");
-
-        String expectedResult = "group1\n    some.other.permission\n    some.permission.doot";
-        assertEquals("", reg.usersToSaveString());
-        assertEquals(expectedResult, reg.groupsToSaveString());
-    }
     //endregion
 
-    @Test
-    public void revokePermission()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignUserPermission("user1", "some.permission.hoot");
-        reg.assignUserPermission("user1", "some.other.permission");
+    //region Has all
 
-        reg.revokeUserPermission("user1", "some.permission.hoot");
+    //endregion
 
-        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
+    //region Has any
 
-    //region hasPermission
+    //endregion
+    //endregion
+    //endregion
+
+    //region Accessors
+    //region Permission queries
+    //region Get status
+    //region Single
+
+    //endregion
+
+    //region Multiple
+
+    //endregion
+    //endregion
+
+    //region Has
+    //region Normally
     @Test
     public void hasPermission_none()
     {
@@ -302,70 +249,7 @@ public class PermissionsRegistryTest
     }
     //endregion
 
-    //region hasGroup
-    @Test
-    public void hasGroup()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToGroup("red", "blue");
-        reg.assignGroupToGroup("green", "red");
-        reg.assignGroupToGroup("cyan", "green");
-        reg.getGroupPermissionsGroupOrNew("yellow");
-        reg.assignGroupToUser("user1", "green");
-
-        assertFalse(reg.userHasGroup("user1", "cyan"));
-        assertTrue(reg.userHasGroup("user1", "green"));
-        assertTrue(reg.userHasGroup("user1", "red"));
-        assertTrue(reg.userHasGroup("user1", "blue"));
-        assertFalse(reg.userHasGroup("user1", "yellow"));
-    }
-    //endregion
-
-    //region assignGroups
-    @Test
-    public void assignGroupToUser()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignUserPermission("user1", "some.permission.hoot");
-        reg.assignUserPermission("user1", "some.other.permission");
-        reg.assignGroupToUser("user1", "turtles");
-        reg.assignGroupToUser("user1", "ducks");
-
-        String expectedResult =     "user1"
-                                + "\n    #ducks"
-                                + "\n    #turtles"
-                                + "\n    some.other.permission"
-                                + "\n    some.permission.doot"
-                                + "\n    some.permission.hoot";
-        assertEquals(expectedResult, reg.usersToSaveString());
-    }
-
-    @Test
-    public void assignGroupToGroup()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "some.permission.doot");
-        reg.assignGroupPermission("group1", "some.permission.hoot");
-        reg.assignGroupPermission("group1", "some.other.permission");
-        reg.assignGroupToGroup("group1", "turtles");
-        reg.assignGroupToGroup("group1", "ducks");
-
-        String expectedUsers = "user1\n    some.permission.doot";
-        String expectedGroups =   "ducks\n\n"
-                                + "group1\n"
-                                + "    #ducks\n"
-                                + "    #turtles\n"
-                                + "    some.other.permission\n"
-                                + "    some.permission.hoot\n\n"
-                                + "turtles";
-
-        assertEquals(expectedUsers, reg.usersToSaveString());
-        assertEquals(expectedGroups, reg.groupsToSaveString());
-    }
-    //endregion
-
-    //region hasPermissionViaGroup
+    //region Via group
     //region 2 level hierarchy
     //region simple case
     @Test
@@ -1053,8 +937,117 @@ public class PermissionsRegistryTest
     //endregion
     //endregion
     //endregion
+    //endregion
 
-    //region getting permission args
+    //region Has all
+
+    //endregion
+
+    //region Has any
+
+    //endregion
+
+    //region Has any subpermission of
+    @Test
+    public void hasAnySubPermissionOf_none()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_direct()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "my.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_inherited()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "my.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedSame()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.perm");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedUnder()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a");
+        reg.assignUserPermission("user1", "-this.is.a.perm");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedOver()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a");
+        reg.assignUserPermission("user1", "-this.is");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedSameStar()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.perm.*");
+
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+
+    @Test
+    public void hasAnySubPermissionOf_negatedAboveStar()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "this.is.a.perm");
+        reg.assignUserPermission("user1", "-this.is.a.*");
+
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
+        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
+    }
+    //endregion
+
+    //region Args
     //region simple cases
     @Test
     public void getUserPermissionArg()
@@ -1065,7 +1058,7 @@ public class PermissionsRegistryTest
 
         assertEquals("doot", reg.getUserPermissionArg("user1", "europe.germany.berlin"));
     }
-    
+
     @Test
     public void getUserPermissionArg_empty()
     {
@@ -1075,7 +1068,7 @@ public class PermissionsRegistryTest
 
         assertEquals("", reg.getUserPermissionArg("user1", "europe.germany.berlin"));
     }
-    
+
     @Test
     public void getUserPermissionArg_noArg()
     {
@@ -1085,7 +1078,7 @@ public class PermissionsRegistryTest
 
         assertNull(reg.getUserPermissionArg("user1", "europe.germany.berlin"));
     }
-    
+
     @Test
     public void getUserPermissionArg_noPermission()
     {
@@ -1095,7 +1088,7 @@ public class PermissionsRegistryTest
 
         assertNull(reg.getUserPermissionArg("user1", "europe.poland.warsaw"));
     }
-    
+
     @Test
     public void getUserPermissionArg_universal()
     {
@@ -1215,7 +1208,7 @@ public class PermissionsRegistryTest
 
         assertEquals("doot", reg.getUserPermissionArg("user1", "europe.france.paris"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_notOverwrittenTwice()
     {
@@ -1231,7 +1224,7 @@ public class PermissionsRegistryTest
 
         assertEquals("doot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_negated()
     {
@@ -1246,7 +1239,7 @@ public class PermissionsRegistryTest
 
         assertNull(reg.getUserPermissionArg("user1", "europe.france.paris"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_negatedBySubGroup()
     {
@@ -1263,7 +1256,7 @@ public class PermissionsRegistryTest
 
         assertNull(reg.getUserPermissionArg("user1", "europe.italy.rome"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_different()
     {
@@ -1278,7 +1271,7 @@ public class PermissionsRegistryTest
 
         assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.france.paris"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_subgroupNegatesUserDifferent()
     {
@@ -1296,7 +1289,7 @@ public class PermissionsRegistryTest
 
         assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.italy.rome"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_noArg()
     {
@@ -1311,7 +1304,7 @@ public class PermissionsRegistryTest
 
         assertNull(reg.getUserPermissionArg("user1", "europe.france.paris"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwriting_subgroupNegatesUserNoArg()
     {
@@ -1350,7 +1343,7 @@ public class PermissionsRegistryTest
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowest()
     {
@@ -1372,7 +1365,7 @@ public class PermissionsRegistryTest
         assertEquals("hoot", reg.getUserPermissionArg("user1", "europe.italy"));
         assertEquals("doot", reg.getUserPermissionArg("user1", "europe"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithNegation()
     {
@@ -1394,7 +1387,7 @@ public class PermissionsRegistryTest
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe.italy"));
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithNegation()
     {
@@ -1416,7 +1409,7 @@ public class PermissionsRegistryTest
         assertNull(reg.getUserPermissionArg("user1", "europe.italy"));
         assertEquals("doot", reg.getUserPermissionArg("user1", "europe"));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversal()
     {
@@ -1438,7 +1431,7 @@ public class PermissionsRegistryTest
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
         assertEquals("soot", reg.getUserPermissionArg("user1", ""));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversal()
     {
@@ -1460,7 +1453,7 @@ public class PermissionsRegistryTest
         assertEquals("hoot", reg.getUserPermissionArg("user1", "europe"));
         assertEquals("doot", reg.getUserPermissionArg("user1", ""));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversalAndNegation()
     {
@@ -1482,7 +1475,7 @@ public class PermissionsRegistryTest
         assertEquals("soot", reg.getUserPermissionArg("user1", "europe"));
         assertEquals("soot", reg.getUserPermissionArg("user1", ""));
     }
-    
+
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversalAndNegation()
     {
@@ -1506,7 +1499,423 @@ public class PermissionsRegistryTest
     }
     //endregion
     //endregion
+    //endregion
 
+    //region Group queries
+    //region Has
+    @Test
+    public void hasGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("red", "blue");
+        reg.assignGroupToGroup("green", "red");
+        reg.assignGroupToGroup("cyan", "green");
+        reg.getGroupPermissionsGroupOrNew("yellow");
+        reg.assignGroupToUser("user1", "green");
+
+        assertFalse(reg.userHasGroup("user1", "cyan"));
+        assertTrue(reg.userHasGroup("user1", "green"));
+        assertTrue(reg.userHasGroup("user1", "red"));
+        assertTrue(reg.userHasGroup("user1", "blue"));
+        assertFalse(reg.userHasGroup("user1", "yellow"));
+    }
+    //endregion
+
+    //region Has all
+
+    //endregion
+
+    //region Has any
+
+    //endregion
+    //endregion
+
+    //region State
+
+    //endregion
+
+    //region Getters
+    //region Members
+    //endregion
+
+    //region Permissions
+    @Test
+    public void getUsers_empty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getUsers()).isEmpty();
+    }
+
+    @Test
+    public void getUsers()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "my.first.perm");
+        reg.assignUserPermission("userhoot", "my.second.perm");
+        reg.assignUserPermission("usernoot", "my.third.perm");
+
+        assertThat(reg.getUsers())
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("userdoot", "userhoot", "usernoot"));
+    }
+    //endregion
+
+    //region Permissions and statuses
+
+    //endregion
+
+    //region Groups
+    @Test
+    public void getGroupNames_empty()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getGroupNames()).isEmpty();
+    }
+
+    @Test
+    public void getGroupNames()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("groupdoot", "my.first.perm");
+        reg.assignGroupPermission("grouphoot", "my.second.perm");
+        reg.assignGroupPermission("groupnoot", "my.third.perm");
+
+        assertThat(reg.getGroupNames())
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("groupdoot", "grouphoot", "groupnoot"));
+    }
+    //endregion
+
+    //region PermissionGroups
+    @Test
+    public void getPermissions_noUser()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.getUserPermissions("nonexistentuser")).isEmpty();
+    }
+
+    @Test
+    public void getPermissions()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "europe.greece.athens");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
+    }
+
+    @Test
+    public void getPermissions_withNegating()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "-europe.greece.athens");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "-europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
+    }
+
+    @Test
+    public void getPermissions_withArgs()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("userdoot", "europe.france.paris");
+        reg.assignUserPermission("userhoot", "europe.germany.berlin");
+        reg.assignUserPermission("userhoot", "europe.greece.athens: Where the parthenon is");
+        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
+        reg.assignUserPermission("usernoot", "europe.spain.madrid");
+
+        assertThat(reg.getUserPermissions("userhoot"))
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
+                                                                   "europe.greece.athens",
+                                                                   "europe.netherlands.amsterdam"));
+    }
+    //endregion
+    //endregion
+    //endregion
+
+    //region Mutators
+    //region Permissions
+    //region Assign
+    @Test
+    public void assignPermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignPermission_negating()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "-some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        String expectedResult = "user1\n    some.other.permission\n    -some.permission.doot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignPermission_wildcard()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot.*");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot.*";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignPermission_universal()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "*");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        String expectedResult = "user1\n    *\n    some.other.permission\n    some.permission.doot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignPermission_universalNegating()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "-*");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        String expectedResult = "user1\n    -*\n    some.other.permission\n    some.permission.doot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignPermissionToGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("group1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.other.permission");
+
+        String expectedResult = "group1\n    some.other.permission\n    some.permission.doot";
+        assertEquals("", reg.usersToSaveString());
+        assertEquals(expectedResult, reg.groupsToSaveString());
+    }
+    //endregion
+
+    //region Revoke
+    @Test
+    public void revokePermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        reg.revokeUserPermission("user1", "some.permission.hoot");
+
+        String expectedResult = "user1\n    some.other.permission\n    some.permission.doot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+    //endregion
+    //endregion
+
+    //region Groups
+    //region Assign
+    @Test
+    public void assignGroupToUser()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignGroupToUser("user1", "turtles");
+        reg.assignGroupToUser("user1", "ducks");
+
+        String expectedResult =     "user1"
+                                    + "\n    #ducks"
+                                    + "\n    #turtles"
+                                    + "\n    some.other.permission"
+                                    + "\n    some.permission.doot"
+                                    + "\n    some.permission.hoot";
+        assertEquals(expectedResult, reg.usersToSaveString());
+    }
+
+    @Test
+    public void assignGroupToGroup()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.permission.hoot");
+        reg.assignGroupPermission("group1", "some.other.permission");
+        reg.assignGroupToGroup("group1", "turtles");
+        reg.assignGroupToGroup("group1", "ducks");
+
+        String expectedUsers = "user1\n    some.permission.doot";
+        String expectedGroups =   "ducks\n\n"
+                                  + "group1\n"
+                                  + "    #ducks\n"
+                                  + "    #turtles\n"
+                                  + "    some.other.permission\n"
+                                  + "    some.permission.hoot\n\n"
+                                  + "turtles";
+
+        assertEquals(expectedUsers, reg.usersToSaveString());
+        assertEquals(expectedGroups, reg.groupsToSaveString());
+    }
+    //endregion
+
+    //region Revoke
+
+    //endregion
+    //endregion
+
+    //region Clear
+
+    //endregion
+
+    //region Set flags
+
+    //endregion
+    //endregion
+
+    //region Saving & Loading
+    //region Saving
+    @Test
+    public void singleLine_saving()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupPermission("yellow", "permission.to.yellow");
+        reg.assignGroupToGroup("red", "yellow");
+        reg.assignGroupToGroup("blue", "red");
+
+        String expected = "blue #red\nred #yellow\n\nyellow\n    permission.to.yellow";
+        assertEquals(expected, reg.groupsToSaveString());
+    }
+    //endregion
+
+    //region Loading
+    @Test
+    public void singleLine_loading() throws IOException
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        String saveString =   "blue #red"
+                              + "\nred: 5 #yellow"
+                              + "\n\nyellow"
+                              + "\n    permission.from.yellow";
+
+        reg.loadGroupsFromSaveString(saveString);
+
+        assertThat(reg.getGroupNames()).containsExactlyInAnyOrderElementsOf(Arrays.asList("blue", "red", "yellow"));
+        assertTrue(reg.groupHasPermission("yellow", "permission.from.yellow"));
+        assertTrue(reg.groupHasPermission("red", "permission.from.yellow"));
+        assertTrue(reg.groupHasPermission("blue", "permission.from.yellow"));
+
+        assertEquals(saveString, reg.groupsToSaveString());
+    }
+
+    @Test
+    public void multilinePermissionArgsLoaded()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        String saveString = "group1\n"
+                            + "    my.perm.first\n"
+                            + "    my.perm.second: this is\n"
+                            + "        some text\n"
+                            + "        that should be written\n"
+                            + "    my.perm.third";
+
+        String expectedPermissionArg = "this is\nsome text\nthat should be written";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
+
+        saveString = "group1\n"
+                     + "    my.perm.first\n"
+                     + "    my.perm.second:\n"
+                     + "        this is\n"
+                     + "        some text\n"
+                     + "        that should be written\n"
+                     + "    my.perm.third";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
+    }
+    //endregion
+
+    //region Both
+    @Test
+    public void multilinePermissionArgLoadAndSave()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        String saveString = "group1\n"
+                            + "    my.perm.first\n"
+                            + "    my.perm.second: this is\n"
+                            + "        some text\n"
+                            + "        that should be written\n"
+                            + "    my.perm.third";
+
+        try
+        { reg.loadGroupsFromSaveString(saveString); }
+        catch(IOException e)
+        { e.printStackTrace(); }
+
+        String expectedResult = "group1\n"
+                                + "    my.perm.first\n"
+                                + "    my.perm.second:\n"
+                                + "        this is\n"
+                                + "        some text\n"
+                                + "        that should be written\n"
+                                + "    my.perm.third";
+
+        assertEquals(expectedResult, reg.groupsToSaveString());
+    }
+
+    @Test
+    public void defaultPermissions_loadingAndSaving()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("this.is.a.permission");
+        reg.assignDefaultPermission("this.is.another.permission: 5");
+        reg.assignDefaultGroup("somedefaultgroup");
+
+        String expectedGroupSavestring = "*"
+                                         + "\n    #somedefaultgroup"
+                                         + "\n    this.is.a.permission"
+                                         + "\n    this.is.another.permission: 5"
+                                         + "\n"
+                                         + "\nsomedefaultgroup";
+
+        assertEquals(expectedGroupSavestring, reg.groupsToSaveString());
+    }
+    //endregion
+    //endregion
+    //endregion
+
+    //region Additional tests
     //region group priority
     @Test
     public void groupPriority_saving()
@@ -1531,13 +1940,13 @@ public class PermissionsRegistryTest
         reg.assignGroupPermission("appa", "someperm: joot");
 
         String expected = "appa: -3\n    someperm: joot\n\n"
-                        + "azula: -3.4\n    someperm: noot\n\n"
-                        + "iroh: -3.76\n    someperm: foot\n\n"
-                        + "jet: 4.2\n    someperm: voot\n\n"
-                        + "katara: 5\n    someperm: doot\n\n"
-                        + "momo: -4\n    someperm: moot\n\n"
-                        + "sozin: 2.5\n    someperm: goot\n\n"
-                        + "suki: -3.9\n    someperm: poot";
+                          + "azula: -3.4\n    someperm: noot\n\n"
+                          + "iroh: -3.76\n    someperm: foot\n\n"
+                          + "jet: 4.2\n    someperm: voot\n\n"
+                          + "katara: 5\n    someperm: doot\n\n"
+                          + "momo: -4\n    someperm: moot\n\n"
+                          + "sozin: 2.5\n    someperm: goot\n\n"
+                          + "suki: -3.9\n    someperm: poot";
 
         assertEquals(expected, reg.groupsToSaveString());
     }
@@ -1638,102 +2047,6 @@ public class PermissionsRegistryTest
 
         assertEquals("zoot", reg.getUserPermissionArg("user1", "someperm"));
     }
-    //endregion
-
-    //region get
-    @Test
-    public void getUsers_empty()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        assertThat(reg.getUsers()).isEmpty();
-    }
-
-    @Test
-    public void getUsers()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("userdoot", "my.first.perm");
-        reg.assignUserPermission("userhoot", "my.second.perm");
-        reg.assignUserPermission("usernoot", "my.third.perm");
-
-        assertThat(reg.getUsers())
-                .containsExactlyInAnyOrderElementsOf(Arrays.asList("userdoot", "userhoot", "usernoot"));
-    }
-
-    @Test
-    public void getGroupNames_empty()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        assertThat(reg.getGroupNames()).isEmpty();
-    }
-
-    @Test
-    public void getGroupNames()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupPermission("groupdoot", "my.first.perm");
-        reg.assignGroupPermission("grouphoot", "my.second.perm");
-        reg.assignGroupPermission("groupnoot", "my.third.perm");
-
-        assertThat(reg.getGroupNames())
-                .containsExactlyInAnyOrderElementsOf(Arrays.asList("groupdoot", "grouphoot", "groupnoot"));
-    }
-
-    @Test
-    public void getPermissions_noUser()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        assertThat(reg.getUserPermissions("nonexistentuser")).isEmpty();
-    }
-
-    @Test
-    public void getPermissions()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("userdoot", "europe.france.paris");
-        reg.assignUserPermission("userhoot", "europe.germany.berlin");
-        reg.assignUserPermission("userhoot", "europe.greece.athens");
-        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
-        reg.assignUserPermission("usernoot", "europe.spain.madrid");
-
-        assertThat(reg.getUserPermissions("userhoot"))
-                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
-                                                                   "europe.greece.athens",
-                                                                   "europe.netherlands.amsterdam"));
-    }
-
-    @Test
-    public void getPermissions_withNegating()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("userdoot", "europe.france.paris");
-        reg.assignUserPermission("userhoot", "europe.germany.berlin");
-        reg.assignUserPermission("userhoot", "-europe.greece.athens");
-        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
-        reg.assignUserPermission("usernoot", "europe.spain.madrid");
-
-        assertThat(reg.getUserPermissions("userhoot"))
-                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
-                                                                   "-europe.greece.athens",
-                                                                   "europe.netherlands.amsterdam"));
-    }
-
-    @Test
-    public void getPermissions_withArgs()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("userdoot", "europe.france.paris");
-        reg.assignUserPermission("userhoot", "europe.germany.berlin");
-        reg.assignUserPermission("userhoot", "europe.greece.athens: Where the parthenon is");
-        reg.assignUserPermission("userhoot", "europe.netherlands.amsterdam");
-        reg.assignUserPermission("usernoot", "europe.spain.madrid");
-
-        assertThat(reg.getUserPermissions("userhoot"))
-                .containsExactlyInAnyOrderElementsOf(Arrays.asList("europe.germany.berlin",
-                                                                   "europe.greece.athens",
-                                                                   "europe.netherlands.amsterdam"));
-    }
-    //endregion
 
     @Test
     public void priorityRetainedForGroupsUsedBeforeDeclared()
@@ -1748,91 +2061,9 @@ public class PermissionsRegistryTest
 
         assertEquals(saveString, reg.groupsToSaveString());
     }
+    //endregion
 
-    @Test
-    public void multilinePermissionArgsLoaded()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-
-        String saveString = "group1\n"
-                            + "    my.perm.first\n"
-                            + "    my.perm.second: this is\n"
-                            + "        some text\n"
-                            + "        that should be written\n"
-                            + "    my.perm.third";
-
-        String expectedPermissionArg = "this is\nsome text\nthat should be written";
-
-        try
-        { reg.loadGroupsFromSaveString(saveString); }
-        catch(IOException e)
-        { e.printStackTrace(); }
-
-        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
-
-        saveString = "group1\n"
-                     + "    my.perm.first\n"
-                     + "    my.perm.second:\n"
-                     + "        this is\n"
-                     + "        some text\n"
-                     + "        that should be written\n"
-                     + "    my.perm.third";
-
-        try
-        { reg.loadGroupsFromSaveString(saveString); }
-        catch(IOException e)
-        { e.printStackTrace(); }
-
-        assertEquals(expectedPermissionArg, reg.getGroupPermissionArg("group1", "my.perm.second"));
-    }
-
-    @Test
-    public void multilinePermissionArgLoadAndSave()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-
-        String saveString = "group1\n"
-                            + "    my.perm.first\n"
-                            + "    my.perm.second: this is\n"
-                            + "        some text\n"
-                            + "        that should be written\n"
-                            + "    my.perm.third";
-
-        try
-        { reg.loadGroupsFromSaveString(saveString); }
-        catch(IOException e)
-        { e.printStackTrace(); }
-
-        String expectedResult = "group1\n"
-                                + "    my.perm.first\n"
-                                + "    my.perm.second:\n"
-                                + "        this is\n"
-                                + "        some text\n"
-                                + "        that should be written\n"
-                                + "    my.perm.third";
-
-        assertEquals(expectedResult, reg.groupsToSaveString());
-    }
-
-    //region default permissions
-    @Test
-    public void defaultPermissions_loadingAndSaving()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignDefaultPermission("this.is.a.permission");
-        reg.assignDefaultPermission("this.is.another.permission: 5");
-        reg.assignDefaultGroup("somedefaultgroup");
-
-        String expectedGroupSavestring = "*"
-                                         + "\n    #somedefaultgroup"
-                                         + "\n    this.is.a.permission"
-                                         + "\n    this.is.another.permission: 5"
-                                         + "\n"
-                                         + "\nsomedefaultgroup";
-
-        assertEquals(expectedGroupSavestring, reg.groupsToSaveString());
-    }
-
+    //region Default permissions
     @Test
     public void defaultPermissions_fallingBack_otherwiseEmpty()
     {
@@ -1895,137 +2126,5 @@ public class PermissionsRegistryTest
         assertFalse(reg.groupExtendsFromGroup("testgroup", "thedefaultgroup"));
     }
     //endregion
-
-    //region single-line permissions
-    @Test
-    public void singleLine_saving()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupPermission("yellow", "permission.to.yellow");
-        reg.assignGroupToGroup("red", "yellow");
-        reg.assignGroupToGroup("blue", "red");
-
-        String expected = "blue #red\nred #yellow\n\nyellow\n    permission.to.yellow";
-        assertEquals(expected, reg.groupsToSaveString());
-    }
-
-    @Test
-    public void singleLine_loading() throws IOException
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        String saveString =   "blue #red"
-                          + "\nred: 5 #yellow"
-                          + "\n\nyellow"
-                          + "\n    permission.from.yellow";
-
-        reg.loadGroupsFromSaveString(saveString);
-
-        assertThat(reg.getGroupNames()).containsExactlyInAnyOrderElementsOf(Arrays.asList("blue", "red", "yellow"));
-        assertTrue(reg.groupHasPermission("yellow", "permission.from.yellow"));
-        assertTrue(reg.groupHasPermission("red", "permission.from.yellow"));
-        assertTrue(reg.groupHasPermission("blue", "permission.from.yellow"));
-
-        assertEquals(saveString, reg.groupsToSaveString());
-    }
-    //endregion
-
-    //region has any subpermission of
-    @Test
-    public void hasAnySubPermissionOf_none()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "my.perm"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_direct()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignUserPermission("user1", "my.perm");
-
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_inherited()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "my.perm");
-
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm.here"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_negatedSame()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "this.is.a.perm");
-        reg.assignUserPermission("user1", "-this.is.a.perm");
-
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_negatedUnder()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "this.is.a");
-        reg.assignUserPermission("user1", "-this.is.a.perm");
-
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_negatedOver()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "this.is.a");
-        reg.assignUserPermission("user1", "-this.is");
-
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_negatedSameStar()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "this.is.a.perm");
-        reg.assignUserPermission("user1", "-this.is.a.perm.*");
-
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
-        assertTrue(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
-    }
-
-    @Test
-    public void hasAnySubPermissionOf_negatedAboveStar()
-    {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.assignGroupToUser("user1", "group1");
-        reg.assignGroupPermission("group1", "this.is.a.perm");
-        reg.assignUserPermission("user1", "-this.is.a.*");
-
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm"));
-        assertFalse(reg.userHasAnySubPermissionOf("user1", "this.is.a.perm.here"));
-    }
     //endregion
 }
