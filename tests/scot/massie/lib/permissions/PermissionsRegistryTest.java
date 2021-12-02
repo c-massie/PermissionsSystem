@@ -1,6 +1,8 @@
 package scot.massie.lib.permissions;
 
+import org.assertj.core.api.AssertProvider;
 import org.junit.jupiter.api.Test;
+import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,6 +29,30 @@ public class PermissionsRegistryTest
     //region Permissions
     //region Has
 
+    // For anything beyond simple "has" or "doesn't have", behvaiour is expected to be comparable to the regular "has
+    // permission" methods. So tests are only provided for "has" and "doesn't have".
+    @Test
+    void assertHasPermission_has()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertDoesNotThrow(() -> reg.assertUserHasPermission("user1", "some.permission.hoot"));
+    }
+
+    @Test
+    void assertHasPermission_doesntHave()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertThrows(UserMissingPermissionException.class,
+                     () -> reg.assertUserHasPermission("user1", "some.permission.foot"));
+    }
     //endregion
 
     //region Has all
