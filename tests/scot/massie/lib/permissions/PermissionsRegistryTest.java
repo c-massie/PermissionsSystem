@@ -69,6 +69,131 @@ public class PermissionsRegistryTest
     //region Permission queries
     //region Get status
     //region Single
+    @Test
+    public void getPermissionStatus_doesNotHave()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_doesNotHave_hasSubpermission()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_doesNotHave_hasAllSubpermissionsViaWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasDirectlyExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasDirectlyUnderOtherWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasDirectlyUnderWildcardWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasDirectlyExactlyWithArg_hasDirectlyUnderOtherWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasViaGroupExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasViaGroupsGroupWxactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasViaDefaultsExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_hasViaDefaultGroupExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedDirectlyExactly_hasViaGroupExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedDirectlyExactly_hasViaDefaultsExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedViaGroupExactly_hasViaGroupsGroupExactly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedViaGroupExactly_hasViaHigherPriorityGroupExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedViaGroupExactly_hasViaLowerPriorityGroupExactlyWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedDirectlySubpermission_hasDirectlySuperpermissionWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    public void getPermissionStatus_negatedDirectlyCoveringWildcard_hasDirectlySameButNotWildcardWithArg()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
     //endregion
 
