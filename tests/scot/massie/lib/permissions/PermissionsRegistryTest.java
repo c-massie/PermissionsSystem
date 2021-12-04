@@ -56,11 +56,49 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Has all
+    @Test
+    void assertHasAllPermissions_hasNone()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
+    @Test
+    void assertHasAllPermissions_hasSome()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void assertHasAllPermissions_hasAll()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
     //endregion
 
     //region Has any
+    @Test
+    void assertHasAnyPermissions_hasNone()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
+    @Test
+    void assertHasAnyPermissions_hasSome()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void assertHasAnyPermissions_hasAll()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
     //endregion
     //endregion
     //endregion
@@ -1092,9 +1130,93 @@ public class PermissionsRegistryTest
 
     //region Has all
 
+    @Test
+    void hasAllPermissions_hasNone()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllPermissions_hasSome()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllPermissions_hasAllDirectly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllPermissions_hasSomeDirectly_restViaGroups()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllPermissions_hasSomeDirectly_restViaDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllPermissions_hasSomeDirectly_restViaSuperpermissions()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
     //endregion
 
     //region Has any
+
+    @Test
+    void hasAnyPermissions_hasNone()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyPermissions_hasSome()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyPermissions_hasAll()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyPermissions_hasSomeViaGroups()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyPermissions_hasSomeViaDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyPermissions_hasSomeViaSuperpermissions()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
     //endregion
 
@@ -1674,9 +1796,79 @@ public class PermissionsRegistryTest
 
     //region Has all
 
+    @Test
+    void hasAllGroups_none()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllGroups_some()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllGroups_all()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllGroups_allViaOtherGroups()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAllGroups_allViaDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
     //endregion
 
     //region Has any
+
+    @Test
+    void hasAnyGroups_none()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyGroups_some()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyGroups_someViaOtherGroups()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyGroups_someViaDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasAnyGroups_all()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
     //endregion
     //endregion
