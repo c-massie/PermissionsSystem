@@ -1904,6 +1904,45 @@ public class PermissionsRegistryTest
 
     //region Permissions and statuses
 
+    @Test
+    void getPermissionsAndStatuses_userDoesntExist()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void getPermissionsAndStatuses_userHasNone()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void getPermissionsAndStatuses_userHasSomeDirectly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void getPermissionsAndStatuses_userHasSomeViaGroup()
+    {
+        // This method shouldn't include permissions a user has indirectly.
+
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void getPermissionsAndStatuses_userHasSomeViaDefaults()
+    {
+        // This method shouldn't include permissions a user has indirectly.
+
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
     //endregion
 
     //region Groups
@@ -2122,11 +2161,72 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Revoke
+    @Test
+    void revokeGroupFromUser_had()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
+    @Test
+    void revokeGroupFromUser_didntHave()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void revokeGroupFromGroup_had()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void revokeGroupFromGroup_didntHave()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
     //endregion
     //endregion
 
     //region Clear
+
+    @Test
+    void clear_empty()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void clear_onlyHadUsers()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void clear_onlyHadGroups()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void clear_onlyHadDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void clear_hadUsersGroupsAndDefaults()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
     //endregion
 
