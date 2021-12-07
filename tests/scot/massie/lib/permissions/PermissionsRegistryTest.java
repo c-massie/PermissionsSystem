@@ -1,14 +1,20 @@
 package scot.massie.lib.permissions;
 
-import org.assertj.core.api.AssertProvider;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
+import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PermissionsRegistryTest
 {
@@ -50,8 +56,21 @@ public class PermissionsRegistryTest
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
 
-        assertThrows(UserMissingPermissionException.class,
-                     () -> reg.assertUserHasPermission("user1", "some.permission.foot"));
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasPermission("user1", "some.permission.foot"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactly("some.permission.foot");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isFalse();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue();
+        assertThat(exceptionThrown.getPermission()).isEqualTo("some.permission.foot");
     }
     //endregion
 
@@ -59,23 +78,168 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasNone()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1",
+                                                                 "some",
+                                                                 "some.permission.doot",
+                                                                 "some.permission.hoot",
+                                                                 "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactlyInAnyOrder("some",
+                                                                               "some.permission.doot",
+                                                                               "some.permission.hoot",
+                                                                               "some.other.permission");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isTrue();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isFalse();
+    }
+
+    @Test
+    void assertHasAllPermissions_hasNoneOfOne()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1", "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactly("some.other.permission");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isFalse();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue();
+        assertThat(exceptionThrown.getPermission()).isEqualTo("some.other.permission");
+    }
+
+    @Test
+    void assertHasAllPermissions_hasOneOfMultiple()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1",
+                                                                 "some",
+                                                                 "some.permission.doot",
+                                                                 "some.permission.hoot",
+                                                                 "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactlyInAnyOrder("some",
+                                                                               "some.permission.doot",
+                                                                               "some.other.permission");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isTrue();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isFalse();
     }
 
     @Test
     void assertHasAllPermissions_hasSome()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1",
+                                                                 "some",
+                                                                 "some.permission.doot",
+                                                                 "some.permission.hoot",
+                                                                 "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactlyInAnyOrder("some",
+                                                                               "some.permission.doot");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isTrue();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isFalse();
+    }
+
+    @Test
+    void assertHasAllPermissions_hasAllButOne()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1",
+                                                                 "some.permission.doot",
+                                                                 "some.permission.hoot",
+                                                                 "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactly("some", "some.permission.doot");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isFalse();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue();
+        assertThat(exceptionThrown.getPermission()).isEqualTo("some.permission.doot");
     }
 
     @Test
     void assertHasAllPermissions_hasAll()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertDoesNotThrow(() -> reg.assertUserHasAllPermissions("user1",
+                                                                 "some.permission.hoot",
+                                                                 "some.permission.doot",
+                                                                 "some.other.permission"));
     }
+
+    @Test
+    void assertHasAllPermissions_hasAllOfOne()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertDoesNotThrow(() -> reg.assertUserHasAllPermissions("user1", "some.permission.hoot"));
+    }
+
     //endregion
 
     //region Has any
