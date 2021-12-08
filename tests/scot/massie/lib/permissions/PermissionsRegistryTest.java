@@ -246,22 +246,97 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasNone()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAnyPermission("user1",
+                                                                "some",
+                                                                "some.permission.doot",
+                                                                "some.permission.hoot",
+                                                                "some.other.permission"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactlyInAnyOrder("some",
+                                                                               "some.permission.doot",
+                                                                               "some.permission.hoot",
+                                                                               "some.other.permission");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isTrue();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue();
+    }
+
+    @Test
+    void assertHasAnyPermissions_hasNoneOfOne()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+
+        MutableWrapper<UserMissingPermissionException> exceptionThrownWrapper = new MutableWrapper<>(null);
+        UserMissingPermissionException exceptionThrown;
+
+        assertThatThrownBy(() -> reg.assertUserHasAnyPermission("user1", "some.permission.doot"))
+                .isInstanceOf(UserMissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(UserMissingPermissionException.class))
+                .matches(ex -> { exceptionThrownWrapper.set(ex); return true; });
+
+        exceptionThrown = exceptionThrownWrapper.get();
+
+        assertThat(exceptionThrown.getUserId()).isEqualTo("user1");
+        assertThat(exceptionThrown.getPermissions()).containsExactlyInAnyOrder("some.permission.doot");
+        assertThat(exceptionThrown.multiplePermissionsWereMissing()).isFalse();
+        assertThat(exceptionThrown.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue();
+        assertThat(exceptionThrown.getPermission()).isEqualTo("some.permission.doot");
+    }
+
+    @Test
+    void assertHasAnyPermissions_hasOneOfMultiple()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+
+        assertDoesNotThrow(() -> reg.assertUserHasAnyPermission("user1",
+                                                                "some",
+                                                                "some.permission.doot",
+                                                                "some.permission.hoot",
+                                                                "some.other.permission"));
     }
 
     @Test
     void assertHasAnyPermissions_hasSome()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertDoesNotThrow(() -> reg.assertUserHasAnyPermission("user1",
+                                                                "some",
+                                                                "some.permission.doot",
+                                                                "some.permission.hoot",
+                                                                "some.other.permission"));
     }
 
     @Test
     void assertHasAnyPermissions_hasAll()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permissions");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertDoesNotThrow(() -> reg.assertUserHasAnyPermission("user1",
+                                                                "some.permission.doot",
+                                                                "some.permission.hoot",
+                                                                "some.other.permission"));
     }
     //endregion
     //endregion
