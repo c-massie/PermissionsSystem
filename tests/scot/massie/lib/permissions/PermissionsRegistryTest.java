@@ -2,6 +2,7 @@ package scot.massie.lib.permissions;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
+import scot.massie.lib.permissions.exceptions.MissingPermissionException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
@@ -294,127 +295,356 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_doesNotHave()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_doesNotHave_hasSubpermission()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.perm.doot");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_doesNotHave_hasAllSubpermissionsViaWildcard()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.perm.*");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_hasDirectlyExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasDirectlyUnderOtherWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasDirectlyUnderWildcardWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.*: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasDirectlyExactlyWithArg_hasDirectlyUnderOtherWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other: My parent perm arg.");
+        reg.assignUserPermission("user1", "some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasViaGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
-    public void getPermissionStatus_hasViaGroupsGroupWxactlyWithArg()
+    public void getPermissionStatus_hasViaGroupsGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupPermission("group2", "some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasViaDefaultsExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignDefaultPermission("some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_hasViaDefaultGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
+        reg.assignDefaultGroup("group1");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_negatedDirectlyExactly_hasViaGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
+        reg.assignUserPermission("user1", "-some.other.perm");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_negatedDirectlyExactly_hasViaDefaultsExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignDefaultPermission("some.other.perm: My perm arg.");
+        reg.assignUserPermission("user1", "-some.other.perm");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaGroupsGroupExactly()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToGroup("group1", "group2");
+        reg.assignGroupPermission("group2", "some.other.perm: My perm arg.");
+        reg.assignUserPermission("user1", "-some.other.perm");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaHigherPriorityGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.getGroupPermissionsGroupOrNew("group1", 10);
+        reg.getGroupPermissionsGroupOrNew("group2", 20);
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignGroupPermission("group1", "-some.other.perm");
+        reg.assignGroupPermission("group2", "some.other.perm: My perm arg.");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isTrue();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isEqualTo("My perm arg.");
+        assertDoesNotThrow(ps::assertHasPermission);
     }
 
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaLowerPriorityGroupExactlyWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.getGroupPermissionsGroupOrNew("group1", 10);
+        reg.getGroupPermissionsGroupOrNew("group2", 20);
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
+        reg.assignGroupPermission("group2", "-some.other.perm");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_negatedDirectlySubpermission_hasDirectlySuperpermissionWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other: My perm arg.");
+        reg.assignUserPermission("user1", "-some.other.perm");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     @Test
     public void getPermissionStatus_negatedDirectlyCoveringWildcard_hasDirectlySameButNotWildcardWithArg()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other: My perm arg.");
+        reg.assignUserPermission("user1", "-some.other.*");
+
+        PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
+
+        assertThat(ps.hasPermission()).isFalse();
+        assertThat(ps.getPermission()).isEqualTo("some.other.perm");
+        assertThat(ps.getPermissionArg()).isNull();
+
+        assertThatThrownBy(ps::assertHasPermission)
+                .isInstanceOf(MissingPermissionException.class)
+                .asInstanceOf(InstanceOfAssertFactories.type(MissingPermissionException.class))
+                .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.perm"))
+                .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.getPermissions()).containsExactly("some.other.perm"));
     }
 
     //endregion
