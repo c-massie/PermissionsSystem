@@ -1547,43 +1547,104 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasNone()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isFalse();
     }
 
     @Test
     void hasAllPermissions_hasSome()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isFalse();
     }
 
     @Test
     void hasAllPermissions_hasAllDirectly()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.noot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaGroups()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.permission.noot");
+        reg.assignGroupPermission("group1", "some.permission.hoot");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignDefaultPermission("some.permission.noot");
+        reg.assignDefaultPermission("some.permission.hoot");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaSuperpermissions()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignUserPermission("user1", "yet.another.permission");
+
+        assertThat(reg.userHasAllPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission",
+                                             "yet.another.permission"))
+                .isTrue();
     }
 
     //endregion
@@ -1593,43 +1654,98 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasNone()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isFalse();
     }
 
     @Test
     void hasAnyPermissions_hasSome()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAnyPermissions_hasAll()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignUserPermission("user1", "some.permission.noot");
+        reg.assignUserPermission("user1", "some.permission.hoot");
+        reg.assignUserPermission("user1", "some.other.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAnyPermissions_hasSomeViaGroups()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.permission.doot");
+        reg.assignGroupPermission("group1", "some.other.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAnyPermissions_hasSomeViaDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignDefaultPermission("some.permission.doot");
+        reg.assignDefaultPermission("some.other.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission"))
+                .isTrue();
     }
 
     @Test
     void hasAnyPermissions_hasSomeViaSuperpermissions()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.irrelevant.permission");
+        reg.assignUserPermission("user1", "some.permission");
+
+        assertThat(reg.userHasAnyPermissions("user1",
+                                             "some.permission.doot",
+                                             "some.permission.noot",
+                                             "some.permission.hoot",
+                                             "some.other.permission",
+                                             "yet.another.permission"))
+                .isTrue();
     }
 
     //endregion
