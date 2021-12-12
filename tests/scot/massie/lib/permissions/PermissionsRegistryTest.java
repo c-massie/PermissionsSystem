@@ -2325,79 +2325,110 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Has all
-
     @Test
     void hasAllGroups_none()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
+                .isFalse();
     }
 
     @Test
     void hasAllGroups_some()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+
+        assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
+                .isFalse();
     }
 
     @Test
     void hasAllGroups_all()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignGroupToUser("user1", "group3");
+        reg.assignGroupToUser("user1", "group4");
+
+        assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     @Test
     void hasAllGroups_allViaOtherGroups()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignGroupToGroup("group2", "group3");
+        reg.assignGroupToGroup("group2", "group4");
+
+        assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     @Test
     void hasAllGroups_allViaDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignDefaultGroup("group3");
+        reg.assignDefaultGroup("group4");
+
+        assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     //endregion
 
     //region Has any
-
     @Test
     void hasAnyGroups_none()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        assertThat(reg.userHasAnyGroups("user1", "group1", "group2", "group3", "group4"))
+                .isFalse();
     }
 
     @Test
     void hasAnyGroups_some()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
-    }
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
 
-    @Test
-    void hasAnyGroups_someViaOtherGroups()
-    {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        assertThat(reg.userHasAnyGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     @Test
     void hasAnyGroups_someViaDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultGroup("group1");
+        reg.assignDefaultGroup("group2");
+
+        assertThat(reg.userHasAnyGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     @Test
     void hasAnyGroups_all()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupToUser("user1", "group2");
+        reg.assignGroupToUser("user1", "group3");
+        reg.assignGroupToUser("user1", "group4");
+
+        assertThat(reg.userHasAnyGroups("user1", "group1", "group2", "group3", "group4"))
+                .isTrue();
     }
 
     //endregion
