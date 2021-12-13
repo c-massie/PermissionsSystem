@@ -1783,7 +1783,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
     //endregion
 
-    //region Permissions and statuses
+    //region All permission statuses
     /**
      * Gets all of a user's permissions and their statuses.
      * @param userId The ID of the user.
@@ -1962,7 +1962,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets the permission group object of the specified group, reässigning the priority in the process. In the
+     * Gets the permission group object of the specified group, reässigning the priority in the process. If the
      * specified group does not currently exist in the registry, creates it.
      * @param groupId The name of the group to get the permission group object of.
      * @param priorityAsString The priority to ensure the specified group has, as a string.
@@ -2053,7 +2053,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     }
 
     /**
-     * Gets the permission group object of the specified user. In the specified user does not currently exist in the
+     * Gets the permission group object of the specified user. If the specified user does not currently exist in the
      * registry, registers it.
      * @param userId The ID of the user to get the permission group object of.
      * @return The permission group object of the user of the given ID.

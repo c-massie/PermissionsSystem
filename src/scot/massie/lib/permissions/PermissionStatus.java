@@ -2,6 +2,8 @@ package scot.massie.lib.permissions;
 
 import scot.massie.lib.permissions.exceptions.MissingPermissionException;
 
+import java.util.Objects;
+
 public final class PermissionStatus
 {
     private final String permission;
@@ -29,4 +31,30 @@ public final class PermissionStatus
 
     public String getPermissionArg()
     { return permissionArg; }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+        PermissionStatus that = (PermissionStatus)o;
+        return hasPermission == that.hasPermission
+            && permission.equals(that.permission)
+            && Objects.equals(permissionArg, that.permissionArg);
+    }
+
+    @Override
+    public int hashCode()
+    { return Objects.hash(permission, hasPermission, permissionArg); }
+
+    @Override
+    public String toString()
+    {
+        String result = (hasPermission ? "has    : " : "has not: ") + permission;
+
+        if(permissionArg != null)
+            result += permissionArg.contains("\n") ? " - (with arg)" : ": " + permissionArg;
+
+        return result;
+    }
 }

@@ -8,6 +8,7 @@ import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -2466,42 +2467,66 @@ public class PermissionsRegistryTest
     //region Permissions and statuses
 
     @Test
-    void getPermissionsAndStatuses_userDoesntExist()
+    void getAllPermissionStatuses_userDoesntExist()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        Collection<PermissionStatus> pstatuses = reg.getAllUserPermissionStatuses("user1");
+
+        assertThat(pstatuses).isEmpty();
     }
 
     @Test
-    void getPermissionsAndStatuses_userHasNone()
+    void getAllPermissionStatuses_userHasNone()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.getUserPermissionsGroupOrNew("user1");
+
+        Collection<PermissionStatus> pstatuses = reg.getAllUserPermissionStatuses("user1");
+
+        assertThat(pstatuses).isEmpty();
     }
 
     @Test
-    void getPermissionsAndStatuses_userHasSomeDirectly()
+    void getAllPermissionStatuses_userHasSomeDirectly()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission");
+        reg.assignUserPermission("user1", "some.other.permission");
+        reg.assignUserPermission("user1", "yet.another.permission");
+
+        assertThat(reg.getAllUserPermissionStatuses("user1"))
+                .containsExactlyInAnyOrder(new PermissionStatus("some.permission",        true, null),
+                                           new PermissionStatus("some.other.permission",  true, null),
+                                           new PermissionStatus("yet.another.permission", true, null));
     }
 
     @Test
-    void getPermissionsAndStatuses_userHasSomeViaGroup()
+    void getAllPermissionStatuses_userHasSomeViaGroup()
     {
         // This method shouldn't include permissions a user has indirectly.
 
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.permission");
+        reg.assignGroupPermission("group1", "some.other.permission");
+        reg.assignGroupPermission("group1", "yet.another.permission");
+
+        assertThat(reg.getAllUserPermissionStatuses("user1")).isEmpty();
     }
 
     @Test
-    void getPermissionsAndStatuses_userHasSomeViaDefaults()
+    void getAllPermissionStatuses_userHasSomeViaDefaults()
     {
         // This method shouldn't include permissions a user has indirectly.
 
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignDefaultPermission("some.permission");
+        reg.assignDefaultPermission("some.other.permission");
+        reg.assignDefaultPermission("yet.another.permission");
+
+        assertThat(reg.getAllUserPermissionStatuses("user1")).isEmpty();
     }
 
     //endregion
