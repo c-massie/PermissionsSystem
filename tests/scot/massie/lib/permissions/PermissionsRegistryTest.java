@@ -2750,29 +2750,55 @@ public class PermissionsRegistryTest
     @Test
     void revokeGroupFromUser_had()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToUser("user1", "group1");
+        assertThat(reg.userHasGroup("user1", "group1"))
+                .withFailMessage("Failed initial test set-up - .userHasGroup did not return true after assigning the "
+                                 + "group to the user.")
+                .isTrue();
+
+        assertThat(reg.revokeGroupFromUser("user1", "group1")).isTrue();
+        assertThat(reg.userHasGroup("user1", "group1")).isFalse();
     }
 
     @Test
     void revokeGroupFromUser_didntHave()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.userHasGroup("user1", "group1"))
+                .withFailMessage("Failed initial test set-up - .userHasGroup did not return false despite having not "
+                                 + "assigned the group to the user.")
+                .isFalse();
+
+        assertThat(reg.revokeGroupFromUser("user1", "group1")).isFalse();
+        assertThat(reg.userHasGroup("user1", "group1")).isFalse();
     }
 
     @Test
     void revokeGroupFromGroup_had()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignGroupToGroup("subgroup", "supergroup");
+        assertThat(reg.groupExtendsFromGroup("subgroup", "supergroup"))
+                .withFailMessage("Failed initial test set-up - .groupExtendsFromGroup did not return true after "
+                                 + "assigning the supergroup to the subgroup.")
+                .isTrue();
+
+        assertThat(reg.revokeGroupFromGroup("subgroup", "supergroup")).isTrue();
+        assertThat(reg.groupExtendsFromGroup("user1", "group1")).isFalse();
     }
 
     @Test
     void revokeGroupFromGroup_didntHave()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        assertThat(reg.groupExtendsFromGroup("subgroup", "supergroup"))
+                .withFailMessage("Failed initial test set-up - .groupExtendsFromGroup did not return false despite "
+                                 + "having not assigned the supergroup to the subgroup.")
+                .isFalse();
+
+        assertThat(reg.revokeGroupFromGroup("subgroup", "supergroup")).isFalse();
+        assertThat(reg.groupExtendsFromGroup("subgroup", "supergroup")).isFalse();
     }
     //endregion
     //endregion
