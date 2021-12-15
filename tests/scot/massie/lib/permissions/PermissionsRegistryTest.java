@@ -2804,42 +2804,83 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Clear
-
     @Test
     void clear_empty()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        reg.clear();
+
+        assertThat(reg.getUsers()).isEmpty();
+        assertThat(reg.getGroupNames()).isEmpty();
+        assertThat(reg.getDefaultPermissions()).isEmpty();
     }
 
     @Test
     void clear_onlyHadUsers()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.getUserPermissionsGroupOrNew("doot");
+        reg.getUserPermissionsGroupOrNew("noot");
+        reg.getUserPermissionsGroupOrNew("hoot");
+
+        reg.clear();
+
+        assertThat(reg.getUsers()).isEmpty();
+        assertThat(reg.getGroupNames()).isEmpty();
+        assertThat(reg.getDefaultPermissions()).isEmpty();
     }
 
     @Test
     void clear_onlyHadGroups()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.getGroupPermissionsGroupOrNew("doot");
+        reg.getGroupPermissionsGroupOrNew("noot");
+        reg.getGroupPermissionsGroupOrNew("hoot");
+
+        reg.clear();
+
+        assertThat(reg.getUsers()).isEmpty();
+        assertThat(reg.getGroupNames()).isEmpty();
+        assertThat(reg.getDefaultPermissions()).isEmpty();
     }
 
     @Test
     void clear_onlyHadDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignDefaultPermission("some.permission.doot");
+        reg.assignDefaultPermission("some.permission.noot");
+        reg.assignDefaultPermission("some.other.permission");
+        reg.assignDefaultPermission("yet.another.permission");
+
+        reg.clear();
+
+        assertThat(reg.getUsers()).isEmpty();
+        assertThat(reg.getGroupNames()).isEmpty();
+        assertThat(reg.getDefaultPermissions()).isEmpty();
     }
 
     @Test
     void clear_hadUsersGroupsAndDefaults()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
-    }
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot");
+        reg.assignGroupToUser("user1", "group1");
+        reg.assignGroupPermission("group1", "some.permission.noot");
+        reg.assignDefaultPermission("some.other.permission");
+        reg.assignDefaultGroup("group2");
+        reg.assignGroupPermission("group2", "yet.another.permission");
+        reg.assignGroupToGroup("group1", "group3");
+        reg.assignGroupPermission("group3", "some.other.unrelated.permission");
 
+        reg.clear();
+
+        assertThat(reg.getUsers()).isEmpty();
+        assertThat(reg.getGroupNames()).isEmpty();
+        assertThat(reg.getDefaultPermissions()).isEmpty();
+    }
     //endregion
 
     //region Set flags
