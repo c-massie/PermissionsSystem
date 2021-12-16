@@ -9,6 +9,8 @@ import scot.massie.lib.utils.wrappers.MutableWrapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +39,6 @@ public class PermissionsRegistryTest
     //region Assertions
     //region Permissions
     //region Has
-
     // For anything beyond simple "has" or "doesn't have", behvaiour is expected to be comparable to the regular "has
     // permission" methods. So tests are only provided for "has" and "doesn't have".
     @Test
@@ -651,6 +652,148 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Multiple
+
+    @Test
+    void getPermissionStatuses_none()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1");
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .isEmpty();
+    }
+
+    @Test
+    void getPermissionStatuses_single_doesntHave()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.noot: permarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1", "some.permission.doot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", false, null));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
+
+    @Test
+    void getPermissionStatuses_single_has()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.doot: permarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1", "some.permission.doot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", true, "permarg"));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
+
+    @Test
+    void getPermissionStatuses_multiple_doesntHaveAny()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.noot: permarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
+                                                                                   "some.permission.doot",
+                                                                                   "some.permission.hoot",
+                                                                                   "some.permission.toot",
+                                                                                   "some.permission.joot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", false, null));
+        expectedPermStatuses.put("some.permission.hoot", new PermissionStatus("some.permission.hoot", false, null));
+        expectedPermStatuses.put("some.permission.toot", new PermissionStatus("some.permission.toot", false, null));
+        expectedPermStatuses.put("some.permission.joot", new PermissionStatus("some.permission.joot", false, null));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
+
+    @Test
+    void getPermissionStatuses_multiple_hasSome()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.noot: permarg");
+        reg.assignUserPermission("user1", "some.permission.hoot: otharg");
+        reg.assignUserPermission("user1", "some.permission.joot: morarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
+                                                                                   "some.permission.doot",
+                                                                                   "some.permission.hoot",
+                                                                                   "some.permission.toot",
+                                                                                   "some.permission.joot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", false, null));
+        expectedPermStatuses.put("some.permission.hoot", new PermissionStatus("some.permission.hoot", true, "otharg"));
+        expectedPermStatuses.put("some.permission.toot", new PermissionStatus("some.permission.toot", false, null));
+        expectedPermStatuses.put("some.permission.joot", new PermissionStatus("some.permission.joot", true, "morarg"));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
+
+    @Test
+    void getPermissionStatuses_multiple_hasAll()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission.noot: permarg");
+        reg.assignUserPermission("user1", "some.permission.noot: somarg");
+        reg.assignUserPermission("user1", "some.permission.hoot: otharg");
+        reg.assignUserPermission("user1", "some.permission.noot: yetarg");
+        reg.assignUserPermission("user1", "some.permission.joot: morarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
+                                                                                   "some.permission.doot",
+                                                                                   "some.permission.hoot",
+                                                                                   "some.permission.toot",
+                                                                                   "some.permission.joot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", true, "somarg"));
+        expectedPermStatuses.put("some.permission.hoot", new PermissionStatus("some.permission.hoot", true, "otharg"));
+        expectedPermStatuses.put("some.permission.toot", new PermissionStatus("some.permission.toot", true, "yetarg"));
+        expectedPermStatuses.put("some.permission.joot", new PermissionStatus("some.permission.joot", true, "morarg"));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
+
+    @Test
+    void getPermissionStatuses_multiple_hasAllUnderSamePermission()
+    {
+        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        reg.assignUserPermission("user1", "some.permission: permarg");
+
+        Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
+                                                                                   "some.permission.doot",
+                                                                                   "some.permission.hoot",
+                                                                                   "some.permission.toot",
+                                                                                   "some.permission.joot");
+
+        Map<String, PermissionStatus> expectedPermStatuses = new HashMap<>();
+        expectedPermStatuses.put("some.permission.doot", new PermissionStatus("some.permission.doot", true, "permarg"));
+        expectedPermStatuses.put("some.permission.hoot", new PermissionStatus("some.permission.hoot", true, "permarg"));
+        expectedPermStatuses.put("some.permission.toot", new PermissionStatus("some.permission.toot", true, "permarg"));
+        expectedPermStatuses.put("some.permission.joot", new PermissionStatus("some.permission.joot", true, "permarg"));
+
+        assertThat(permStatuses)
+                .isNotNull()
+                .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
+    }
 
     //endregion
     //endregion
