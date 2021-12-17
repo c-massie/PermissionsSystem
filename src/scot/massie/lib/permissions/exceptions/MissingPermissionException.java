@@ -41,7 +41,7 @@ public class MissingPermissionException extends Exception
     {
         super(message);
         this.permissionsMissing = Collections.singletonList(permission);
-        this.isForAnyPermissions = false;
+        this.isForAnyPermissions = true;
     }
 
     /**
@@ -196,6 +196,8 @@ public class MissingPermissionException extends Exception
 
     /**
      * Gets whether having *any* permission required would have resulted in the permission check passing.
+     * @apiNote In the case of a single permission failing, this may still return false - this is more for checking if
+     *          this is thrown as a result of an "any" check vs an "all" check.
      * @return True if any permission required being present would have resulted in a pass for the permission check.
      *         Otherwise, (if all permissions were needed) false.
      */

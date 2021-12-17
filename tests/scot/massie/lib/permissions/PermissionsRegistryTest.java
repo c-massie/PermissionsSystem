@@ -106,7 +106,7 @@ public class PermissionsRegistryTest
                 .satisfies(ex -> assertThat(ex.getUserId()).isEqualTo("user1"))
                 .satisfies(ex -> assertThat(ex.getPermissions()).containsExactlyInAnyOrder("some.other.permission"))
                 .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
-                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isFalse())
                 .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.other.permission"));
     }
 
@@ -171,7 +171,7 @@ public class PermissionsRegistryTest
                 .satisfies(ex -> assertThat(ex.getUserId()).isEqualTo("user1"))
                 .satisfies(ex -> assertThat(ex.getPermissions()).containsExactlyInAnyOrder("some.permission.doot"))
                 .satisfies(ex -> assertThat(ex.multiplePermissionsWereMissing()).isFalse())
-                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isTrue())
+                .satisfies(ex -> assertThat(ex.anySinglePermissionWouldHavePassedPermissionCheck()).isFalse())
                 .satisfies(ex -> assertThat(ex.getPermission()).isEqualTo("some.permission.doot"));
     }
 
@@ -652,7 +652,6 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Multiple
-
     @Test
     void getPermissionStatuses_none()
     {
@@ -750,9 +749,9 @@ public class PermissionsRegistryTest
     {
         PermissionsRegistry<String> reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.noot: permarg");
-        reg.assignUserPermission("user1", "some.permission.noot: somarg");
+        reg.assignUserPermission("user1", "some.permission.doot: somarg");
         reg.assignUserPermission("user1", "some.permission.hoot: otharg");
-        reg.assignUserPermission("user1", "some.permission.noot: yetarg");
+        reg.assignUserPermission("user1", "some.permission.toot: yetarg");
         reg.assignUserPermission("user1", "some.permission.joot: morarg");
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
@@ -794,7 +793,6 @@ public class PermissionsRegistryTest
                 .isNotNull()
                 .containsExactlyInAnyOrderEntriesOf(expectedPermStatuses);
     }
-
     //endregion
     //endregion
 
@@ -1687,7 +1685,6 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Has all
-
     @Test
     void hasAllPermissions_hasNone()
     {
@@ -1790,11 +1787,9 @@ public class PermissionsRegistryTest
                                              "yet.another.permission"))
                 .isTrue();
     }
-
     //endregion
 
     //region Has any
-
     @Test
     void hasAnyPermissions_hasNone()
     {
@@ -1891,7 +1886,6 @@ public class PermissionsRegistryTest
                                              "yet.another.permission"))
                 .isTrue();
     }
-
     //endregion
 
     //region Has any subpermission of
