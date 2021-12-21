@@ -3,6 +3,7 @@ package scot.massie.lib.permissions;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import jdk.nashorn.internal.ir.annotations.Immutable;
+import scot.massie.lib.functionalinterfaces.Condition;
 
 import java.util.Objects;
 
@@ -11,7 +12,7 @@ import java.util.Objects;
  * that's handled by PermissionSet itself, but contains all other information.
  */
 @Immutable
-public final class Permission
+public class Permission
 {
     //region Default instances
     /**
@@ -39,24 +40,24 @@ public final class Permission
     /**
      * Whether or not this permission permits something. False implies it negates other permissions instead.
      */
-    private final boolean permits;
+    protected final boolean permits;
 
     /**
      * The string argument associated with this permission. Null implies there is no argument associated with this
      * permission.
      */
     @Nullable
-    private final String argument;
+    protected final String argument;
 
     /**
      * Whether or not the permission exists as the result of a different permission being declared. e.g. in
      * {@link PermissionSet}, the permission "some.permission.path" implies the permission "some.permission.path.*".
      */
-    private final boolean isIndirect;
+    protected final boolean isIndirect;
     //endregion
 
     //region Initialisation
-    private Permission(boolean permits, String argument, boolean isIndirect)
+    protected Permission(boolean permits, String argument, boolean isIndirect)
     {
         this.permits = permits;
         this.argument = argument;
@@ -72,6 +73,15 @@ public final class Permission
     @NotNull
     public Permission withArg(String argument)
     { return new Permission(permits, argument, isIndirect); }
+
+    /**
+     * Gets a variant of the permission this is called on, only to be considered when the given condition is met.
+     * @param condition The condition the permission is to meet in order to be considered.
+     * @return A copy of the permission this is called on, as a ConditionalPermission object, with the given condition.
+     */
+    @NotNull
+    public ConditionalPermission onCondition(Condition condition)
+    { return new ConditionalPermission(permits, argument, isIndirect, condition); }
 
     /**
      * Gets a variant of the permission this is called on, marked as being the indirect consequence of another
