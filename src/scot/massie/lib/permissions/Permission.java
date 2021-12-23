@@ -148,6 +148,24 @@ public class Permission
      */
     public boolean isIndirect()
     { return isIndirect; }
+
+    /**
+     * Whether or not this permission should be considered.
+     * @apiNote This generally always returns true, except for instances of {@link ConditionalPermission}, which derive
+     *          the result of this from an internally held condition.
+     * @return True if this permission should be considered when considering permissions. Otherwise, false.
+     */
+    public boolean shouldBeConsidered()
+    { return true; }
+
+    /**
+     * Whether or not this permission should be ignored.
+     * @apiNote This generally always returns false, except for instances of {@link ConditionalPermission}, which derive
+     *          the result of this from an internally held condition.
+     * @return True if this permission should be ignored when considering permissions. Otherwise, false.
+     */
+    public boolean shouldBeIgnored()
+    { return false; }
     //endregion
 
     //region Overloads

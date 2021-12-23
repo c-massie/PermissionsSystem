@@ -44,6 +44,7 @@ public class ConditionalPermission extends Permission
      * @return True if this permission's condition returns true and this permission should be considered. Otherwise,
      *         false.
      */
+    @Override
     public boolean shouldBeConsidered()
     { return condition.test(); }
 
@@ -53,6 +54,7 @@ public class ConditionalPermission extends Permission
      * @return True if this permission's condition returns false and this permission should be ignore and not
      *         considered. Otherwise, false.
      */
+    @Override
     public boolean shouldBeIgnored()
     { return !condition.test(); }
 

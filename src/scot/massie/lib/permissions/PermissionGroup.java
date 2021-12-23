@@ -633,7 +633,7 @@ public class PermissionGroup
      *         false.
      */
     boolean containsOnlyAGroup()
-    { return (permissionSet.isEmpty()) && (referencedGroups.size() == 1); }
+    { return (permissionSet.isEmptyExceptForConditionals()) && (referencedGroups.size() == 1); }
 
     /**
      * Gets whether or not this permission group contains any permissions, or references any groups. Ignores the default
@@ -642,7 +642,7 @@ public class PermissionGroup
      *         default group. Otherwise, false.
      */
     public boolean isEmpty()
-    { return permissionSet.isEmpty() && referencedGroups.isEmpty(); }
+    { return permissionSet.isEmptyExceptForConditionals() && referencedGroups.isEmpty(); }
     //endregion
 
     //region String conversion
@@ -670,7 +670,7 @@ public class PermissionGroup
         for(PermissionGroup permGroup : referencedGroups)
             result.append("\n    #").append(permGroup.getName());
 
-        if(permissionSet.hasAny())
+        if(permissionSet.hasAnyExceptForConditionals())
             result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
 
         return result.toString();

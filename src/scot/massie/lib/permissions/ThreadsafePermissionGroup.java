@@ -307,7 +307,7 @@ public class ThreadsafePermissionGroup extends PermissionGroup
         for(PermissionGroup permGroup : groups)
             result.append("\n    #").append(permGroup.getName());
 
-        if(permissionSet.hasAny())
+        if(permissionSet.hasAnyExceptForConditionals())
             result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
 
         return result.toString();

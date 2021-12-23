@@ -1,15 +1,11 @@
 package scot.massie.lib.permissions;
 
-import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.Test;
 import scot.massie.lib.collections.trees.Tree;
 import scot.massie.lib.collections.trees.TreeEntry;
 
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
