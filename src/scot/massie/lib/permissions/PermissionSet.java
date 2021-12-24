@@ -5,6 +5,7 @@ import scot.massie.lib.collections.trees.RecursiveTree;
 import scot.massie.lib.collections.trees.Tree;
 import scot.massie.lib.collections.trees.TreeEntry;
 import scot.massie.lib.collections.trees.TreePath;
+import scot.massie.lib.functionalinterfaces.Condition;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.text.ParseException;
@@ -678,6 +679,38 @@ public final class PermissionSet
     //endregion
 
     //region Mutators
+
+    /**
+     * <p>Parses the provided permission as a string and adds it to the permission set.</p>
+     *
+     * <p>Permissions must be in the form of: "first.second.third"</p>
+     *
+     * <p>Permissions may be suffixed with ".*" to make it apply to all permissions lower than itself (starting with
+     * it), but not to itself.</p>
+     *
+     * <p>Permissions may be prefixed with "-" to indicate that it negates the permission and any it covers, rather than
+     * allowing them.</p>
+     *
+     * <p>Any text after the first colon ":" is considered to make up the string argument, and not be part of the
+     * formatted permission itself.</p>
+     * @param permissionAsString The permission formatted as a string.
+     * @param condition The condition under which the permission should be considered. Passing null results in the
+     *                  permission being unconditional.
+     * @return The permission object previously set at the given path, or null if there was none.
+     * @throws ParseException If the provided string is not parsable as a permission.
+     */
+    public Permission set(String permissionAsString, Condition condition) throws ParseException
+    {
+        if(permissionAsString == null)
+            throw new NullPointerException("permissionAsString was null.");
+
+        String[] parts = permissionAsString.split(":", 2);
+        String permWithoutArg = parts[0].trim();
+        String permArg = parts.length > 1 ? parts[1].trim() : null;
+        Permission perm = createPermissionFromString(permWithoutArg, permArg, condition);
+        return storePermission(perm, permissionAsString, permWithoutArg);
+    }
+
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set.</p>
      *
@@ -696,66 +729,7 @@ public final class PermissionSet
      * @throws ParseException If the provided string is not parsable as a permission.
      */
     public Permission set(String permissionAsString) throws ParseException
-    {
-        boolean isNegation = false;
-        boolean isWildcard = false;
-        String[] parts = permissionAsString.split(":", 2);
-        String permWithoutArg = parts[0].trim();
-        String permArg = parts.length > 1 ? parts[1].trim() : null;
-
-        if(permWithoutArg.startsWith("-"))
-        {
-            isNegation = true;
-            permWithoutArg = permWithoutArg.substring(1);
-        }
-
-        Permission perm = isNegation ? Permission.NEGATING : Permission.PERMITTING;
-
-        if(permArg != null)
-            perm = perm.withArg(permArg);
-
-        if(permWithoutArg.equals("*"))
-        {
-            Permission oldValue = exactPermissionTree.setRootItem(perm);
-            descendantPermissionTree.setRootItemIf(perm.indirectly(),
-                                                   (path, perm1) -> (perm1 == null) || (perm1.isIndirect()));
-            return oldValue;
-        }
-
-        if(permWithoutArg.endsWith(".*"))
-        {
-            isWildcard = true;
-            permWithoutArg = permWithoutArg.substring(0, permWithoutArg.length() - 2);
-        }
-
-        if(permWithoutArg.contains("*"))
-            throw new ParseException
-            (
-                "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
-                permissionAsString.indexOf("*")
-            );
-
-        if(permWithoutArg.contains("-"))
-            throw new ParseException
-            (
-                "Permission negations must be at the start of the permission: " + permissionAsString,
-                permissionAsString.indexOf("-", isNegation ? 1 : 0)
-            );
-
-        //String[] path = splitPath(permWithoutArg);
-        TreePath<String> path = new TreePath<>(splitPath(permWithoutArg));
-        Permission oldValue;
-
-        if(!isWildcard)
-        {
-            oldValue = exactPermissionTree.setAt(path, perm);
-            descendantPermissionTree.setAtIf(path, perm.indirectly(), (tp, p) -> (p == null) || (p.isIndirect()));
-        }
-        else // if isWildcard
-            oldValue = descendantPermissionTree.setAt(path, perm);
-
-        return oldValue;
-    }
+    { return set(permissionAsString, null); }
 
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set, as described in
@@ -768,7 +742,111 @@ public final class PermissionSet
      * @throws ParseException If the provided string is not parsable as a permission.
      */
     public Permission setWhileDeIndenting(String permissionAsString) throws ParseException
-    { return set(permissionAsString.replaceAll("(?m)^ {4}", "")); }
+    { return set(permissionAsString.replaceAll("(?m)^ {4}", ""), null); }
+
+    /**
+     * <p>Parses the provided permission as a string and adds it to the permission set, as described in
+     * {@link #set(String, Condition)}.</p>
+     * @param permissionAsString The permission formatted as a string.
+     * @param condition The condition under which the permission should be considered.
+     * @return The permission object previously set at the given path, or null if there was none.
+     * @throws ParseException If the provided string is not parsable as a permission.
+     * @throws NullPointerException If the permission or condition is null.
+     */
+    public Permission setConditional(String permissionAsString, Condition condition) throws ParseException
+    {
+        if(condition == null)
+            throw new NullPointerException("Condition was null.");
+
+        return set(permissionAsString, condition);
+    }
+
+    /**
+     * <p>Creates a permission object from a path, argument, and condition if applicable.</p>
+     *
+     * <p>Permissions are negating when their path starts with "-".</p>
+     * @param pathAsString The path of the permission, including any decorations like negation, but without the
+     *                     permission argument if applicable. (Anything after the colon)
+     * @param permissionArgument The permission argument.
+     * @param condition The condition under which the permission should be considered. Passing null results in the
+     *                  permission being unconditional.
+     * @return A new permission object derived from the parameters provided.
+     */
+    private Permission createPermissionFromString(String pathAsString, String permissionArgument, Condition condition)
+    {
+        boolean isNegation = false;
+
+        if(pathAsString.startsWith("-"))
+            isNegation = true;
+
+        Permission perm = isNegation ? Permission.NEGATING : Permission.PERMITTING;
+
+        if(permissionArgument != null)
+            perm = perm.withArg(permissionArgument);
+
+        if(condition != null)
+            perm = perm.onCondition(condition);
+
+        return perm;
+    }
+
+    /**
+     * Stores a given permission object in the permission set at the given path.
+     * @param permission The permission to store.
+     * @param permissionAsString The original string representation of the permission being stored.
+     * @param pathAsString The path at which the permission is being stored.
+     * @return The permission object previously set at the given path, or null if there was none.
+     * @throws ParseException If the provided string is not parsable as a permission.
+     */
+    private Permission storePermission(Permission permission, String permissionAsString, String pathAsString)
+            throws ParseException
+    {
+        if(pathAsString.startsWith("-"))
+            pathAsString = pathAsString.substring(1);
+
+        if(pathAsString.equals("*"))
+        {
+            Permission oldValue = exactPermissionTree.setRootItem(permission);
+            descendantPermissionTree.setRootItemIf(permission.indirectly(),
+                                                   (p, perm1) -> (perm1 == null) || (perm1.isIndirect()));
+            return oldValue;
+        }
+
+        boolean isWildcard = false;
+
+        if(pathAsString.endsWith(".*"))
+        {
+            isWildcard = true;
+            pathAsString = pathAsString.substring(0, pathAsString.length() - 2);
+        }
+
+        if(pathAsString.contains("*"))
+            throw new ParseException
+            (
+                "Permissions cannot be arbitrarily wildcarded: " + permissionAsString,
+                permissionAsString.indexOf("*")
+            );
+
+        if(pathAsString.contains("-"))
+            throw new ParseException
+            (
+                "Permission negations must be at the start of the permission: " + permissionAsString,
+                permissionAsString.indexOf("-", permission.negates() ? 1 : 0)
+            );
+
+        TreePath<String> path = new TreePath<>(splitPath(pathAsString));
+        Permission oldValue;
+
+        if(!isWildcard)
+        {
+            oldValue = exactPermissionTree.setAt(path, permission);
+            descendantPermissionTree.setAtIf(path, permission.indirectly(), (tp, p) -> (p == null) || (p.isIndirect()));
+        }
+        else // if isWildcard
+            oldValue = descendantPermissionTree.setAt(path, permission);
+
+        return oldValue;
+    }
 
     /**
      * Removes the provided permission from the permission set.
