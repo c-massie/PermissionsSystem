@@ -19,6 +19,13 @@ import java.util.stream.Stream;
 /**
  * A set of {@link Permission permissions} arranged in a string-keyed tree, where permissions are considered to "cover"
  * (apply to) all permissions under them in the tree.
+ *
+ * @apiNote PermissionSet supports conditional permissions. There are two caveats to these separating them from regular
+ *          permissions: They are only counted when their condition is met, and they are added/removed/handled
+ *          separately from regular non-conditional permissions - a permission set can have both a conditional and
+ *          non-conditional permission at the same path, and if it does, the non-conditional one takes priority.
+ *          Conditional priorities are intended to act as a hard-coded permission that may rely on factors external to
+ *          the permission system, available if that permission is not explicitly added to the permission set.
  */
 public final class PermissionSet
 {
@@ -115,6 +122,23 @@ public final class PermissionSet
      * <p>Permission paths are the paths to the permission in this tree or {@link #exactPermissionTree}.</p>
      */
     final Tree<String, Permission> descendantPermissionTree = new RecursiveTree<>();
+
+    /**
+     * <p>The tree of exact conditional permissions. Permissions in this tree cover only themselves exactly.</p>
+     *
+     * <p>If permissions exist at the same path in both {@link #exactPermissionTree} and this, the version stored in
+     * {@link #exactPermissionTree} is preferred.</p>
+     */
+    final Tree<String, Permission> exactConditionalPermissionTree = new RecursiveTree<String, Permission>();
+
+    /**
+     * <p>The tree of descendant conditional permissions. Permissions in this tree cover only permissions descending
+     * from them.</p>
+     *
+     * <p>If permissions exist at the same path in both {@link #descendantPermissionTree} and this, the version stored
+     * in {@link #descendantPermissionTree} is preferred.</p>
+     */
+    final Tree<String, Permission> descendantConditionalPermissionTree = new RecursiveTree<String, Permission>();
     //endregion
 
     //region Methods
@@ -170,7 +194,12 @@ public final class PermissionSet
      * @return True if this contains no permissions. Otherwise, false.
      */
     public boolean isEmpty()
-    { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
+    {
+        return exactPermissionTree                  .isEmpty()
+            && descendantPermissionTree             .isEmpty()
+            && exactConditionalPermissionTree       .isEmpty()
+            && descendantConditionalPermissionTree  .isEmpty();
+    }
 
     /**
      * Checks whether or not this permission set is empty, ignoring {@link ConditionalPermission conditionals}.
@@ -178,10 +207,7 @@ public final class PermissionSet
      *         false.
      */
     public boolean isEmptyExceptForConditionals()
-    {
-        return (exactPermissionTree     .getItemsWhere((p, x) -> !(x instanceof ConditionalPermission)).isEmpty())
-            && (descendantPermissionTree.getItemsWhere((p, x) -> !(x instanceof ConditionalPermission)).isEmpty());
-    }
+    { return exactPermissionTree.isEmpty() && descendantPermissionTree.isEmpty(); }
     //endregion
 
     //region Getters
@@ -211,21 +237,46 @@ public final class PermissionSet
         TreePath<String> pPath = new TreePath<>(permissionPath);
         Permission relevantPerm = exactPermissionTree.getAtOrNull(pPath);
 
-        if(relevantPerm != null)
+        if(relevantPerm == null)
+            exactConditionalPermissionTree.getAtOrNull(pPath);
+
+        if(relevantPerm != null && relevantPerm.shouldBeConsidered())
             return new PermissionWithPath(permissionPath, relevantPerm);
 
         List<TreeEntry<String, Permission>> relevantEntries = descendantPermissionTree.getEntriesAlong(pPath);
-        final int pPathSize = permissionPath.size();
+        List<TreeEntry<String, Permission>> relevantConditionalEntries
+                = descendantConditionalPermissionTree.getEntriesAlong(pPath);
 
-        // x -> x.getPath().size() because exact matches are only handled by exactPermissionTree.
-        int index = ListUtils.lastIndexWhere(relevantEntries,
-                                             x -> x.getPath().size() != pPathSize && x.getItem().shouldBeConsidered());
+        final int permPathSize = permissionPath.size();
 
-        if(index < 0)
+        int relevantIndex = ListUtils.lastIndexWhere(relevantEntries, x -> x.getPath().size() != permPathSize);
+        int relevantCondIndex = ListUtils.lastIndexWhere(relevantConditionalEntries,
+                                                         x ->    x.getPath().size() != permPathSize
+                                                              && x.getItem().shouldBeConsidered());
+
+        if(relevantIndex < 0 && relevantCondIndex < 0)
             return null;
 
-        TreeEntry<String, Permission> relevantEntry = relevantEntries.get(index);
-        return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
+        TreeEntry<String, Permission> relevantEntry = null;
+        TreeEntry<String, Permission> relevantCondEntry = null;
+
+        if(relevantIndex >= 0)
+            relevantEntry = relevantEntries.get(relevantIndex);
+
+        if(relevantCondIndex >= 0)
+            relevantCondEntry = relevantConditionalEntries.get(relevantCondIndex);
+
+        if(relevantEntry != null)
+        {
+            if(relevantCondEntry == null || relevantEntry.getPath().size() >= relevantCondEntry.getPath().size())
+            {
+                // longer path size == more relevant.
+                return new PermissionWithPath(relevantEntry.getPath().getNodes(), relevantEntry.getItem());
+            }
+        }
+
+        assert(relevantCondEntry != null); // At least one of relevantEntry and relevantCondEntry are non-null.
+        return new PermissionWithPath(relevantCondEntry.getPath().getNodes(), relevantCondEntry.getItem());
     }
 
     /**
@@ -328,11 +379,19 @@ public final class PermissionSet
         TreePath<String> pPath = new TreePath<>(permissionPath);
 
         for(Permission p : exactPermissionTree.getItemsAtAndUnder(pPath))
-            if(p.permits() && p.shouldBeConsidered())
+            if(p.permits())
                 return true;
 
         for(Permission p : descendantPermissionTree.getItemsAtAndUnder(pPath))
+            if(p.permits())
+                return true;
+
+        for(Permission p : exactConditionalPermissionTree.getItemsAtAndUnder(pPath))
             if(p.permits() && p.shouldBeConsidered())
+                return true;
+
+        for(Permission p : descendantConditionalPermissionTree.getItemsAtAndUnder(pPath))
+            if(p.permits())
                 return true;
 
         return false;
@@ -375,16 +434,27 @@ public final class PermissionSet
         TreePath<String> pPath = new TreePath<>(permissionPath);
 
         for(TreeEntry<String, Permission> p : exactPermissionTree.getEntriesAtAndUnder(pPath))
+            if(p.getItem().permits() && condition.test(new PermissionWithPath(p.getPath().getNodes(), p.getItem())))
+            { return true; }
+
+        for(TreeEntry<String, Permission> p : descendantPermissionTree.getEntriesAtAndUnder(pPath))
+            if(p.getItem().permits() && condition.test(new PermissionWithPath(p.getPath().getNodes(), p.getItem())))
+            { return true; }
+
+        for(TreeEntry<String, Permission> p : exactConditionalPermissionTree.getEntriesAtAndUnder(pPath))
             if(p.getItem().permits()
                && p.getItem().shouldBeConsidered()
                && condition.test(new PermissionWithPath(p.getPath().getNodes(), p.getItem())))
             { return true; }
 
-        for(TreeEntry<String, Permission> p : descendantPermissionTree.getEntriesAtAndUnder(pPath))
+        for(TreeEntry<String, Permission> p
+                : descendantConditionalPermissionTree.getEntriesAtAndUnder(pPath))
+        {
             if(p.getItem().permits()
                && p.getItem().shouldBeConsidered()
                && condition.test(new PermissionWithPath(p.getPath().getNodes(), p.getItem())))
             { return true; }
+        }
 
         return false;
     }
@@ -422,7 +492,12 @@ public final class PermissionSet
      */
     public boolean hasPermissionExactly(List<String> permissionPath)
     {
-        Permission perm = exactPermissionTree.getAtOrNull(new TreePath<>(permissionPath));
+        TreePath<String> permPath = new TreePath<>(permissionPath);
+        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+
+        if(perm == null)
+            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+
         return (perm != null) && (perm.permits()) && (perm.shouldBeConsidered());
     }
 
@@ -436,7 +511,12 @@ public final class PermissionSet
      */
     public boolean hasPermissionExactly(String... permissionPath)
     {
-        Permission perm = exactPermissionTree.getAtOrNull(new TreePath<>(permissionPath));
+        TreePath<String> permPath = new TreePath<>(permissionPath);
+        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+
+        if(perm == null)
+            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+
         return (perm != null) && (perm.permits()) && (perm.shouldBeConsidered());
     }
 
@@ -495,7 +575,12 @@ public final class PermissionSet
      */
     public boolean negatesPermissionExactly(List<String> permissionPath)
     {
-        Permission perm = exactPermissionTree.getAtOrNull(new TreePath<>(permissionPath));
+        TreePath<String> permPath = new TreePath<>(permissionPath);
+        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+
+        if(perm == null)
+            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+
         return (perm != null) && (perm.negates()) && (perm.shouldBeConsidered());
     }
 
@@ -509,7 +594,12 @@ public final class PermissionSet
      */
     public boolean negatesPermissionExactly(String... permissionPath)
     {
-        Permission perm = exactPermissionTree.getAtOrNull(new TreePath<>(permissionPath));
+        TreePath<String> permPath = new TreePath<>(permissionPath);
+        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+
+        if(perm == null)
+            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+
         return (perm != null) && (perm.negates()) && (perm.shouldBeConsidered());
     }
     //endregion
@@ -679,7 +769,6 @@ public final class PermissionSet
     //endregion
 
     //region Mutators
-
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set.</p>
      *
@@ -801,14 +890,22 @@ public final class PermissionSet
     private Permission storePermission(Permission permission, String permissionAsString, String pathAsString)
             throws ParseException
     {
+        Tree<String, Permission> exactTree = exactPermissionTree;
+        Tree<String, Permission> descendantTree = descendantPermissionTree;
+
+        if(permission instanceof ConditionalPermission)
+        {
+            exactTree = exactConditionalPermissionTree;
+            descendantTree = descendantConditionalPermissionTree;
+        }
+
         if(pathAsString.startsWith("-"))
             pathAsString = pathAsString.substring(1);
 
         if(pathAsString.equals("*"))
         {
-            Permission oldValue = exactPermissionTree.setRootItem(permission);
-            descendantPermissionTree.setRootItemIf(permission.indirectly(),
-                                                   (p, perm1) -> (perm1 == null) || (perm1.isIndirect()));
+            Permission oldValue = exactTree.setRootItem(permission);
+            descendantTree.setRootItemIf(permission.indirectly(), (p, perm) -> (perm == null) || (perm.isIndirect()));
             return oldValue;
         }
 
@@ -839,11 +936,11 @@ public final class PermissionSet
 
         if(!isWildcard)
         {
-            oldValue = exactPermissionTree.setAt(path, permission);
-            descendantPermissionTree.setAtIf(path, permission.indirectly(), (tp, p) -> (p == null) || (p.isIndirect()));
+            oldValue = exactTree.setAt(path, permission);
+            descendantTree.setAtIf(path, permission.indirectly(), (tp, p) -> (p == null) || (p.isIndirect()));
         }
         else // if isWildcard
-            oldValue = descendantPermissionTree.setAt(path, permission);
+            oldValue = descendantTree.setAt(path, permission);
 
         return oldValue;
     }
@@ -858,6 +955,34 @@ public final class PermissionSet
      * @return The permission object that was at the given path in the permission set, or null if there was none.
      */
     public Permission remove(String permissionAsString)
+    { return removeFromTrees(permissionAsString, exactPermissionTree, descendantPermissionTree); }
+
+    /**
+     * Removes the provided conditional permission from the permission set.
+     * @apiNote Negation and string arguments are not needed for removal, and are ignored.
+     * @apiNote "some.thing" and "some.thing.*" are different permissions and removing one does not remove the other.
+     * @apiNote This does not remove any permissions "lower than" (starting with) or "higher than" (truncated from) the
+     *          provided permission.
+     * @param permissionAsString The permission formatted as a string.
+     * @return The permission object that was at the given path in the permission set, or null if there was none.
+     */
+    public ConditionalPermission removeConditional(String permissionAsString)
+    {
+        return (ConditionalPermission)removeFromTrees(permissionAsString,
+                                                      exactConditionalPermissionTree,
+                                                      descendantConditionalPermissionTree);
+    }
+
+    /**
+     * Removes the provided permission from the provided permission trees of a permission set.
+     * @param permissionAsString The permission to remove.
+     * @param exactTree The exact permission tree of the permission set the permission is being removed from.
+     * @param descendantTree The descendant permission tree of the permission set the permission is being removed from.
+     * @return The permission object that was there, or there was no permission with a matching path.
+     */
+    private static Permission removeFromTrees(String permissionAsString,
+                                              Tree<String, Permission> exactTree,
+                                              Tree<String, Permission> descendantTree)
     {
         permissionAsString = permissionAsString.trim();
 
@@ -879,14 +1004,14 @@ public final class PermissionSet
 
         if(!isForWildcard)
         {
-            Permission permissionThatWasThere = exactPermissionTree.clearAt(path);
+            Permission permissionThatWasThere = exactTree.clearAt(path);
 
             if(permissionThatWasThere != null)
             {
-                Permission descendantPerm = descendantPermissionTree.getAtOrNull(path);
+                Permission descendantPerm = descendantTree.getAtOrNull(path);
 
                 if(descendantPerm != null && descendantPerm.isIndirect())
-                    descendantPermissionTree.clearAt(path);
+                    descendantTree.clearAt(path);
             }
 
             return permissionThatWasThere;
@@ -895,7 +1020,7 @@ public final class PermissionSet
         {
             MutableWrapper<Boolean> removedFlag = new MutableWrapper<>(false);
 
-            Permission permissionThatWasThere = descendantPermissionTree.clearAtIf(path, (xpath, xperm) ->
+            Permission permissionThatWasThere = descendantTree.clearAtIf(path, (xpath, xperm) ->
             {
                 boolean isDirect = !xperm.isIndirect();
                 removedFlag.set(isDirect);
@@ -910,6 +1035,17 @@ public final class PermissionSet
      * Removes all permissions from this permission set.
      */
     public void clear()
+    {
+        exactPermissionTree.clear();
+        descendantPermissionTree.clear();
+        exactConditionalPermissionTree.clear();
+        descendantConditionalPermissionTree.clear();
+    }
+
+    /**
+     * Removes all permissions from this permission set, except for conditional permissions.
+     */
+    public void clearExceptConditionals()
     {
         exactPermissionTree.clear();
         descendantPermissionTree.clear();
