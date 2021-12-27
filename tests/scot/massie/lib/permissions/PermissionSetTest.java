@@ -7,13 +7,13 @@ import scot.massie.lib.collections.trees.TreeEntry;
 import java.text.ParseException;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PermissionSetTest
 {
+    // Test notes:
     /*
-
     Tests assume that set works as expected, except for the tests for set itself
 
     set(...) tests are written against the implementation of PermissionSet. In particular, with the expectation that
@@ -25,126 +25,12 @@ class PermissionSetTest
     Where overloads of String, List<String>, and String... exist, only test the List<String> overload. The other two
     overloads point to the List<String> overload, and the String overload should work where splitPath works as expected.
 
-    static string manipulation methods
-        splitPath
-            empty string
-            string with no separators
-            string with multiple separators
-            string with empty elements
-        applyPermissionToPathStringWithoutArg
-            permission
-            permission negates
-        applyPermissionToPathString
-            permission, no arg
-            permission, single line arg
-            permission, multi-line arg
-            permission negates, no arg
-            permission negates, single-line arg
-            permission negates, multi-line arg
+    */
 
-    accessors
-        tests as a whole
-            hasAny
-                empty
-                has exact permission
-                has descendant permission
-            isEmpty
-                empty
-                has exact permission
-                has descendant permission
-        getters
-            getMostRelevantPermission
-                empty
-                has no relevant permissions
-                has permission exactly in descendant tree
-                has permission exactly in exact tree
-                has permission that covers in descendant tree
-                has permission that covers in exact tree
-            getPermission
-                doesn't need to be tested, covered by getMostRelevantPermission
-        test permissions
-            hasPermission
-                doesn't need to be tested, covered by getMostRelevantPermission
-            hasPermissionOrAnyUnder
-                empty
-                has no permissions under
-                has permission exactly as wildcard
-                has permission exactly
-                has covered permission as wildcard
-                has covered permission
-                has covering permission as wildcard
-                has covering permission
-                has covering permission but negated exactly
-                has covering permission but negated above
-            hasPermissionOrAnyUnderWhere
-                empty
-                has no permissions under
-                has permission exactly as wildcard
-                has permission exactly as wildcard but failing predicate
-                has permission exactly
-                has permission exactly but failing predicate
-                has covered permission as wildcard
-                has covered permission as wildcard but failing predicate
-                has covered permission
-                has covered permission but failing predicate
-                has covering permission as wildcard
-                has covering permission as wildcard but failing predicate
-                has covering permission
-                has covering permission but failing predicate
-                has covering permission but negated exactly
-                has covering permission but negated above
-            hasPermissionExactly
-                simple function, doesn't need to be tested
-            negatesPermission
-                doesn't need to be tested, covered by getMostRelevantPermission
-            negatesPermissionExactly
-                simple function, doesn't need to be tested
-        conversion to savestrings
-            getPermissionsAsStrings
-                empty
-                single permission, no args
-                single permission, single-line arg
-                single permission, multi-line arg
-                multiple permissions
-            toSaveString
-                empty
-                single permission, no args
-                single permission, single-line arg
-                single permission, multi-line arg
-                multiple permissions
-
-    mutators
-        set
-            permission
-            permission with single-line arg
-            permission with multi-line arg
-            permission with multi-line arg, no newline before first line
-            permission with multi-line arg, not indented
-            wildcard permission
-            negating permission
-            permission with wildcard in illegal place
-            permission with negation in illegal place
-        setWhileDeIndenting
-            permission without arg
-            permission with single-line arg
-            permission with single-line arg on next line
-            permission with multi-line arg
-        remove
-            empty
-            no matching permission
-            matching permission
-            matching permission, matching permission is negating
-            matching permission, matching permission has argument
-            matching permission, matching and input permissions are wildcarded
-            matching permission, but wrong use of wildcard
-            matching permission, also has same permission wildcarded that should not be removed
-            matching permission, input permission was negated which should be ignored
-            matching permission, input permission had argument, which should be ignored
-        clear
-            simple function, doesn't need to be tested
-
-     */
-
+    //region Methods
+    //region Static utils
+    //region String manipulation
+    //region splitPath(...)
     @Test
     void splitPath_empty()
     { assertThat(PermissionSet.splitPath("")).containsExactly(""); }
@@ -160,7 +46,9 @@ class PermissionSetTest
     @Test
     void splitPath_multi_withEmpties()
     { assertThat(PermissionSet.splitPath(".second..fourth.")).containsExactly("", "second", "", "fourth", ""); }
+    //endregion
 
+    //region applyPermissionToPathStringWithoutArgs(...)
     @Test
     void applyPermissionToPathStringWithoutArg_permits()
     {
@@ -176,7 +64,9 @@ class PermissionSetTest
                                                                        Permission.NEGATING.withArg("doot")))
                 .isEqualTo("-first.second.third");
     }
+    //endregion
 
+    //region applyPermissionToPathString(...)
     @Test
     void applyPermissionToPathString_permits_noArg()
     {
@@ -222,7 +112,13 @@ class PermissionSetTest
                                                              Permission.NEGATING.withArg("doot\nnoot")))
                 .isEqualTo("-first.second.third:\n    doot\n    noot");
     }
+    //endregion
+    //endregion
+    //endregion
 
+    //region Accessors
+    //region Tests as a whole
+    //region hasAny()
     @Test
     void hasAny_empty()
     { assertThat(new PermissionSet().hasAny()).isFalse(); }
@@ -242,7 +138,13 @@ class PermissionSetTest
         pset.set("first.second.third.*");
         assertThat(pset.hasAny()).isTrue();
     }
+    //endregion
 
+    //region hasAnyExceptForConditionals(...)
+
+    //endregion
+
+    //region isEmpty(...)
     @Test
     void isEmpty_empty()
     { assertThat(new PermissionSet().isEmpty()).isTrue(); }
@@ -262,7 +164,15 @@ class PermissionSetTest
         pset.set("first.second.third.*");
         assertThat(pset.isEmpty()).isFalse();
     }
+    //endregion
 
+    //region isEmptyExceptForConditionals(...)
+
+    //endregion
+    //endregion
+
+    //region Getters
+    //region getMostRelevantPermission(...)
     @Test
     void getMostRelevantPermission_empty()
     { assertThat(new PermissionSet().getMostRelevantPermission("first", "second")).isNull(); }
@@ -318,7 +228,21 @@ class PermissionSetTest
         assertThat(pwp.getPermission().permits()).isTrue();
         assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
     }
+    //endregion
 
+    //region getPermission(...)
+
+    //endregion
+    //endregion
+
+    //region Check permissions
+    //region has permission
+    //region has permission normally
+
+    //endregion
+
+    //region has permission or any under
+    //region hasPermissionOrAnyUnder(...)
     @Test
     void hasPermissionOrAnyUnder_empty()
     { assertThat(new PermissionSet().hasPermissionOrAnyUnder("first.second")).isFalse(); }
@@ -396,7 +320,9 @@ class PermissionSetTest
         pset.set("-first.second");
         assertThat(pset.hasPermissionOrAnyUnder("first.second.third")).isFalse();
     }
+    //endregion
 
+    //region hasPermissionOrAnyUnderWhere(...)
     @Test
     void hasPermissionOrAnyUnderWhere_empty()
     { assertThat(new PermissionSet().hasPermissionOrAnyUnderWhere("first.second", x -> true)).isFalse(); }
@@ -522,7 +448,35 @@ class PermissionSetTest
         pset.set("-first.second");
         assertThat(pset.hasPermissionOrAnyUnderWhere("first.second.third", x -> true)).isFalse();
     }
+    //endregion
+    //endregion
 
+    //region has permission exactly
+
+    //endregion
+    //endregion
+
+    //region negates permission
+    //region negates permission normally
+
+    //endregion
+
+    //region negates permission exactly
+
+    //endregion
+    //endregion
+    //endregion
+
+    //region Conversion to strings
+    //region getSaveStringForPermission(...)
+
+    //endregion
+
+    //region getSaveStringLinesForPermission(...)
+
+    //endregion
+
+    //region getPermissionsAsStrings(...)
     @Test
     void getPermissionsAsStrings_empty()
     { assertThat(new PermissionSet().getPermissionsAsStrings(true)).isEmpty(); }
@@ -573,7 +527,9 @@ class PermissionSetTest
                                                                         "-one.two",
                                                                         "uno.dos.*");
     }
+    //endregion
 
+    //region toSaveString(...)
     @Test
     void toSaveString_empty()
     { assertThat(new PermissionSet().toSaveString()).isEqualTo(""); }
@@ -612,11 +568,17 @@ class PermissionSetTest
         pset.set("ein.zwei: hoot");
 
         assertThat(pset.toSaveString()).isEqualTo(  "ein.zwei: hoot\n"
-                                                  + "first.second\n"
-                                                  + "-one.two\n"
-                                                  + "uno.dos.*:\n    doot\n    noot");
+                                                    + "first.second\n"
+                                                    + "-one.two\n"
+                                                    + "uno.dos.*:\n    doot\n    noot");
     }
+    //endregion
+    //endregion
+    //endregion
 
+    //region Mutators
+    //region set
+    //region set(...)
     @Test
     void set_permission() throws ParseException
     {
@@ -783,7 +745,9 @@ class PermissionSetTest
         assertThrows(ParseException.class, () -> pset.set("first.second-"));
         assertThrows(ParseException.class, () -> pset.set("--first-second"));
     }
+    //endregion
 
+    //region setWhileDeIndenting(...)
     @Test
     void setWhileDeIndenting_withoutArg() throws ParseException
     {
@@ -830,7 +794,23 @@ class PermissionSetTest
         assertThat(perm.hasArg()).isTrue();
         assertThat(perm.getArg()).isEqualTo("doot\nhoot\nnoot");
     }
+    //endregion
 
+    //region setConditional(...)
+
+    //endregion
+
+    //region createPermissionFromString(...)
+
+    //endregion
+
+    //region storePermission(...)
+
+    //endregion
+    //endregion
+
+    //region remove
+    //region remove(...)
     @Test
     void remove_empty()
     {
@@ -924,4 +904,22 @@ class PermissionSetTest
         assertThat(pset.remove("first.second: doot")).isEqualTo(Permission.PERMITTING);
         assertThat(pset.getPermission("first.second")).isNull();
     }
+    //endregion
+
+    //region removeConditional(...)
+
+    //endregion
+    //endregion
+
+    //region clear
+    //region clear(...)
+
+    //endregion
+
+    //region clearExceptConditionals(...)
+
+    //endregion
+    //endregion
+    //endregion
+    //endregion
 }

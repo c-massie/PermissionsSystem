@@ -325,6 +325,8 @@ public final class PermissionSet
     //endregion
 
     //region Check permissions
+    //region has permission
+    //region has permission normally
     /**
      * Checks if the permissions in this permission set allow the provided permission.
      * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
@@ -353,7 +355,9 @@ public final class PermissionSet
      */
     public boolean hasPermission(String... permissionPath)
     { return hasPermission(Arrays.asList(permissionPath)); }
+    //endregion
 
+    //region has permission or any under
     /**
      * Checks if this permission set has a permission or any subpermissions of it.
      * @param permissionPath The permission path to test.
@@ -468,7 +472,9 @@ public final class PermissionSet
      */
     public boolean hasPermissionOrAnyUnderWhere(String[] permissionPath, Predicate<PermissionWithPath> condition)
     { return hasPermissionOrAnyUnderWhere(Arrays.asList(permissionPath), condition); }
+    //endregion
 
+    //region has permission exactly
     /**
      * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
      * is not simply allowed by inference of another permission that covers it.
@@ -519,7 +525,11 @@ public final class PermissionSet
 
         return (perm != null) && (perm.permits()) && (perm.shouldBeConsidered());
     }
+    //endregion
+    //endregion
 
+    //region negates permission
+    //region negates permission normally
     /**
      * Checks if this permissions set negates the provided permission path. (and doesn't simply not cover it.)
      * @apiNote The permission path provided should not contain any negation or string argument, or be a wildcard
@@ -551,7 +561,9 @@ public final class PermissionSet
      */
     public boolean negatesPermission(String... permissionPath)
     { return negatesPermission(Arrays.asList(permissionPath)); }
+    //endregion
 
+    //region negates permission exactly
     /**
      * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
      * has been specifically added as one to negate.
@@ -602,6 +614,8 @@ public final class PermissionSet
 
         return (perm != null) && (perm.negates()) && (perm.shouldBeConsidered());
     }
+    //endregion
+    //endregion
     //endregion
 
     //region Conversion to strings
@@ -769,6 +783,7 @@ public final class PermissionSet
     //endregion
 
     //region Mutators
+    //region set
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set.</p>
      *
@@ -861,7 +876,7 @@ public final class PermissionSet
      *                  permission being unconditional.
      * @return A new permission object derived from the parameters provided.
      */
-    private Permission createPermissionFromString(String pathAsString, String permissionArgument, Condition condition)
+    Permission createPermissionFromString(String pathAsString, String permissionArgument, Condition condition)
     {
         boolean isNegation = false;
 
@@ -887,7 +902,7 @@ public final class PermissionSet
      * @return The permission object previously set at the given path, or null if there was none.
      * @throws ParseException If the provided string is not parsable as a permission.
      */
-    private Permission storePermission(Permission permission, String permissionAsString, String pathAsString)
+    Permission storePermission(Permission permission, String permissionAsString, String pathAsString)
             throws ParseException
     {
         Tree<String, Permission> exactTree = exactPermissionTree;
@@ -944,7 +959,9 @@ public final class PermissionSet
 
         return oldValue;
     }
+    //endregion
 
+    //region remove
     /**
      * Removes the provided permission from the permission set.
      * @apiNote Negation and string arguments are not needed for removal, and are ignored.
@@ -1030,7 +1047,9 @@ public final class PermissionSet
             return removedFlag.get() ? permissionThatWasThere : null;
         }
     }
+    //endregion
 
+    //region clear
     /**
      * Removes all permissions from this permission set.
      */
@@ -1050,6 +1069,7 @@ public final class PermissionSet
         exactPermissionTree.clear();
         descendantPermissionTree.clear();
     }
+    //endregion
     //endregion
     //endregion
 }
