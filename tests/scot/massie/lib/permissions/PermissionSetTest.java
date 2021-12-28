@@ -3,6 +3,7 @@ package scot.massie.lib.permissions;
 import org.junit.jupiter.api.Test;
 import scot.massie.lib.collections.trees.Tree;
 import scot.massie.lib.collections.trees.TreeEntry;
+import scot.massie.lib.functionalinterfaces.Condition;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -138,10 +139,61 @@ class PermissionSetTest
         pset.set("first.second.third.*");
         assertThat(pset.hasAny()).isTrue();
     }
+
+    @Test
+    void hasAny_conditional_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third", () -> true);
+        assertThat(pset.hasAny()).isTrue();
+    }
+
+    @Test
+    void hasAny_conditional_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*", () -> true);
+        assertThat(pset.hasAny()).isTrue();
+    }
+
     //endregion
 
     //region hasAnyExceptForConditionals(...)
+    @Test
+    void hasAnyExceptForConditionals_empty()
+    { assertThat(new PermissionSet().hasAnyExceptForConditionals()).isFalse(); }
 
+    @Test
+    void hasAnyExceptForConditionals_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third");
+        assertThat(pset.hasAnyExceptForConditionals()).isTrue();
+    }
+
+    @Test
+    void hasAnyExceptForConditionals_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*");
+        assertThat(pset.hasAnyExceptForConditionals()).isTrue();
+    }
+
+    @Test
+    void hasAnyExceptForConditionals_conditional_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third", () -> true);
+        assertThat(pset.hasAnyExceptForConditionals()).isFalse();
+    }
+
+    @Test
+    void hasAnyExceptForConditionals_conditional_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*", () -> true);
+        assertThat(pset.hasAnyExceptForConditionals()).isFalse();
+    }
     //endregion
 
     //region isEmpty(...)
@@ -164,10 +216,60 @@ class PermissionSetTest
         pset.set("first.second.third.*");
         assertThat(pset.isEmpty()).isFalse();
     }
+
+    @Test
+    void isEmpty_conditional_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third", () -> true);
+        assertThat(pset.isEmpty()).isFalse();
+    }
+
+    @Test
+    void isEmpty_conditional_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*", () -> true);
+        assertThat(pset.isEmpty()).isFalse();
+    }
     //endregion
 
     //region isEmptyExceptForConditionals(...)
+    @Test
+    void isEmptyExceptForConditionals_empty()
+    { assertThat(new PermissionSet().isEmptyExceptForConditionals()).isTrue(); }
 
+    @Test
+    void isEmptyExceptForConditionals_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third");
+        assertThat(pset.isEmptyExceptForConditionals()).isFalse();
+    }
+
+    @Test
+    void isEmptyExceptForConditionals_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*");
+        assertThat(pset.isEmptyExceptForConditionals()).isFalse();
+    }
+
+    @Test
+    void isEmptyExceptForConditionals_conditional_exact() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third", () -> true);
+        assertThat(pset.isEmptyExceptForConditionals()).isTrue();
+    }
+
+    @Test
+    void isEmptyExceptForConditionals_conditional_descendant() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third.*", () -> true);
+        assertThat(pset.isEmptyExceptForConditionals()).isTrue();
+    }
     //endregion
     //endregion
 
@@ -228,9 +330,236 @@ class PermissionSetTest
         assertThat(pwp.getPermission().permits()).isTrue();
         assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
     }
+
+    @Test
+    void getMostRelevantPermission_hasExactConditional_shouldBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second");
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwp.getPermission().permits()).isTrue();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_hasExactConditional_shouldNotBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second");
+        assertThat(pwp).isNull();
+    }
+
+    @Test
+    void getMostRelevantPermission_hasCoveringWildcardConditional_shouldBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*: doot", () -> true);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second", "third");
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwp.getPermission().permits()).isTrue();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_hasCoveringWildcardConditional_shouldNotBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*: doot", () -> false);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second", "third");
+        assertThat(pwp).isNull();
+    }
+
+    @Test
+    void getMostRelevantPermission_hasCoveringConditional_shouldBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second", "third");
+        assertThat(pwp).isNotNull();
+        assertThat(pwp.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwp.getPermission().permits()).isTrue();
+        assertThat(pwp.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_hasCoveringConditional_shouldNotBeCounted() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        PermissionSet.PermissionWithPath pwp = pset.getMostRelevantPermission("first", "second", "third");
+        assertThat(pwp).isNull();
+    }
+
+    @Test
+    void getMostRelevantPermission_uncountedConditionalBelowUnconditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        pset.set("first.second.third: noot", () -> false);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNotNull();
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpParent.getPermission().permits()).isTrue();
+        assertThat(pwpParent.getPermission().getArg()).isEqualTo("doot");
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_uncountedConditionalBelowCountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        pset.set("first.second.third: noot", () -> false);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNotNull();
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpParent.getPermission().permits()).isTrue();
+        assertThat(pwpParent.getPermission().getArg()).isEqualTo("doot");
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("doot");
+    }
+
+    @Test
+    void getMostRelevantPermission_uncountedConditionalBelowUncountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        pset.set("first.second.third: noot", () -> false);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNull();
+        assertThat(pwpChild).isNull();
+    }
+
+    @Test
+    void getMostRelevantPermission_countedConditionalBelowUnconditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        pset.set("first.second.third: noot", () -> true);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNotNull();
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpParent.getPermission().permits()).isTrue();
+        assertThat(pwpParent.getPermission().getArg()).isEqualTo("doot");
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second", "third"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_countedConditionalBelowCountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        pset.set("first.second.third: noot", () -> true);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNotNull();
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpParent.getPermission().permits()).isTrue();
+        assertThat(pwpParent.getPermission().getArg()).isEqualTo("doot");
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second", "third"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_countedConditionalBelowUncountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        pset.set("first.second.third: noot", () -> true);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNull();
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second", "third"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_unconditionalBelowCountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        pset.set("first.second.third: noot");
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNotNull();
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpParent.getPermission().permits()).isTrue();
+        assertThat(pwpParent.getPermission().getArg()).isEqualTo("doot");
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second", "third"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_unconditionalBelowUncountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        pset.set("first.second.third: noot");
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent).isNull();
+
+        assertThat(pwpChild).isNotNull();
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second", "third"));
+        assertThat(pwpChild.getPermission().permits()).isTrue();
+        assertThat(pwpChild.getPermission().getArg()).isEqualTo("noot");
+    }
+
+    @Test
+    void getMostRelevantPermission_unconditionalAndUncountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void getMostRelevantPermission_unconditionalAndCountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
     //endregion
 
     //region getPermission(...)
+
+    // Should be covered by getMostRelevantPermission(...) tests.
 
     //endregion
     //endregion
@@ -238,7 +567,34 @@ class PermissionSetTest
     //region Check permissions
     //region has permission
     //region has permission normally
+    //region hasPermission(...)
 
+    // hasPermission should be covered by getMostRelevantPermission(...) tests. Just some quick sanity tests:
+
+    @Test
+    void hasPermission_has() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        assertThat(pset.hasPermission("first.second")).isTrue();
+    }
+
+    @Test
+    void hasPermission_hasCovering() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        assertThat(pset.hasPermission("first.second.third")).isTrue();
+    }
+
+    @Test
+    void hasPermission_doesntHave()
+    {
+        PermissionSet pset = new PermissionSet();
+        assertThat(pset.hasPermission("first.second")).isFalse();
+    }
+
+    //endregion
     //endregion
 
     //region has permission or any under
@@ -272,6 +628,34 @@ class PermissionSetTest
     }
 
     @Test
+    void hasPermissionOrAnyUnder_hasExactlyCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasExactlyUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndUncountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndCountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
     void hasPermissionOrAnyUnder_hasCoveredAsWildcard() throws ParseException
     {
         PermissionSet pset = new PermissionSet();
@@ -288,6 +672,34 @@ class PermissionSetTest
     }
 
     @Test
+    void hasPermissionOrAnyUnder_hasCoveredCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasCoveredUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndCountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndUncountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
     void hasPermissionOrAnyUnder_hasCoveringAsWildcard() throws ParseException
     {
         PermissionSet pset = new PermissionSet();
@@ -301,6 +713,34 @@ class PermissionSetTest
         PermissionSet pset = new PermissionSet();
         pset.set("first: doot");
         assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasCoveringCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionOrAnyUnder_hasCoveringUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndCountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndUncountedConditionalAtSamePath()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
     }
 
     @Test
@@ -452,30 +892,213 @@ class PermissionSetTest
     //endregion
 
     //region has permission exactly
+    @Test
+    void hasPermissionExactly_doesntHave()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
+    @Test
+    void hasPermissionExactly_hasExactly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_hasWildcardExactly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_doesntHaveExactlyButHasAsWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_doesntHaveWildcardExactlyButHasAsNonWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_doesntHaveButHasCovering()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_doesntHaveButHasCoveringWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_doesntHaveButHasCovered()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_hasExactlyAsCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_hasExactlyAsUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_hasExactlyAsUnconditionalAndCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void hasPermissionExactly_hasExactlyAsUnconditionalAndUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
     //endregion
     //endregion
 
     //region negates permission
     //region negates permission normally
+    //region negatesPermission(...)
 
+    // negatesPermission should be covered by getMostRelevantPermission(...) tests. Just some quick sanity tests:
+
+    @Test
+    void negatesPermission_negates() throws ParseException
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermission_negatesCovering() throws ParseException
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermission_doesntNegate()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    //endregion
     //endregion
 
     //region negates permission exactly
+    //region negatesPermissionExactly(...)
+    @Test
+    void negatesPermissionExactly_doesntNegate()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
 
+    @Test
+    void negatesPermissionExactly_negatesExactly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesWildcardExactly()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_doesntNegateExactlyButNegatesAsWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_doesntNegateWildcardExactlyButNegatesAsNonWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_doesntNegateButNegatesCovering()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_doesntNegateButNegatesCoveringWildcard()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_doesntNegateButNegatesCovered()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesExactlyAsCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesExactlyAsUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndCountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndUncountedConditional()
+    {
+        // TO DO: Write.
+        System.out.println("Test not yet written.");
+    }
+    //endregion
     //endregion
     //endregion
     //endregion
 
     //region Conversion to strings
-    //region getSaveStringForPermission(...)
-
-    //endregion
-
-    //region getSaveStringLinesForPermission(...)
-
-    //endregion
-
     //region getPermissionsAsStrings(...)
     @Test
     void getPermissionsAsStrings_empty()
@@ -733,6 +1356,7 @@ class PermissionSetTest
         assertThrows(ParseException.class, () -> pset.set("*.first.second"));
         assertThrows(ParseException.class, () -> pset.set("first*.second"));
         assertThrows(ParseException.class, () -> pset.set("first.second*"));
+        assertThrows(ParseException.class, () -> pset.set("first.second.*.*"));
     }
 
     @Test
@@ -797,7 +1421,211 @@ class PermissionSetTest
     //endregion
 
     //region setConditional(...)
+    @Test
+    void setConditional_permission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second", condition);
 
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+
+        assertThat(actualExactEntry).isNotNull();
+
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_permissionWithSingleLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second: doot", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot").onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot").onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_permissionWithMultiLineArg() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second:\n    doot\n    noot", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\n    noot").onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY
+                                                  .withArg("doot\n    noot")
+                                                  .onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_permissionWithMultiLineArg_noNewlineBefore() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second: doot\n    noot", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\n    noot").onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY
+                                                  .withArg("doot\n    noot")
+                                                  .onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_permissionWithMultiLineArg_notIndented() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second:\ndoot\nnoot", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.withArg("doot\nnoot").onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.withArg("doot\nnoot").onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_wildcardPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("first.second.*", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        assertThat(exacts).isEmpty();
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING.onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_negatingPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        pset.setConditional("-first.second", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.NEGATING.onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.NEGATING_INDIRECTLY.onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
+
+    @Test
+    void setConditional_illegalWildcard()
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        assertThrows(ParseException.class, () -> pset.setConditional("first.*.second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("*.first.second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first*.second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first.second*", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first.second.*.*", condition));
+    }
+
+    @Test
+    void setConditional_illegalNegation()
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> true;
+        assertThrows(ParseException.class, () -> pset.setConditional("first-second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first.-second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first-.second", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("first.second-", condition));
+        assertThrows(ParseException.class, () -> pset.setConditional("--first-second", condition));
+    }
+
+    @Test
+    void setConditional_uncountedPermission() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        Condition condition = () -> false;
+        pset.setConditional("first.second", condition);
+
+        Tree<String, Permission> exacts = pset.exactConditionalPermissionTree;
+        Permission expectedExact = Permission.PERMITTING.onCondition(condition);
+        assertThat(exacts).hasSize(1);
+        TreeEntry<String, Permission> actualExactEntry = exacts.iterator().next();
+
+        assertThat(actualExactEntry).isNotNull();
+
+        assertThat(actualExactEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualExactEntry.getItem()).isEqualTo(expectedExact);
+
+        Tree<String, Permission> descendants = pset.descendantConditionalPermissionTree;
+        Permission expectedDescendant = Permission.PERMITTING_INDIRECTLY.onCondition(condition);
+        assertThat(descendants).hasSize(1);
+        TreeEntry<String, Permission> actualDescendantEntry = descendants.iterator().next();
+        assertThat(actualDescendantEntry.getPath().getNodes()).containsExactly("first", "second");
+        assertThat(actualDescendantEntry.getItem()).isEqualTo(expectedDescendant);
+    }
     //endregion
 
     //region createPermissionFromString(...)

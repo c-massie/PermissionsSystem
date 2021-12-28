@@ -238,7 +238,7 @@ public final class PermissionSet
         Permission relevantPerm = exactPermissionTree.getAtOrNull(pPath);
 
         if(relevantPerm == null)
-            exactConditionalPermissionTree.getAtOrNull(pPath);
+            relevantPerm = exactConditionalPermissionTree.getAtOrNull(pPath);
 
         if(relevantPerm != null && relevantPerm.shouldBeConsidered())
             return new PermissionWithPath(permissionPath, relevantPerm);
