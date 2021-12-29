@@ -542,17 +542,45 @@ class PermissionSetTest
     }
 
     @Test
-    void getMostRelevantPermission_unconditionalAndUncountedConditionalAtSamePath()
+    void getMostRelevantPermission_unconditionalAndUncountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        pset.set("first.second: noot");
+        pset.set("first.second: toot", () -> false);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent.getPermission()).isNotNull();
+        assertThat(pwpParent.getPermission().indirectly()).isEqualTo(pwpChild.getPermission());
+
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second"));
+
+        Permission perm = pwpParent.getPermission();
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.getArg()).isEqualTo("noot");
     }
 
     @Test
-    void getMostRelevantPermission_unconditionalAndCountedConditionalAtSamePath()
+    void getMostRelevantPermission_unconditionalAndCountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        pset.set("first.second: noot");
+        pset.set("first.second: toot", () -> true);
+        PermissionSet.PermissionWithPath pwpParent = pset.getMostRelevantPermission("first", "second");
+        PermissionSet.PermissionWithPath pwpChild = pset.getMostRelevantPermission("first", "second", "third");
+
+        assertThat(pwpParent.getPermission()).isNotNull();
+        assertThat(pwpParent.getPermission().indirectly()).isEqualTo(pwpChild.getPermission());
+
+        assertThat(pwpParent.getPath()).isEqualTo(Arrays.asList("first", "second"));
+        assertThat(pwpChild.getPath()).isEqualTo(Arrays.asList("first", "second"));
+
+        Permission perm = pwpParent.getPermission();
+        assertThat(perm.permits()).isTrue();
+        assertThat(perm.getArg()).isEqualTo("noot");
     }
 
     //endregion
@@ -570,7 +598,6 @@ class PermissionSetTest
     //region hasPermission(...)
 
     // hasPermission should be covered by getMostRelevantPermission(...) tests. Just some quick sanity tests:
-
     @Test
     void hasPermission_has() throws ParseException
     {
@@ -593,7 +620,6 @@ class PermissionSetTest
         PermissionSet pset = new PermissionSet();
         assertThat(pset.hasPermission("first.second")).isFalse();
     }
-
     //endregion
     //endregion
 
@@ -628,31 +654,37 @@ class PermissionSetTest
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasExactlyCountedConditional()
+    void hasPermissionOrAnyUnder_hasExactlyCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasExactlyUncountedConditional()
+    void hasPermissionOrAnyUnder_hasExactlyUncountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndUncountedConditionalAtSamePath()
+    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndUncountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        pset.set("first.second: noot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndCountedConditionalAtSamePath()
+    void hasPermissionOrAnyUnder_hasExactlyUnconditionalAndCountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second: doot");
+        pset.set("first.second: noot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
@@ -672,31 +704,37 @@ class PermissionSetTest
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveredCountedConditional()
+    void hasPermissionOrAnyUnder_hasCoveredCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third: doot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveredUncountedConditional()
+    void hasPermissionOrAnyUnder_hasCoveredUncountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third: doot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndCountedConditionalAtSamePath()
+    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndCountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third: doot");
+        pset.set("first.second.third: noot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndUncountedConditionalAtSamePath()
+    void hasPermissionOrAnyUnder_hasCoveredUnconditionalAndUncountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third: doot");
+        pset.set("first.second.third: noot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
@@ -716,31 +754,37 @@ class PermissionSetTest
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveringCountedConditional()
+    void hasPermissionOrAnyUnder_hasCoveringCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first: doot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionOrAnyUnder_hasCoveringUncountedConditional()
+    void hasPermissionOrAnyUnder_hasCoveringUncountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first: doot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isFalse();
     }
 
     @Test
-    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndCountedConditionalAtSamePath()
+    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndCountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first: doot");
+        pset.set("first: noot", () -> true);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
-    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndUncountedConditionalAtSamePath()
+    void hasPErmissionOrAnyUnder_hasCoveringUnconditionalAndUncountedConditionalAtSamePath() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first: doot");
+        pset.set("first: noot", () -> false);
+        assertThat(pset.hasPermissionOrAnyUnder("first.second")).isTrue();
     }
 
     @Test
@@ -895,85 +939,107 @@ class PermissionSetTest
     @Test
     void hasPermissionExactly_doesntHave()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_hasExactly()
+    void hasPermissionExactly_hasExactly() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        assertThat(pset.hasPermissionExactly("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionExactly_hasWildcardExactly()
+    void hasPermissionExactly_hasWildcardExactly() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*");
+        assertThat(pset.hasPermissionExactly("first.second.*")).isTrue();
     }
 
     @Test
-    void hasPermissionExactly_doesntHaveExactlyButHasAsWildcard()
+    void hasPermissionExactly_doesntHaveExactlyButHasAsWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.*");
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_doesntHaveWildcardExactlyButHasAsNonWildcard()
+    void hasPermissionExactly_doesntHaveWildcardExactlyButHasAsNonWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        assertThat(pset.hasPermissionExactly("first.second.*")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_doesntHaveButHasCovering()
+    void hasPermissionExactly_doesntHaveButHasCovering() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first");
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_doesntHaveButHasCoveringWildcard()
+    void hasPermissionExactly_doesntHaveButHasCoveringWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.*");
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_doesntHaveButHasCovered()
+    void hasPermissionExactly_doesntHaveButHasCovered() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third");
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_hasExactlyAsCountedConditional()
+    void hasPermissionExactly_doesntHaveWildcardButHasCovered() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second.third");
+        assertThat(pset.hasPermissionExactly("first.*")).isFalse();
+        assertThat(pset.hasPermissionExactly("first.second.*")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_hasExactlyAsUncountedConditional()
+    void hasPermissionExactly_hasExactlyAsCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second", () -> true);
+        assertThat(pset.hasPermissionExactly("first.second")).isTrue();
     }
 
     @Test
-    void hasPermissionExactly_hasExactlyAsUnconditionalAndCountedConditional()
+    void hasPermissionExactly_hasExactlyAsUncountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second", () -> false);
+        assertThat(pset.hasPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void hasPermissionExactly_hasExactlyAsUnconditionalAndUncountedConditional()
+    void hasPermissionExactly_hasExactlyAsUnconditionalAndCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        pset.set("first.second", () -> true);
+        assertThat(pset.hasPermissionExactly("first.second")).isTrue();
+    }
+
+    @Test
+    void hasPermissionExactly_hasExactlyAsUnconditionalAndUncountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("first.second");
+        pset.set("first.second", () -> false);
+        assertThat(pset.hasPermissionExactly("first.second")).isTrue();
     }
     //endregion
     //endregion
@@ -987,22 +1053,24 @@ class PermissionSetTest
     @Test
     void negatesPermission_negates() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        assertThat(pset.negatesPermission("first.second")).isTrue();
     }
 
     @Test
     void negatesPermission_negatesCovering() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        assertThat(pset.negatesPermission("first.second.third")).isTrue();
     }
 
     @Test
     void negatesPermission_doesntNegate()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        assertThat(pset.negatesPermission("first.second")).isFalse();
     }
 
     //endregion
@@ -1013,85 +1081,107 @@ class PermissionSetTest
     @Test
     void negatesPermissionExactly_doesntNegate()
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_negatesExactly()
+    void negatesPermissionExactly_negatesExactly() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        assertThat(pset.negatesPermissionExactly("first.second")).isTrue();
     }
 
     @Test
-    void negatesPermissionExactly_negatesWildcardExactly()
+    void negatesPermissionExactly_negatesWildcardExactly() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second.*");
+        assertThat(pset.negatesPermissionExactly("first.second.*")).isTrue();
     }
 
     @Test
-    void negatesPermissionExactly_doesntNegateExactlyButNegatesAsWildcard()
+    void negatesPermissionExactly_doesntNegateExactlyButNegatesAsWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second.*");
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_doesntNegateWildcardExactlyButNegatesAsNonWildcard()
+    void negatesPermissionExactly_doesntNegateWildcardExactlyButNegatesAsNonWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        assertThat(pset.negatesPermissionExactly("first.second.*")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_doesntNegateButNegatesCovering()
+    void negatesPermissionExactly_doesntNegateButNegatesCovering() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first");
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_doesntNegateButNegatesCoveringWildcard()
+    void negatesPermissionExactly_doesntNegateButNegatesCoveringWildcard() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.*");
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_doesntNegateButNegatesCovered()
+    void negatesPermissionExactly_doesntNegateButNegatesCovered() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second.third");
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_negatesExactlyAsCountedConditional()
+    void negatesPermissionExactly_doesntNegateWildcardButNegatesCovered() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second.third");
+        assertThat(pset.negatesPermissionExactly("first.*")).isFalse();
+        assertThat(pset.negatesPermissionExactly("first.second.*")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_negatesExactlyAsUncountedConditional()
+    void negatesPermissionExactly_negatesExactlyAsCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second", () -> true);
+        assertThat(pset.negatesPermissionExactly("first.second")).isTrue();
     }
 
     @Test
-    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndCountedConditional()
+    void negatesPermissionExactly_negatesExactlyAsUncountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second", () -> false);
+        assertThat(pset.negatesPermissionExactly("first.second")).isFalse();
     }
 
     @Test
-    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndUncountedConditional()
+    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndCountedConditional() throws ParseException
     {
-        // TO DO: Write.
-        System.out.println("Test not yet written.");
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        pset.set("-first.second", () -> true);
+        assertThat(pset.negatesPermissionExactly("first.second")).isTrue();
+    }
+
+    @Test
+    void negatesPermissionExactly_negatesExactlyAsUnconditionalAndUncountedConditional() throws ParseException
+    {
+        PermissionSet pset = new PermissionSet();
+        pset.set("-first.second");
+        pset.set("-first.second", () -> false);
+        assertThat(pset.negatesPermissionExactly("first.second")).isTrue();
     }
     //endregion
     //endregion

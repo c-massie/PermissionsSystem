@@ -395,7 +395,7 @@ public final class PermissionSet
                 return true;
 
         for(Permission p : descendantConditionalPermissionTree.getItemsAtAndUnder(pPath))
-            if(p.permits())
+            if(p.permits() && p.shouldBeConsidered())
                 return true;
 
         return false;
@@ -486,7 +486,18 @@ public final class PermissionSet
      *         Otherwise, false.
      */
     public boolean hasPermissionExactly(String permissionPath)
-    { return hasPermissionExactly(splitPath(permissionPath)); }
+    {
+        if(permissionPath.trim().endsWith(".*"))
+        {
+            permissionPath = permissionPath.substring(0, permissionPath.length() - 2);
+
+            return hasPermissionExactly(Arrays.asList(splitPath(permissionPath)),
+                                        descendantPermissionTree,
+                                        descendantConditionalPermissionTree);
+        }
+
+        return hasPermissionExactly(splitPath(permissionPath));
+    }
 
     /**
      * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
@@ -497,15 +508,7 @@ public final class PermissionSet
      *         Otherwise, false.
      */
     public boolean hasPermissionExactly(List<String> permissionPath)
-    {
-        TreePath<String> permPath = new TreePath<>(permissionPath);
-        Permission perm = exactPermissionTree.getAtOrNull(permPath);
-
-        if(perm == null)
-            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
-
-        return (perm != null) && (perm.permits()) && (perm.shouldBeConsidered());
-    }
+    { return hasPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree); }
 
     /**
      * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
@@ -516,14 +519,27 @@ public final class PermissionSet
      *         Otherwise, false.
      */
     public boolean hasPermissionExactly(String... permissionPath)
+    { return hasPermissionExactly(Arrays.asList(permissionPath), exactPermissionTree, exactConditionalPermissionTree); }
+
+    /**
+     * Checks if the given permission trees directly contain the given permission path.
+     * @param permissionPath The path to check for.
+     * @param permTree The regular permission tree to check.
+     * @param conditionalPermTree The fallback conditional tree to check.
+     * @return True if the given trees contain a direct permitting counted permission at the given path. Otherwise,
+     *         false.
+     */
+    private static boolean hasPermissionExactly(List<String> permissionPath,
+                                                Tree<String, Permission> permTree,
+                                                Tree<String, Permission> conditionalPermTree)
     {
         TreePath<String> permPath = new TreePath<>(permissionPath);
-        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+        Permission perm = permTree.getAtOrNull(permPath);
 
         if(perm == null)
-            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+            perm = conditionalPermTree.getAtOrNull(permPath);
 
-        return (perm != null) && (perm.permits()) && (perm.shouldBeConsidered());
+        return (perm != null) && (perm.permits()) && (!perm.isIndirect()) && (perm.shouldBeConsidered());
     }
     //endregion
     //endregion
@@ -575,7 +591,18 @@ public final class PermissionSet
      *         permission that covers it. Otherwise, false.
      */
     public boolean negatesPermissionExactly(String permissionPath)
-    { return negatesPermissionExactly(splitPath(permissionPath)); }
+    {
+        if(permissionPath.trim().endsWith(".*"))
+        {
+            permissionPath = permissionPath.substring(0, permissionPath.length() - 2);
+
+            return negatesPermissionExactly(Arrays.asList(splitPath(permissionPath)),
+                                            descendantPermissionTree,
+                                            descendantConditionalPermissionTree);
+        }
+
+        return negatesPermissionExactly(splitPath(permissionPath));
+    }
 
     /**
      * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
@@ -586,15 +613,7 @@ public final class PermissionSet
      *         permission that covers it. Otherwise, false.
      */
     public boolean negatesPermissionExactly(List<String> permissionPath)
-    {
-        TreePath<String> permPath = new TreePath<>(permissionPath);
-        Permission perm = exactPermissionTree.getAtOrNull(permPath);
-
-        if(perm == null)
-            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
-
-        return (perm != null) && (perm.negates()) && (perm.shouldBeConsidered());
-    }
+    { return negatesPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree); }
 
     /**
      * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
@@ -606,13 +625,29 @@ public final class PermissionSet
      */
     public boolean negatesPermissionExactly(String... permissionPath)
     {
+        return negatesPermissionExactly(Arrays.asList(permissionPath),
+                                        exactPermissionTree,
+                                        exactConditionalPermissionTree);
+    }
+
+    /**
+     * Checks if the given permission trees directly negate the given permission path.
+     * @param permissionPath The path to check for.
+     * @param permTree The regular permission tree to check.
+     * @param conditionalPermTree The fallback conditional tree to check.
+     * @return True if the given trees contain a direct negating counted permission at the given path. Otherwise, false.
+     */
+    private static boolean negatesPermissionExactly(List<String> permissionPath,
+                                                    Tree<String, Permission> permTree,
+                                                    Tree<String, Permission> conditionalPermTree)
+    {
         TreePath<String> permPath = new TreePath<>(permissionPath);
-        Permission perm = exactPermissionTree.getAtOrNull(permPath);
+        Permission perm = permTree.getAtOrNull(permPath);
 
         if(perm == null)
-            perm = exactConditionalPermissionTree.getAtOrNull(permPath);
+            perm = conditionalPermTree.getAtOrNull(permPath);
 
-        return (perm != null) && (perm.negates()) && (perm.shouldBeConsidered());
+        return (perm != null) && (perm.negates()) && (!perm.isIndirect()) && (perm.shouldBeConsidered());
     }
     //endregion
     //endregion
