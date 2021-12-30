@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -222,7 +223,10 @@ public final class PermissionSet
      *         in this permission set applies to the given permission path.
      */
     public PermissionWithPath getMostRelevantPermission(String permissionPath)
-    { return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath))); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return getMostRelevantPermission(Arrays.asList(splitPath(permissionPath)));
+    }
 
     /**
      * Gets the {@link Permission} in this permission set that applies to the provided path, paired with the path it's
@@ -234,6 +238,7 @@ public final class PermissionSet
      */
     public PermissionWithPath getMostRelevantPermission(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         TreePath<String> pPath = new TreePath<>(permissionPath);
         Permission relevantPerm = exactPermissionTree.getAtOrNull(pPath);
 
@@ -288,7 +293,10 @@ public final class PermissionSet
      *         in this permission set applies to the given permission path.
      */
     public PermissionWithPath getMostRelevantPermission(String... permissionPath)
-    { return getMostRelevantPermission(Arrays.asList(permissionPath)); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return getMostRelevantPermission(Arrays.asList(permissionPath));
+    }
 
     /**
      * Gets the {@link Permission} in this permission set that applies to the provided path.
@@ -298,7 +306,10 @@ public final class PermissionSet
      * @return The {@link Permission} that applies to the provided permission path.
      */
     public Permission getPermission(String permissionPath)
-    { return getPermission(Arrays.asList(splitPath(permissionPath))); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return getPermission(Arrays.asList(splitPath(permissionPath)));
+    }
 
     /**
      * Gets the {@link Permission} in this permission set that applies to the provided path.
@@ -307,6 +318,7 @@ public final class PermissionSet
      */
     public Permission getPermission(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         PermissionWithPath mostRelevant = getMostRelevantPermission(permissionPath);
 
         if(mostRelevant == null)
@@ -321,7 +333,10 @@ public final class PermissionSet
      * @return The {@link Permission} that applies to the provided permission path.
      */
     public Permission getPermission(String... permissionPath)
-    { return getPermission(Arrays.asList(permissionPath)); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return getPermission(Arrays.asList(permissionPath));
+    }
     //endregion
 
     //region Check permissions
@@ -335,7 +350,10 @@ public final class PermissionSet
      * @return True if the permission path is allowed. Otherwise, false.
      */
     public boolean hasPermission(String permissionPath)
-    { return hasPermission(Arrays.asList(splitPath(permissionPath))); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermission(Arrays.asList(splitPath(permissionPath)));
+    }
 
     /**
      * Checks if the permissions in this permission set allow the provided permission.
@@ -344,6 +362,7 @@ public final class PermissionSet
      */
     public boolean hasPermission(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
         return (mrp != null) && (mrp.permission.permits());
     }
@@ -354,7 +373,10 @@ public final class PermissionSet
      * @return True if the permission path is allowed. Otherwise, false.
      */
     public boolean hasPermission(String... permissionPath)
-    { return hasPermission(Arrays.asList(permissionPath)); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermission(Arrays.asList(permissionPath));
+    }
     //endregion
 
     //region has permission or any under
@@ -365,7 +387,10 @@ public final class PermissionSet
      *         false.
      */
     public boolean hasPermissionOrAnyUnder(String permissionPath)
-    { return hasPermissionOrAnyUnder(Arrays.asList(splitPath(permissionPath))); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionOrAnyUnder(Arrays.asList(splitPath(permissionPath)));
+    }
 
     /**
      * Checks if this permission set has a permission or any subpermissions of it.
@@ -375,6 +400,7 @@ public final class PermissionSet
      */
     public boolean hasPermissionOrAnyUnder(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
         if(mrp != null && mrp.getPermission().permits())
@@ -408,7 +434,10 @@ public final class PermissionSet
      *         false.
      */
     public boolean hasPermissionOrAnyUnder(String... permissionPath)
-    { return hasPermissionOrAnyUnder(Arrays.asList(permissionPath)); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionOrAnyUnder(Arrays.asList(permissionPath));
+    }
 
     /**
      * Checks if this permission set has a permission or any subpermissions of it that satisfies a given condition.
@@ -418,7 +447,10 @@ public final class PermissionSet
      *         the given condition. Otherwise, false.
      */
     public boolean hasPermissionOrAnyUnderWhere(String permissionPath, Predicate<PermissionWithPath> condition)
-    { return hasPermissionOrAnyUnderWhere(Arrays.asList(splitPath(permissionPath)), condition); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionOrAnyUnderWhere(Arrays.asList(splitPath(permissionPath)), condition);
+    }
 
     /**
      * Checks if this permission set has a permission or any subpermissions of it that satisfies a given condition.
@@ -429,7 +461,11 @@ public final class PermissionSet
      */
     public boolean hasPermissionOrAnyUnderWhere(List<String> permissionPath, Predicate<PermissionWithPath> condition)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
+
+        if(condition == null)
+            condition = x -> true;
 
         if(mrp != null && mrp.getPermission().permits())
             if(condition.test(mrp))
@@ -471,7 +507,10 @@ public final class PermissionSet
      *         the given condition. Otherwise, false.
      */
     public boolean hasPermissionOrAnyUnderWhere(String[] permissionPath, Predicate<PermissionWithPath> condition)
-    { return hasPermissionOrAnyUnderWhere(Arrays.asList(permissionPath), condition); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionOrAnyUnderWhere(Arrays.asList(permissionPath), condition);
+    }
     //endregion
 
     //region has permission exactly
@@ -487,6 +526,8 @@ public final class PermissionSet
      */
     public boolean hasPermissionExactly(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+
         if(permissionPath.trim().endsWith(".*"))
         {
             permissionPath = permissionPath.substring(0, permissionPath.length() - 2);
@@ -508,7 +549,10 @@ public final class PermissionSet
      *         Otherwise, false.
      */
     public boolean hasPermissionExactly(List<String> permissionPath)
-    { return hasPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree);
+    }
 
     /**
      * Checks if this permissions set explicitly allows the provided permission path, and the provided permission path
@@ -519,7 +563,10 @@ public final class PermissionSet
      *         Otherwise, false.
      */
     public boolean hasPermissionExactly(String... permissionPath)
-    { return hasPermissionExactly(Arrays.asList(permissionPath), exactPermissionTree, exactConditionalPermissionTree); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return hasPermissionExactly(Arrays.asList(permissionPath), exactPermissionTree, exactConditionalPermissionTree);
+    }
 
     /**
      * Checks if the given permission trees directly contain the given permission path.
@@ -555,7 +602,10 @@ public final class PermissionSet
      *         provided permission path by simple omission) false.
      */
     public boolean negatesPermission(String permissionPath)
-    { return negatesPermission(Arrays.asList(splitPath(permissionPath))); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return negatesPermission(Arrays.asList(splitPath(permissionPath)));
+    }
 
     /**
      * Checks if this permissions set negates the provided permission path. (and doesn't simply not cover it.)
@@ -565,6 +615,7 @@ public final class PermissionSet
      */
     public boolean negatesPermission(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
         return (mrp != null) && (mrp.permission.negates());
     }
@@ -576,7 +627,10 @@ public final class PermissionSet
      *         provided permission path by simple omission) false.
      */
     public boolean negatesPermission(String... permissionPath)
-    { return negatesPermission(Arrays.asList(permissionPath)); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return negatesPermission(Arrays.asList(permissionPath));
+    }
     //endregion
 
     //region negates permission exactly
@@ -592,6 +646,8 @@ public final class PermissionSet
      */
     public boolean negatesPermissionExactly(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+
         if(permissionPath.trim().endsWith(".*"))
         {
             permissionPath = permissionPath.substring(0, permissionPath.length() - 2);
@@ -613,7 +669,10 @@ public final class PermissionSet
      *         permission that covers it. Otherwise, false.
      */
     public boolean negatesPermissionExactly(List<String> permissionPath)
-    { return negatesPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
+        return negatesPermissionExactly(permissionPath, exactPermissionTree, exactConditionalPermissionTree);
+    }
 
     /**
      * Checks if this permissions set specifically negates the provided permission path. That is, if the permission path
@@ -625,6 +684,7 @@ public final class PermissionSet
      */
     public boolean negatesPermissionExactly(String... permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath must not be null.");
         return negatesPermissionExactly(Arrays.asList(permissionPath),
                                         exactPermissionTree,
                                         exactConditionalPermissionTree);
@@ -840,9 +900,7 @@ public final class PermissionSet
      */
     public Permission set(String permissionAsString, Condition condition) throws ParseException
     {
-        if(permissionAsString == null)
-            throw new NullPointerException("permissionAsString was null.");
-
+        Objects.requireNonNull(permissionAsString, "permissionAsString must not be null.");
         String[] parts = permissionAsString.split(":", 2);
         String permWithoutArg = parts[0].trim();
         String permArg = parts.length > 1 ? parts[1].trim() : null;
@@ -881,7 +939,10 @@ public final class PermissionSet
      * @throws ParseException If the provided string is not parsable as a permission.
      */
     public Permission setWhileDeIndenting(String permissionAsString) throws ParseException
-    { return set(permissionAsString.replaceAll("(?m)^ {4}", ""), null); }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString must not be null.");
+        return set(permissionAsString.replaceAll("(?m)^ {4}", ""), null);
+    }
 
     /**
      * <p>Parses the provided permission as a string and adds it to the permission set, as described in
@@ -894,9 +955,7 @@ public final class PermissionSet
      */
     public Permission setConditional(String permissionAsString, Condition condition) throws ParseException
     {
-        if(condition == null)
-            throw new NullPointerException("Condition was null.");
-
+        Objects.requireNonNull(permissionAsString, "condition must not be null.");
         return set(permissionAsString, condition);
     }
 
@@ -913,12 +972,7 @@ public final class PermissionSet
      */
     Permission createPermissionFromString(String pathAsString, String permissionArgument, Condition condition)
     {
-        boolean isNegation = false;
-
-        if(pathAsString.startsWith("-"))
-            isNegation = true;
-
-        Permission perm = isNegation ? Permission.NEGATING : Permission.PERMITTING;
+        Permission perm = pathAsString.startsWith("-") ? Permission.NEGATING : Permission.PERMITTING;
 
         if(permissionArgument != null)
             perm = perm.withArg(permissionArgument);
@@ -1007,7 +1061,10 @@ public final class PermissionSet
      * @return The permission object that was at the given path in the permission set, or null if there was none.
      */
     public Permission remove(String permissionAsString)
-    { return removeFromTrees(permissionAsString, exactPermissionTree, descendantPermissionTree); }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString must not be null.");
+        return removeFromTrees(permissionAsString, exactPermissionTree, descendantPermissionTree);
+    }
 
     /**
      * Removes the provided conditional permission from the permission set.
@@ -1020,6 +1077,7 @@ public final class PermissionSet
      */
     public ConditionalPermission removeConditional(String permissionAsString)
     {
+        Objects.requireNonNull(permissionAsString, "permissionAsString must not be null.");
         return (ConditionalPermission)removeFromTrees(permissionAsString,
                                                       exactConditionalPermissionTree,
                                                       descendantConditionalPermissionTree);
