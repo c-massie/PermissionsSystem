@@ -4,6 +4,7 @@ import scot.massie.lib.events.EventListener;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.predefined.ValueReassignedEventArgs;
+import scot.massie.lib.functionalinterfaces.Condition;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -691,6 +692,16 @@ public class PermissionGroup
      */
     public Permission addPermission(String permissionAsString) throws ParseException
     { return permissionSet.set(permissionAsString); }
+
+    /**
+     * Adds a permission to this permission group.
+     * @param permissionAsString The permission to add.
+     * @param condition The condition under which this permission is considered.
+     * @return A permission representing the previously set permission at the given path, or null if there was none.
+     * @throws ParseException If the provided permission was not parsable as a string.
+     */
+    public Permission addPermission(String permissionAsString, Condition condition) throws ParseException
+    { return permissionSet.set(permissionAsString, condition); }
 
     /**
      * <p>Adds a permission to this permission group, after having deïndented the string by 4 spaces.</p>
