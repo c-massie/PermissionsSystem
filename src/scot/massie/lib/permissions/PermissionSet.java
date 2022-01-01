@@ -1162,6 +1162,15 @@ public final class PermissionSet
         exactPermissionTree.clear();
         descendantPermissionTree.clear();
     }
+
+    /**
+     * Removes all conditional permissions from this permission set.
+     */
+    public void clearConditionals()
+    {
+        exactConditionalPermissionTree.clear();
+        descendantConditionalPermissionTree.clear();
+    }
     //endregion
     //endregion
     //endregion

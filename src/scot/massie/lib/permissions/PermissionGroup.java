@@ -715,15 +715,24 @@ public class PermissionGroup
     { return permissionSet.setWhileDeIndenting(permissionAsString); }
 
     /**
-     * <p>Removes the given permission from the permission group.</p>
-     *
-     * <p>See {@link PermissionSet#remove(String)}.</p>
+     * Removes the specified permission from the permission group.
+     * @see PermissionSet#remove(String)
      * @param permissionPath The permission to remove from this group.
      * @return A permission object representing the permission directly in the group at the given path, or null if there
      *         was none.
      */
     public Permission removePermission(String permissionPath)
     { return permissionSet.remove(permissionPath); }
+
+    /**
+     * Removes the specified conditional permission from the permission group.
+     * @see PermissionSet#removeConditional(String)
+     * @param permissionPath The permission to remove from this group.
+     * @return A permission object representing the permission directly in the group at the given path, or null if there
+     *         was none.
+     */
+    public Permission removeConditionalPermission(String permissionPath)
+    { return permissionSet.removeConditional(permissionPath); }
     //endregion
 
     //region Permission groups
@@ -803,14 +812,55 @@ public class PermissionGroup
      * Removes all permissions and referenced groups from this permission group. Does not affect the default group.
      */
     public void clear()
-    {
-        permissionSet.clear();
+    { clear(true); }
 
+    /**
+     * Removes all permissions and referenced groups from this permission group. Does not affect the default group.
+     * @param includingConditionalPermissions Whether or not to clear conditional permissions.
+     */
+    public void clear(boolean includingConditionalPermissions)
+    {
+        clearPermissions(includingConditionalPermissions);
+        clearGroups();
+    }
+
+    /**
+     * Removes all referenced groups from this permission group. Does not affect the default group.
+     */
+    public void clearGroups()
+    {
         for(PermissionGroup group : referencedGroups)
             group.priorityChanged.deregister(priorityChangedListener);
 
         referencedGroups.clear();
     }
+
+    /**
+     * Removes all permissions from this permission group. Does not affect any referenced groups or the default
+     * permissions.
+     */
+    public void clearPermissions()
+    { clearPermissions(true); }
+
+    /**
+     * Removes all permissions from this permission group. Does not affect any referenced groups or the default
+     * permissions.
+     * @param includingConditionals Whether or not to remove conditional permissions.
+     */
+    public void clearPermissions(boolean includingConditionals)
+    {
+        if(includingConditionals)
+            permissionSet.clear();
+        else
+            permissionSet.clearExceptConditionals();
+    }
+
+    /**
+     * Removes all conditional permissions from this permission group. Does not remove any permissions that are not
+     * conditional, and does not affect any referenced groups or the default permissions.
+     */
+    public void clearConditionalPermissions()
+    { permissionSet.clearConditionals(); }
     //endregion
     //endregion
     //endregion
