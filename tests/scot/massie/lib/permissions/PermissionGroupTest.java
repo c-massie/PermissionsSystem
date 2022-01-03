@@ -1,6 +1,5 @@
 package scot.massie.lib.permissions;
 
-import org.assertj.core.api.ObjectAssert;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
@@ -416,7 +415,7 @@ public class PermissionGroupTest
     {
         PermissionGroup pg = new PermissionGroup("testgroup");
         PermissionGroup nppg = new PermissionGroup("notpresent");
-        assertThat(nppg.removePermissionGroup(nppg)).isFalse();
+        assertThat(pg.removePermissionGroup(nppg)).isFalse();
     }
 
     @Test

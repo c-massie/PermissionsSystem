@@ -75,15 +75,6 @@ public class Permission
     { return new Permission(permits, argument, isIndirect); }
 
     /**
-     * Gets a variant of the permission this is called on, only to be considered when the given condition is met.
-     * @param condition The condition the permission is to meet in order to be considered.
-     * @return A copy of the permission this is called on, as a ConditionalPermission object, with the given condition.
-     */
-    @NotNull
-    public ConditionalPermission onCondition(Condition condition)
-    { return new ConditionalPermission(permits, argument, isIndirect, condition); }
-
-    /**
      * Gets a variant of the permission this is called on, marked as being the indirect consequence of another
      * permission.
      * @return A copy of the permission this is called on, marked as being indirect. Returns the same object where the
@@ -148,24 +139,6 @@ public class Permission
      */
     public boolean isIndirect()
     { return isIndirect; }
-
-    /**
-     * Whether or not this permission should be considered.
-     * @apiNote This generally always returns true, except for instances of {@link ConditionalPermission}, which derive
-     *          the result of this from an internally held condition.
-     * @return True if this permission should be considered when considering permissions. Otherwise, false.
-     */
-    public boolean shouldBeConsidered()
-    { return true; }
-
-    /**
-     * Whether or not this permission should be ignored.
-     * @apiNote This generally always returns false, except for instances of {@link ConditionalPermission}, which derive
-     *          the result of this from an internally held condition.
-     * @return True if this permission should be ignored when considering permissions. Otherwise, false.
-     */
-    public boolean shouldBeIgnored()
-    { return false; }
     //endregion
 
     //region Overloads

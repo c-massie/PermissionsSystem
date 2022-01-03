@@ -4,7 +4,6 @@ import scot.massie.lib.events.EventListener;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.predefined.ValueReassignedEventArgs;
-import scot.massie.lib.functionalinterfaces.Condition;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -634,7 +633,7 @@ public class PermissionGroup
      *         false.
      */
     boolean containsOnlyAGroup()
-    { return (permissionSet.isEmptyExceptForConditionals()) && (referencedGroups.size() == 1); }
+    { return (permissionSet.isEmpty()) && (referencedGroups.size() == 1); }
 
     /**
      * Gets whether or not this permission group contains any permissions, or references any groups. Ignores the default
@@ -643,7 +642,7 @@ public class PermissionGroup
      *         default group. Otherwise, false.
      */
     public boolean isEmpty()
-    { return permissionSet.isEmptyExceptForConditionals() && referencedGroups.isEmpty(); }
+    { return permissionSet.isEmpty() && referencedGroups.isEmpty(); }
     //endregion
 
     //region String conversion
@@ -671,7 +670,7 @@ public class PermissionGroup
         for(PermissionGroup permGroup : referencedGroups)
             result.append("\n    #").append(permGroup.getName());
 
-        if(permissionSet.hasAnyExceptForConditionals())
+        if(permissionSet.isEmpty())
             result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
 
         return result.toString();
@@ -694,16 +693,6 @@ public class PermissionGroup
     { return permissionSet.set(permissionAsString); }
 
     /**
-     * Adds a permission to this permission group.
-     * @param permissionAsString The permission to add.
-     * @param condition The condition under which this permission is considered.
-     * @return A permission representing the previously set permission at the given path, or null if there was none.
-     * @throws ParseException If the provided permission was not parsable as a string.
-     */
-    public Permission addPermission(String permissionAsString, Condition condition) throws ParseException
-    { return permissionSet.set(permissionAsString, condition); }
-
-    /**
      * <p>Adds a permission to this permission group, after having deïndented the string by 4 spaces.</p>
      *
      * <p>See {@link PermissionSet#setWhileDeIndenting(String)}.</p>
@@ -723,16 +712,6 @@ public class PermissionGroup
      */
     public Permission removePermission(String permissionPath)
     { return permissionSet.remove(permissionPath); }
-
-    /**
-     * Removes the specified conditional permission from the permission group.
-     * @see PermissionSet#removeConditional(String)
-     * @param permissionPath The permission to remove from this group.
-     * @return A permission object representing the permission directly in the group at the given path, or null if there
-     *         was none.
-     */
-    public Permission removeConditionalPermission(String permissionPath)
-    { return permissionSet.removeConditional(permissionPath); }
     //endregion
 
     //region Permission groups
@@ -812,15 +791,8 @@ public class PermissionGroup
      * Removes all permissions and referenced groups from this permission group. Does not affect the default group.
      */
     public void clear()
-    { clear(true); }
-
-    /**
-     * Removes all permissions and referenced groups from this permission group. Does not affect the default group.
-     * @param includingConditionalPermissions Whether or not to clear conditional permissions.
-     */
-    public void clear(boolean includingConditionalPermissions)
     {
-        clearPermissions(includingConditionalPermissions);
+        clearPermissions();
         clearGroups();
     }
 
@@ -840,27 +812,7 @@ public class PermissionGroup
      * permissions.
      */
     public void clearPermissions()
-    { clearPermissions(true); }
-
-    /**
-     * Removes all permissions from this permission group. Does not affect any referenced groups or the default
-     * permissions.
-     * @param includingConditionals Whether or not to remove conditional permissions.
-     */
-    public void clearPermissions(boolean includingConditionals)
-    {
-        if(includingConditionals)
-            permissionSet.clear();
-        else
-            permissionSet.clearExceptConditionals();
-    }
-
-    /**
-     * Removes all conditional permissions from this permission group. Does not remove any permissions that are not
-     * conditional, and does not affect any referenced groups or the default permissions.
-     */
-    public void clearConditionalPermissions()
-    { permissionSet.clearConditionals(); }
+    { permissionSet.clear(); }
     //endregion
     //endregion
     //endregion

@@ -1,6 +1,5 @@
 package scot.massie.lib.permissions;
 
-import scot.massie.lib.functionalinterfaces.Condition;
 import scot.massie.lib.functionalinterfaces.Procedure;
 
 import java.text.ParseException;
@@ -308,7 +307,7 @@ public class ThreadsafePermissionGroup extends PermissionGroup
         for(PermissionGroup permGroup : groups)
             result.append("\n    #").append(permGroup.getName());
 
-        if(permissionSet.hasAnyExceptForConditionals())
+        if(permissionSet.hasAny())
             result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
 
         return result.toString();
@@ -322,20 +321,12 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     { synchronized(mainSyncLock) { return super.addPermission(permissionAsString); } }
 
     @Override
-    public Permission addPermission(String permissionAsString, Condition condition) throws ParseException
-    { synchronized(mainSyncLock) { return super.addPermission(permissionAsString, condition); } }
-
-    @Override
     public Permission addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
     { synchronized(mainSyncLock) { return super.addPermissionWhileDeIndenting(permissionAsString); } }
 
     @Override
     public Permission removePermission(String permissionPath)
     { synchronized(mainSyncLock) { return super.removePermission(permissionPath); } }
-
-    @Override
-    public Permission removeConditionalPermission(String permissionPath)
-    { synchronized(mainSyncLock) { return super.removeConditionalPermission(permissionPath); } }
 
     @Override
     public void addPermissionGroup(PermissionGroup permGroup)
@@ -390,34 +381,12 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     }
 
     @Override
-    public void clear(boolean includingConditionalPermissions)
-    {
-        synchronized(mainSyncLock)
-        {
-            if(includingConditionalPermissions)
-                permissionSet.clear();
-            else
-                permissionSet.clearExceptConditionals();
-
-            referencedGroups.clear();
-        }
-    }
-
-    @Override
     public void clearGroups()
     { synchronized(mainSyncLock) { referencedGroups.clear(); } }
 
     @Override
     public void clearPermissions()
     { synchronized(mainSyncLock) { super.clearPermissions(); } }
-
-    @Override
-    public void clearPermissions(boolean includingConditionals)
-    { synchronized(mainSyncLock) { super.clearPermissions(includingConditionals); } }
-
-    @Override
-    public void clearConditionalPermissions()
-    { synchronized(mainSyncLock) { super.clearConditionalPermissions(); } }
     //endregion
     //endregion
 }
