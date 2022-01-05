@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -20,6 +21,89 @@ import java.util.function.Predicate;
  */
 public class PermissionGroup
 {
+    /**
+     * <p>A wrapper for a permission group's priority as both a double and a long, with whether it's a double or long.</p>
+     *
+     * <p>If Java supported named typed tuples, this would be: (bool isLong, double asDouble, long asLong)</p>
+     */
+    public static final class Priority
+    {
+        /**
+         * Whether or not the priority represented by this object is a long.
+         */
+        private final boolean priorityIsLong;
+
+        /**
+         * This priority object's actual value as a double.
+         */
+        private final double priorityAsDouble;
+
+        /**
+         * This priority object's actual value as a long.
+         */
+        private final long priorityAsLong;
+
+        /**
+         * Creates a new GroupPriority wrapper.
+         * @param asDouble The priority as a double.
+         * @param asLong The priority as a long.
+         * @param isLong Whether or not the priority is properly represented as a long. (vs. a double)
+         */
+        public Priority(double asDouble, long asLong, boolean isLong)
+        {
+            this.priorityIsLong = isLong;
+            this.priorityAsLong = asLong;
+            this.priorityAsDouble = asDouble;
+        }
+
+        /**
+         * Whether or not the priority represented by this object is best represented as a double.
+         * @return True if this priority is best represented as a double. Otherwise, false.
+         */
+        public boolean isDouble()
+        { return !priorityIsLong; }
+
+        /**
+         * Whether or not the priority represented by this object is best represented as a long.
+         * @return True if this priority is best represented as a long. Otherwise, false.
+         */
+        public boolean isLong()
+        { return priorityIsLong; }
+
+        /**
+         * Gets the priority as a double.
+         * @return The priority as a double.
+         */
+        public double asDouble()
+        { return priorityAsDouble; }
+
+        /**
+         * Gets the priority as a long.
+         * @return The priority as a long.
+         */
+        public long asLong()
+        { return priorityAsLong; }
+
+        @Override
+        public String toString()
+        { return "" + (priorityIsLong ? priorityAsLong : priorityAsDouble); }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) return true;
+            if(o == null || getClass() != o.getClass()) return false;
+            Priority that = (Priority)o;
+            return priorityIsLong == that.priorityIsLong
+                   && Double.compare(that.priorityAsDouble, priorityAsDouble) == 0
+                   && priorityAsLong == that.priorityAsLong;
+        }
+
+        @Override
+        public int hashCode()
+        { return Objects.hash(priorityIsLong, priorityAsDouble, priorityAsLong); }
+    }
+
     //region Constants
     /**
      * <p>Comparator that sorts permission groups in order of priority, in order from highest to lowest.</p>
@@ -276,6 +360,15 @@ public class PermissionGroup
      */
     public long getPriorityAsLong()
     { return priorityAsLong; }
+
+    /**
+     * Gets this permission group's priority in a wrapper containing its double and long representations, and whether
+     * it should be represented as a double or long.
+     * @return A wrapper containing both the double and long representations of this permission group's priority, as
+     *         well as an indication of which is the most appropriate.
+     */
+    public Priority getPriorityAsObject()
+    { return new Priority(priority, priorityAsLong, priorityIsLong); }
 
     /**
      * Gets a string representation of this permission group's priority. See {@link #getPriority()}.
@@ -670,7 +763,7 @@ public class PermissionGroup
         for(PermissionGroup permGroup : referencedGroups)
             result.append("\n    #").append(permGroup.getName());
 
-        if(permissionSet.isEmpty())
+        if(permissionSet.hasAny())
             result.append("\n").append(permissionSet.toSaveString().replaceAll("(?m)^(?=.+)", "    "));
 
         return result.toString();

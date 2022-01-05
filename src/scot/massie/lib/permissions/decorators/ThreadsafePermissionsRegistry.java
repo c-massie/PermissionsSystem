@@ -1,6 +1,7 @@
 package scot.massie.lib.permissions.decorators;
 
 import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.PermissionGroup;
 import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
@@ -543,6 +544,27 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public Double getGroupPriority(String groupName)
+    {
+        synchronized(inner)
+        { return inner.getGroupPriority(groupName); }
+    }
+
+    @Override
+    public Long getGroupPriorityAsLong(String groupName)
+    {
+        synchronized(inner)
+        { return inner.getGroupPriorityAsLong(groupName); }
+    }
+
+    @Override
+    public PermissionGroup.Priority getGroupPriorityAsObject(String groupName)
+    {
+        synchronized(inner)
+        { return inner.getGroupPriorityAsObject(groupName); }
+    }
+
+    @Override
     public List<String> getUserPermissions(ID userId)
     {
         synchronized(inner)
@@ -550,10 +572,10 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
-    public List<String> getGroupPermissions(String groupdId)
+    public List<String> getGroupPermissions(String groupName)
     {
         synchronized(inner)
-        { return inner.getGroupPermissions(groupdId); }
+        { return inner.getGroupPermissions(groupName); }
     }
 
     @Override
@@ -561,6 +583,27 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     {
         synchronized(inner)
         { return inner.getDefaultPermissions(); }
+    }
+
+    @Override
+    public List<String> getUserPermissionsWithArgs(ID userId)
+    {
+        synchronized(inner)
+        { return inner.getUserPermissionsWithArgs(userId); }
+    }
+
+    @Override
+    public List<String> getGroupPermissionsWithArgs(String groupName)
+    {
+        synchronized(inner)
+        { return inner.getGroupPermissionsWithArgs(groupName); }
+    }
+
+    @Override
+    public List<String> getDefaultPermissionsWithArgs()
+    {
+        synchronized(inner)
+        { return inner.getDefaultPermissionsWithArgs(); }
     }
 
     @Override
@@ -627,6 +670,48 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public void assignUserPermissions(ID userId, List<String> permissions)
+    {
+        synchronized(inner)
+        { inner.assignUserPermissions(userId, permissions); }
+    }
+
+    @Override
+    public void assignUserPermissions(ID userId, String[] permissions)
+    {
+        synchronized(inner)
+        { inner.assignUserPermissions(userId, permissions); }
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, List<String> permissions)
+    {
+        synchronized(inner)
+        { inner.assignGroupPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, String[] permissions)
+    {
+        synchronized(inner)
+        { inner.assignGroupPermissions(groupName, permissions); }
+    }
+
+    @Override
+    public void assignDefaultPermissions(List<String> permissions)
+    {
+        synchronized(inner)
+        { inner.assignDefaultPermissions(permissions); }
+    }
+
+    @Override
+    public void assignDefaultPermissions(String[] permissions)
+    {
+        synchronized(inner)
+        { inner.assignDefaultPermissions(permissions); }
+    }
+
+    @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
         synchronized(inner)
@@ -648,45 +733,87 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
+    public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     {
         synchronized(inner)
-        { inner.assignGroupToUser(userId, groupIdBeingAssigned); }
+        { inner.assignGroupToUser(userId, groupNameBeingAssigned); }
     }
 
     @Override
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
+    public void assignGroupToGroup(String groupName, String groupNameBeingAssigned)
     {
         synchronized(inner)
-        { inner.assignGroupToGroup(groupId, groupIdBeingAssigned); }
+        { inner.assignGroupToGroup(groupName, groupNameBeingAssigned); }
     }
 
     @Override
-    public void assignDefaultGroup(String groupIdBeingAssigned)
+    public void assignDefaultGroup(String groupNameBeingAssigned)
     {
         synchronized(inner)
-        { inner.assignDefaultGroup(groupIdBeingAssigned); }
+        { inner.assignDefaultGroup(groupNameBeingAssigned); }
     }
 
     @Override
-    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
+    public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
     {
         synchronized(inner)
-        { return inner.revokeGroupFromUser(userId, groupIdBeingRevoked); }
+        { inner.assignGroupsToUser(userId, groupNamesBeingAssigned); }
     }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
+    public void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned)
     {
         synchronized(inner)
-        { return inner.revokeGroupFromGroup(groupId, groupIdBeingRevoked); }
+        { inner.assignGroupsToUser(userId, groupNamesBeingAssigned); }
     }
 
     @Override
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
+    public void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned)
     {
         synchronized(inner)
-        { return inner.revokeDefaultGroup(groupIdBeingRevoked); }
+        { inner.assignGroupsToGroup(groupName, groupNamesBeingAssigned); }
+    }
+
+    @Override
+    public void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned)
+    {
+        synchronized(inner)
+        { inner.assignGroupsToGroup(groupName, groupNamesBeingAssigned); }
+    }
+
+    @Override
+    public void assignDefaultGroups(List<String> groupNameBeingAssigned)
+    {
+        synchronized(inner)
+        { inner.assignDefaultGroups(groupNameBeingAssigned); }
+    }
+
+    @Override
+    public void assignDefaultGroups(String[] groupNameBeingAssigned)
+    {
+        synchronized(inner)
+        { inner.assignDefaultGroups(groupNameBeingAssigned); }
+    }
+
+    @Override
+    public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
+    {
+        synchronized(inner)
+        { return inner.revokeGroupFromUser(userId, groupNameBeingRevoked); }
+    }
+
+    @Override
+    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
+    {
+        synchronized(inner)
+        { return inner.revokeGroupFromGroup(groupId, groupNameBeingRevoked); }
+    }
+
+    @Override
+    public boolean revokeDefaultGroup(String groupNameBeingRevoked)
+    {
+        synchronized(inner)
+        { return inner.revokeDefaultGroup(groupNameBeingRevoked); }
     }
 
     @Override

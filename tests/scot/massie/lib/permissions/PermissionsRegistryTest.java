@@ -2580,6 +2580,12 @@ public class PermissionsRegistryTest
     //region Members
     //endregion
 
+    //region Group priorities
+
+    // TO DO: Write tests here.
+
+    //endregion
+
     //region Permissions
     @Test
     public void getUsers_empty()
@@ -2751,6 +2757,7 @@ public class PermissionsRegistryTest
     //region Mutators
     //region Permissions
     //region Assign
+    //region Single
     @Test
     public void assignPermission()
     {
@@ -2821,6 +2828,13 @@ public class PermissionsRegistryTest
     }
     //endregion
 
+    //region Multiple
+
+    // TO DO: Write tests here.
+
+    //endregion
+    //endregion
+
     //region Revoke
     @Test
     public void revokePermission()
@@ -2840,6 +2854,7 @@ public class PermissionsRegistryTest
 
     //region Groups
     //region Assign
+    //region Single
     @Test
     public void assignGroupToUser()
     {
@@ -2881,6 +2896,13 @@ public class PermissionsRegistryTest
         assertEquals(expectedUsers, reg.usersToSaveString());
         assertEquals(expectedGroups, reg.groupsToSaveString());
     }
+    //endregion
+
+    //region Multiple
+
+    // TO DO: Write tests here.
+
+    //endregion
     //endregion
 
     //region Revoke

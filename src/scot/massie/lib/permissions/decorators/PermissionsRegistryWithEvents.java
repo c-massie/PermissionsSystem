@@ -11,6 +11,7 @@ import scot.massie.lib.permissions.events.args.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -195,6 +196,42 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
+    public void assignUserPermissions(ID userId, List<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignUserPermissions(ID userId, String[] permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, List<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, String[] permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignDefaultPermissions(List<String> permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignDefaultPermissions(String[] permissions)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
         Permission r = super.revokeUserPermission(userId, permission);
@@ -219,52 +256,88 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
+    public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     {
-        super.assignGroupToUser(userId, groupIdBeingAssigned);
+        super.assignGroupToUser(userId, groupNameBeingAssigned);
         groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutUser(this,
                                                                                     userId,
-                                                                                    groupIdBeingAssigned));
+                                                                                    groupNameBeingAssigned));
     }
 
     @Override
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
+    public void assignGroupToGroup(String groupName, String groupNameBeingAssigned)
     {
-        super.assignGroupToGroup(groupId, groupIdBeingAssigned);
+        super.assignGroupToGroup(groupName, groupNameBeingAssigned);
         groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutGroup(this,
-                                                                                     groupId,
-                                                                                     groupIdBeingAssigned));
+                                                                                     groupName,
+                                                                                     groupNameBeingAssigned));
     }
 
     @Override
-    public void assignDefaultGroup(String groupId)
+    public void assignDefaultGroup(String groupNameBeingAssigned)
     {
-        super.assignDefaultGroup(groupId);
-        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupId));
+        super.assignDefaultGroup(groupNameBeingAssigned);
+        groupAssigned_internal.invoke(PermissionGroupAssignedEventArgs.newAboutDefaultPermissions(this, groupNameBeingAssigned));
     }
 
     @Override
-    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
+    public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
     {
-        boolean result = super.revokeGroupFromUser(userId, groupIdBeingRevoked);
-        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutUser(this, userId, groupIdBeingRevoked));
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignDefaultGroups(List<String> groupNameBeingAssigned)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void assignDefaultGroups(String[] groupNameBeingAssigned)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
+    {
+        boolean result = super.revokeGroupFromUser(userId, groupNameBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutUser(this, userId, groupNameBeingRevoked));
         return result;
     }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
+    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
     {
-        boolean result = super.revokeGroupFromGroup(groupId, groupIdBeingRevoked);
-        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutGroup(this, groupId, groupIdBeingRevoked));
+        boolean result = super.revokeGroupFromGroup(groupId, groupNameBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutGroup(this, groupId, groupNameBeingRevoked));
         return result;
     }
 
     @Override
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
+    public boolean revokeDefaultGroup(String groupNameBeingRevoked)
     {
-        boolean result = super.revokeDefaultGroup(groupIdBeingRevoked);
+        boolean result = super.revokeDefaultGroup(groupNameBeingRevoked);
         groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutDefaultPermissions(this,
-                                                                                                groupIdBeingRevoked));
+                                                                                                groupNameBeingRevoked));
         return result;
     }
 

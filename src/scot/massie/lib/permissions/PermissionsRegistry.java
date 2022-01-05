@@ -873,7 +873,6 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Has
-
     /**
      * <p>Checks whether or not a specified user "has" a given permission.</p>
      *
@@ -1720,6 +1719,57 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     { return parseIdFromString; }
     //endregion
 
+    //region Group priorities
+    /**
+     * Gets the priority of the group with a given name. (As a double)
+     * @param groupName The name of the group to get the priority of.
+     * @return The priority of the group by the given name in this permissions registry as a boxed double, or null if
+     *         no such group exists.
+     */
+    public Double getGroupPriority(String groupName)
+    {
+        PermissionGroup permGroup = getGroupPermissionsGroup(groupName);
+
+        if(permGroup == null)
+            return null;
+
+        return permGroup.getPriority();
+    }
+
+    /**
+     * Gets the priority of the group with a given name. (As a long)
+     * @param groupName The name of the group to get the priority of.
+     * @return The priority of the group by the given name in this permissions registry as a boxed long, or null if no
+     *         such group exists.
+     */
+    public Long getGroupPriorityAsLong(String groupName)
+    {
+        PermissionGroup permGroup = getGroupPermissionsGroup(groupName);
+
+        if(permGroup == null)
+            return null;
+
+        return permGroup.getPriorityAsLong();
+    }
+
+    /**
+     * Gets the priority of the group with a given name. (As an object containing long and double representations.)
+     * @param groupName The name of the group to get the priority of.
+     * @return The priority of the group by the given name in this permissions registry as a wrapper object containing
+     *         the double and long representations of it and an indication of which it would best be represented as, or
+     *         null if no such group exists.
+     */
+    public PermissionGroup.Priority getGroupPriorityAsObject(String groupName)
+    {
+        PermissionGroup permGroup = getGroupPermissionsGroup(groupName);
+
+        if(permGroup == null)
+            return null;
+
+        return permGroup.getPriorityAsObject();
+    }
+    //endregion
+
     //region Permissions
     /**
      * <p>Gets a list of the permissions directly assigned to the specified user.</p>
@@ -1742,12 +1792,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * assigned to the user.</p>
      *
      * <p>The string representations of the permissions of the group returned do not include permission arguments.</p>
-     * @param groupdId The name of the group to get the permissions of.
+     * @param groupName The name of the group to get the permissions of.
      * @return A sorted list of all the permissions of the specified group, not including referenced groups or the
      *         default permissions, and not including permission arguments.
      */
-    public List<String> getGroupPermissions(String groupdId)
-    { return getPermissions(getGroupPermissionsGroup(groupdId)); }
+    public List<String> getGroupPermissions(String groupName)
+    { return getPermissions(getGroupPermissionsGroup(groupName)); }
 
     /**
      * <p>Gets a list of the default permissions.</p>
@@ -1775,12 +1825,74 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      *         the default permissions, and not including permission arguments.
      */
     protected List<String> getPermissions(PermissionGroup permGroup)
+    { return getPermissions(permGroup, false); }
+
+    /**
+     * <p>Gets a list of string representations of all permissions directly assigned to the given permission group
+     * object.</p>
+     *
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the given permission group object.</p>
+     * @param permGroup The permission group object to get the permissions of.
+     * @param withArgs Whether or not to include permission arguments in the string representations of permissions.
+     * @return A sorted list of all permissions of the given permission group object, not including referenced groups or
+     *         the default permissions, and including permission arguments only if applicable and specified.
+     */
+    private List<String> getPermissions(PermissionGroup permGroup, boolean withArgs)
     {
         if(permGroup == null)
             return Collections.emptyList();
 
-        return permGroup.getPermissionsAsStrings(false);
+        return permGroup.getPermissionsAsStrings(withArgs);
     }
+
+    /**
+     * <p>Gets a list of the permissions directly assigned to the specified user, with arguments.</p>
+     *
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the user.</p>
+     * @param userId The ID of the user to get the permissions of.
+     * @return A sorted list of all permissions of the specified user, not including referenced groups or the default
+     *         permissions, and including permission arguments if applicable.
+     */
+    public List<String> getUserPermissionsWithArgs(ID userId)
+    { return getPermissionsWithArgs(permissionsForUsers.getOrDefault(userId, null)); }
+
+    /**
+     * <p>Gets a list of the permissions directly assigned to the specified group, with arguments.</p>
+     *
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the user.</p>
+     * @param groupName The name of the group to get the permissions of.
+     * @return A sorted list of all the permissions of the specified group, not including referenced groups or the
+     *         default permissions, and including permission arguments if applicable.
+     */
+    public List<String> getGroupPermissionsWithArgs(String groupName)
+    { return getPermissionsWithArgs(getGroupPermissionsGroup(groupName)); }
+
+    /**
+     * <p>Gets a list of the default permissions, with arguments.</p>
+     *
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include default
+     * groups.</p>
+     * @return A sorted list of all the default permissions, not including default groups, and including permission
+     *         arguments if applicable.
+     */
+    public List<String> getDefaultPermissionsWithArgs()
+    { return getPermissionsWithArgs(defaultPermissions); }
+
+    /**
+     * <p>Gets a list of string representations of all permissions directly assigned to the given permission group
+     * object, including their arguments if applicable.</p>
+     *
+     * <p>The resulting list is ordered by the nodes of the permissions alphabetically, and does not include groups
+     * assigned to the given permission group object.</p>
+     * @param permGroup The permission group object to get the permissions of.
+     * @return A sorted list of all permissions of the given permission group object, not including referenced groups or
+     *         the default permissions, and including permission arguments if applicable.
+     */
+    protected List<String> getPermissionsWithArgs(PermissionGroup permGroup)
+    { return getPermissions(permGroup, true); }
     //endregion
 
     //region All permission statuses
@@ -1871,54 +1983,53 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region PermissionGroups
-
     /**
      * Gets the permission group object of the specified group. If the group is specified as "*", this is taken to mean
      * the default permission group.
-     * @param groupId The ID of the group to get the PermissionGroup object of.
+     * @param groupName The ID of the group to get the PermissionGroup object of.
      * @return The PermissionGroup object of the specified group, or the default PermissionGroup object if the group is
      *         specified as "*", or null if the specified group does not exist and is not specified as "*".
      */
-    PermissionGroup getGroupPermissionsGroup(String groupId)
-    { return ("*".equals(groupId)) ? (defaultPermissions) : (assignableGroups.get(groupId)); }
+    PermissionGroup getGroupPermissionsGroup(String groupName)
+    { return ("*".equals(groupName)) ? (defaultPermissions) : (assignableGroups.get(groupName)); }
 
     /**
      * Gets the permission group object of the specified group. If the specified group does not currently exist in the
      * registry, creates it.
-     * @param groupId The name of the group to get the permission group object of.
+     * @param groupName The name of the group to get the permission group object of.
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName)
     {
-        if("*".equals(groupId))
+        if("*".equals(groupName))
             return defaultPermissions;
 
-        assertGroupNameValid(groupId);
+        assertGroupNameValid(groupName);
 
-        return assignableGroups.computeIfAbsent(groupId, s ->
+        return assignableGroups.computeIfAbsent(groupName, s ->
         {
             markAsModified();
-            return new PermissionGroup(groupId);
+            return new PermissionGroup(groupName);
         });
     }
 
     /**
      * Gets the permission group object of the specified group, reässigning the priority in the process. If the
      * specified group does not currently exist in the registry, creates it.
-     * @param groupId The name of the group to get the permission group object of.
+     * @param groupName The name of the group to get the permission group object of.
      * @param priority The priority to ensure the specified group has.
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException If the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, long priority)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, long priority)
     {
-        if("*".equals(groupId))
+        if("*".equals(groupName))
             return defaultPermissions;
 
-        assertGroupNameValid(groupId);
+        assertGroupNameValid(groupName);
 
-        return assignableGroups.compute(groupId, (s, permissionGroup) ->
+        return assignableGroups.compute(groupName, (s, permissionGroup) ->
         {
             markAsModified();
 
@@ -1928,26 +2039,26 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                 return permissionGroup;
             }
             else
-                return new PermissionGroup(groupId, priority);
+                return new PermissionGroup(groupName, priority);
         });
     }
 
     /**
      * Gets the permission group object of the specified group, reässigning the priority in the process. If the
      * specified group does not currently exist in the registry, creates it.
-     * @param groupId The name of the group to get the permission group object of.
+     * @param groupName The name of the group to get the permission group object of.
      * @param priority The priority to ensure the specified group has.
      * @return The permission group object of the group of the given name.
      * @throws InvalidGroupNameException if the group name provided is not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, double priority)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, double priority)
     {
-        if("*".equals(groupId))
+        if("*".equals(groupName))
             return defaultPermissions;
 
-        assertGroupNameValid(groupId);
+        assertGroupNameValid(groupName);
 
-        return assignableGroups.compute(groupId, (s, permissionGroup) ->
+        return assignableGroups.compute(groupName, (s, permissionGroup) ->
         {
             markAsModified();
 
@@ -1957,23 +2068,30 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                 return permissionGroup;
             }
             else
-                return new PermissionGroup(groupId, priority);
+                return new PermissionGroup(groupName, priority);
         });
+    }
+
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, PermissionGroup.Priority priority)
+    {
+        return priority.isLong()
+                       ? getGroupPermissionsGroupOrNew(groupName, priority.asLong())
+                       : getGroupPermissionsGroupOrNew(groupName, priority.asDouble());
     }
 
     /**
      * Gets the permission group object of the specified group, reässigning the priority in the process. If the
      * specified group does not currently exist in the registry, creates it.
-     * @param groupId The name of the group to get the permission group object of.
+     * @param groupName The name of the group to get the permission group object of.
      * @param priorityAsString The priority to ensure the specified group has, as a string.
      * @return The permission group object of the group of the given name.
      * @throws InvalidPriorityException If the provided priority was not parsable as a number.
      * @throws InvalidGroupNameException If the provided group name was not a valid group name.
      */
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString)
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, String priorityAsString)
             throws InvalidPriorityException
     {
-        if("*".equals(groupId))
+        if("*".equals(groupName))
             return defaultPermissions;
 
         long priorityAsLong = 0;
@@ -1985,7 +2103,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsLong = false; }
 
         if(priorityIsLong)
-            return getGroupPermissionsGroupOrNew(groupId, priorityAsLong);
+            return getGroupPermissionsGroupOrNew(groupName, priorityAsLong);
 
         double priorityAsDouble = 0;
         boolean priorityIsDouble = true;
@@ -1996,7 +2114,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         { priorityIsDouble = false; }
 
         if(priorityIsDouble)
-            return getGroupPermissionsGroupOrNew(groupId, priorityAsDouble);
+            return getGroupPermissionsGroupOrNew(groupName, priorityAsDouble);
 
         throw new InvalidPriorityException(priorityAsString);
     }
@@ -2102,7 +2220,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //region Mutators
     //region Permissions
     //region Assign
-
+    //region Single
     /**
      * Assigns a permission to a user.
      * @param userId The ID of the user to assign a permission to.
@@ -2145,6 +2263,75 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         catch(ParseException e)
         { throw new InvalidPermissionException(permission, e); }
     }
+    //endregion
+
+    //region Multiple
+    /**
+     * Assigns permissions to a user.
+     * @param userId The ID of the user to assign permissions to.
+     * @param permissions A list of permissions to assign.
+     */
+    public void assignUserPermissions(ID userId, List<String> permissions)
+    { assignPermissions(getUserPermissionsGroupOrNew(userId), permissions); }
+
+    /**
+     * Assigns permissions to a user.
+     * @param userId The ID of the user to assign permissions to.
+     * @param permissions An array of permissions to assign.
+     */
+    public void assignUserPermissions(ID userId, String[] permissions)
+    { assignUserPermissions(userId, Arrays.asList(permissions)); }
+
+    /**
+     * Assigns permissions to a group.
+     * @param groupName The name of the group to assign permissions to.
+     * @param permissions A list of permissions to assign.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
+     */
+    public void assignGroupPermissions(String groupName, List<String> permissions)
+    { assignPermissions(getGroupPermissionsGroupOrNew(groupName), permissions); }
+
+    /**
+     * Assigns permissions to a group.
+     * @param groupName The name of the group to assign permissions to.
+     * @param permissions An array of permissions to assign.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
+     */
+    public void assignGroupPermissions(String groupName, String[] permissions)
+    { assignGroupPermissions(groupName, Arrays.asList(permissions)); }
+
+    /**
+     * Assigns default permissions. All users will be considered to have these permissions unless otherwise overridden.
+     * @param permissions An array of permissions to assign.
+     */
+    public void assignDefaultPermissions(List<String> permissions)
+    { assignPermissions(defaultPermissions, permissions); }
+
+    /**
+     * Assigns default permissions. All users will be considered to have these permissions unless otherwise overridden.
+     * @param permissions A list of permissions to assign.
+     */
+    public void assignDefaultPermissions(String[] permissions)
+    { assignDefaultPermissions(Arrays.asList(permissions)); }
+
+    /**
+     * Assigns the given permissions to the given permission group object.
+     * @param permGroup The permission group object to assign a permission to.
+     * @param permissions A list of permissions to assign to the given permission group object.
+     */
+    protected void assignPermissions(PermissionGroup permGroup, List<String> permissions)
+    {
+        markAsModified();
+
+        for(String p : permissions)
+        {
+            try
+            { permGroup.addPermission(p); }
+            catch(ParseException e)
+            { throw new InvalidPermissionException(p, e); }
+        }
+    }
+    //endregion
     //endregion
 
     //region Revoke
@@ -2197,89 +2384,176 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     //region Groups
     //region Assign
+    //region Single
     /**
      * Assigns a group to a user.
      * @param userId The ID of the user to assign a group to.
-     * @param groupIdBeingAssigned The name of the group being assigned.
+     * @param groupNameBeingAssigned The name of the group being assigned.
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { assignGroupTo(getUserPermissionsGroupOrNew(userId), groupIdBeingAssigned, false); }
+    public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
+    { assignGroupTo(getUserPermissionsGroupOrNew(userId), groupNameBeingAssigned, false); }
 
     /**
-     * Assigns a group to another group. A group can not extend from itself or a group that extends from it.
-     * @param groupId The name of the group to assign another group to.
-     * @param groupIdBeingAssigned The name of the group being assigned.
+     * Assigns a group to another group. A group cannot extend from itself or a group that extends from it.
+     * @param groupName The name of the group to assign another group to.
+     * @param groupNameBeingAssigned The name of the group being assigned.
      * @throws InvalidGroupNameException If either of the group names was not a valid group name.
      */
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    { assignGroupTo(getGroupPermissionsGroupOrNew(groupId), groupIdBeingAssigned, true); }
+    public void assignGroupToGroup(String groupName, String groupNameBeingAssigned)
+    { assignGroupTo(getGroupPermissionsGroupOrNew(groupName), groupNameBeingAssigned, true); }
 
     /**
      * Assigns a group to the default permissions.
-     * @param groupIdBeingAssigned The name of the group being assigned.
+     * @param groupNameBeingAssigned The name of the group being assigned.
      * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
-    public void assignDefaultGroup(String groupIdBeingAssigned)
-    {  assignGroupTo(defaultPermissions, groupIdBeingAssigned, true); }
+    public void assignDefaultGroup(String groupNameBeingAssigned)
+    {  assignGroupTo(defaultPermissions, groupNameBeingAssigned, true); }
 
     /**
      * Assigns a group to a permission group object.
      * @param permGroup The permission group to be assigned a group.
-     * @param groupIdBeingAssigned The name of the group to assign.
+     * @param groupNameBeingAssigned The name of the group to assign.
      * @param checkForCircular Whether or not to check for circular hierarchies.
      */
-    protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
+    protected void assignGroupTo(PermissionGroup permGroup, String groupNameBeingAssigned, boolean checkForCircular)
     {
-        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupIdBeingAssigned);
+        PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(groupNameBeingAssigned);
 
         if(checkForCircular)
             assertNotCircular(permGroup, permGroupBeingAssigned);
 
-        markAsModified();
         permGroup.addPermissionGroup(permGroupBeingAssigned);
+        markAsModified();
     }
+    //endregion
+
+    //region Multiple
+    /**
+     * Assigns groups to a user.
+     * @param userId The ID of the user to assign groups to.
+     * @param groupNamesBeingAssigned A list of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the group names were not valid group names.
+     */
+    public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
+    { assignGroupsTo(getUserPermissionsGroupOrNew(userId), groupNamesBeingAssigned, false); }
+
+    /**
+     * Assigns groups to a user.
+     * @param userId The ID of the user to assign groups to.
+     * @param groupNamesBeingAssigned An array of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the group names were not valid group names.
+     */
+    public void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned)
+    { assignGroupsToUser(userId, Arrays.asList(groupNamesBeingAssigned)); }
+
+    /**
+     * Assigns groups to another group. A group cannot extend from itself or a group that extends from it.
+     * @param groupName The name of the group to assign other groups to.
+     * @param groupNamesBeingAssigned A list of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the group names involved were not valid group names.
+     */
+    public void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned)
+    { assignGroupsTo(getGroupPermissionsGroupOrNew(groupName), groupNamesBeingAssigned, true); }
+
+    /**
+     * Assigns groups to another group. A group cannot extend from itself or a group that extends from it.
+     * @param groupName The name of the group to assign other groups to.
+     * @param groupNamesBeingAssigned An array of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the group names involved were not valid group names.
+     */
+    public void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned)
+    { assignGroupsToGroup(groupName, Arrays.asList(groupNamesBeingAssigned)); }
+
+    /**
+     * Assigns groups to the default permissions.
+     * @param groupNamesBeingAssigned A list of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the groups names were not valid group names.
+     */
+    public void assignDefaultGroups(List<String> groupNamesBeingAssigned)
+    { assignGroupsTo(defaultPermissions, groupNamesBeingAssigned, true); }
+
+    /**
+     * Assigns groups to the default permissions.
+     * @param groupNamesBeingAssigned An array of the names of groups being assigned.
+     * @throws InvalidGroupNameException If any of the groups names were not valid group names.
+     */
+    public void assignDefaultGroups(String[] groupNamesBeingAssigned)
+    { assignDefaultGroups(Arrays.asList(groupNamesBeingAssigned)); }
+
+    /**
+     * Assigns groups to a permission group object.
+     * @param permGroup The permission group object to be assigned groups.
+     * @param groupNamesBeingAssigned A list of the names of groups to assign.
+     * @param checkForCircular Whether or not to check for circular hierarchies.
+     */
+    protected void assignGroupsTo(PermissionGroup permGroup,
+                                  List<String> groupNamesBeingAssigned,
+                                  boolean checkForCircular)
+    {
+        if(checkForCircular)
+        {
+            for(String gn : groupNamesBeingAssigned)
+            {
+                PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(gn);
+                assertNotCircular(permGroup, permGroupBeingAssigned);
+                permGroup.addPermissionGroup(permGroupBeingAssigned);
+            }
+        }
+        else
+        {
+            for(String gn : groupNamesBeingAssigned)
+            {
+                PermissionGroup permGroupBeingAssigned = getGroupPermissionsGroupOrNew(gn);
+                permGroup.addPermissionGroup(permGroupBeingAssigned);
+            }
+        }
+
+        markAsModified();
+    }
+    //endregion
     //endregion
 
     //region Revoke
     /**
      * Deässigns a group from a user.
      * @param userId The ID of the user to deässign a group from.
-     * @param groupIdBeingRevoked The name of the group being deässigned.
+     * @param groupNameBeingRevoked The name of the group being deässigned.
      * @return True if a group was deässigned from the user as a result of this call. Otherwise, false.
      */
-    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    { return revokeGroupFrom(permissionsForUsers.get(userId), groupIdBeingRevoked); }
+    public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
+    { return revokeGroupFrom(permissionsForUsers.get(userId), groupNameBeingRevoked); }
 
     /**
      * Deässigns a group from another group.
      * @param groupId The name of the group to deässign another group from.
-     * @param groupIdBeingRevoked The name of the group to deässign.
+     * @param groupNameBeingRevoked The name of the group to deässign.
      * @return True if a group was deässigned from the group as a result of this call. Otherwise, false.
      */
-    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    { return revokeGroupFrom(getGroupPermissionsGroup(groupId), groupIdBeingRevoked); }
+    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
+    { return revokeGroupFrom(getGroupPermissionsGroup(groupId), groupNameBeingRevoked); }
 
     /**
      * Deässigns a group as a default group.
-     * @param groupIdBeingRevoked The group to deässign.
+     * @param groupNameBeingRevoked The group to deässign.
      * @return True if a group was deässigned as a default group as a result of this call. Otherwise, false.
      */
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { return revokeGroupFrom(defaultPermissions, groupIdBeingRevoked); }
+    public boolean revokeDefaultGroup(String groupNameBeingRevoked)
+    { return revokeGroupFrom(defaultPermissions, groupNameBeingRevoked); }
 
     /**
      * Removes a group from the referenced groups of the given permission group object.
      * @param permGroup The permission group object to remove a referenced group from.
-     * @param groupIdBeingRevoked The name of the group to remove.
+     * @param groupNameBeingRevoked The name of the group to remove.
      * @return True if the permission group object was modified as a result of this call. Otherwise, false.
      */
-    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
+    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupNameBeingRevoked)
     {
         if(permGroup == null)
             return false;
 
-        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupIdBeingRevoked);
+        PermissionGroup permGroupBeingRevoked = assignableGroups.get(groupNameBeingRevoked);
 
         if(permGroupBeingRevoked == null)
             return false;

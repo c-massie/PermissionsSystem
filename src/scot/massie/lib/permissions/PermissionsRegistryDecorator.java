@@ -410,12 +410,24 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getIdFromStringFunction(); }
 
     @Override
+    public Double getGroupPriority(String groupName)
+    { return inner.getGroupPriority(groupName); }
+
+    @Override
+    public Long getGroupPriorityAsLong(String groupName)
+    { return inner.getGroupPriorityAsLong(groupName); }
+
+    @Override
+    public PermissionGroup.Priority getGroupPriorityAsObject(String groupName)
+    { return inner.getGroupPriorityAsObject(groupName); }
+
+    @Override
     public List<String> getUserPermissions(ID userId)
     { return inner.getUserPermissions(userId); }
 
     @Override
-    public List<String> getGroupPermissions(String groupdId)
-    { return inner.getGroupPermissions(groupdId); }
+    public List<String> getGroupPermissions(String groupName)
+    { return inner.getGroupPermissions(groupName); }
 
     @Override
     public List<String> getDefaultPermissions()
@@ -424,6 +436,22 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     protected List<String> getPermissions(PermissionGroup permGroup)
     { return inner.getPermissions(permGroup); }
+
+    @Override
+    public List<String> getUserPermissionsWithArgs(ID userId)
+    { return inner.getUserPermissionsWithArgs(userId); }
+
+    @Override
+    public List<String> getGroupPermissionsWithArgs(String groupName)
+    { return inner.getGroupPermissionsWithArgs(groupName); }
+
+    @Override
+    public List<String> getDefaultPermissionsWithArgs()
+    { return inner.getDefaultPermissionsWithArgs(); }
+
+    @Override
+    protected List<String> getPermissionsWithArgs(PermissionGroup permGroup)
+    { return inner.getPermissionsWithArgs(permGroup); }
 
     @Override
     public Collection<PermissionStatus> getAllUserPermissionStatuses(ID userId)
@@ -458,24 +486,28 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getGroupsOf(permGroup); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroup(String groupId)
-    { return inner.getGroupPermissionsGroup(groupId); }
+    PermissionGroup getGroupPermissionsGroup(String groupName)
+    { return inner.getGroupPermissionsGroup(groupName); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId)
-    { return inner.getGroupPermissionsGroupOrNew(groupId); }
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName)
+    { return inner.getGroupPermissionsGroupOrNew(groupName); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, long priority)
-    { return inner.getGroupPermissionsGroupOrNew(groupId, priority); }
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, long priority)
+    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, double priority)
-    { return inner.getGroupPermissionsGroupOrNew(groupId, priority); }
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, double priority)
+    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
 
     @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupId, String priorityAsString) throws InvalidPriorityException
-    { return inner.getGroupPermissionsGroupOrNew(groupId, priorityAsString); }
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, PermissionGroup.Priority priority)
+    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
+
+    @Override
+    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, String priorityAsString) throws InvalidPriorityException
+    { return inner.getGroupPermissionsGroupOrNew(groupName, priorityAsString); }
 
     @Override
     PermissionGroup getGroupPermissionsGroupFromSaveString(String saveString)
@@ -506,6 +538,34 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.assignPermission(permGroup, permission); }
 
     @Override
+    public void assignUserPermissions(ID userId, List<String> permissions)
+    { inner.assignUserPermissions(userId, permissions); }
+
+    @Override
+    public void assignUserPermissions(ID userId, String[] permissions)
+    { inner.assignUserPermissions(userId, permissions); }
+
+    @Override
+    public void assignGroupPermissions(String groupName, List<String> permissions)
+    { inner.assignGroupPermissions(groupName, permissions); }
+
+    @Override
+    public void assignGroupPermissions(String groupName, String[] permissions)
+    { inner.assignGroupPermissions(groupName, permissions); }
+
+    @Override
+    public void assignDefaultPermissions(List<String> permissions)
+    { inner.assignDefaultPermissions(permissions); }
+
+    @Override
+    public void assignDefaultPermissions(String[] permissions)
+    { inner.assignDefaultPermissions(permissions); }
+
+    @Override
+    protected void assignPermissions(PermissionGroup permGroup, List<String> permissions)
+    { inner.assignPermissions(permGroup, permissions); }
+
+    @Override
     public Permission revokeUserPermission(ID userId, String permission)
     { return inner.revokeUserPermission(userId, permission); }
 
@@ -522,36 +582,64 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.revokePermission(permGroup, permission); }
 
     @Override
-    public void assignGroupToUser(ID userId, String groupIdBeingAssigned)
-    { inner.assignGroupToUser(userId, groupIdBeingAssigned); }
+    public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
+    { inner.assignGroupToUser(userId, groupNameBeingAssigned); }
 
     @Override
-    public void assignGroupToGroup(String groupId, String groupIdBeingAssigned)
-    { inner.assignGroupToGroup(groupId, groupIdBeingAssigned); }
+    public void assignGroupToGroup(String groupName, String groupNameBeingAssigned)
+    { inner.assignGroupToGroup(groupName, groupNameBeingAssigned); }
 
     @Override
-    public void assignDefaultGroup(String groupIdBeingAssigned)
-    { inner.assignDefaultGroup(groupIdBeingAssigned); }
+    public void assignDefaultGroup(String groupNameBeingAssigned)
+    { inner.assignDefaultGroup(groupNameBeingAssigned); }
 
     @Override
-    protected void assignGroupTo(PermissionGroup permGroup, String groupIdBeingAssigned, boolean checkForCircular)
-    { inner.assignGroupTo(permGroup, groupIdBeingAssigned, checkForCircular); }
+    protected void assignGroupTo(PermissionGroup permGroup, String groupNameBeingAssigned, boolean checkForCircular)
+    { inner.assignGroupTo(permGroup, groupNameBeingAssigned, checkForCircular); }
 
     @Override
-    public boolean revokeGroupFromUser(ID userId, String groupIdBeingRevoked)
-    { return inner.revokeGroupFromUser(userId, groupIdBeingRevoked); }
+    public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
+    { inner.assignGroupsToUser(userId, groupNamesBeingAssigned); }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupIdBeingRevoked)
-    { return inner.revokeGroupFromGroup(groupId, groupIdBeingRevoked); }
+    public void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned)
+    { inner.assignGroupsToUser(userId, groupNamesBeingAssigned); }
 
     @Override
-    public boolean revokeDefaultGroup(String groupIdBeingRevoked)
-    { return inner.revokeDefaultGroup(groupIdBeingRevoked); }
+    public void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned)
+    { inner.assignGroupsToGroup(groupName, groupNamesBeingAssigned); }
 
     @Override
-    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupIdBeingRevoked)
-    { return inner.revokeGroupFrom(permGroup, groupIdBeingRevoked); }
+    public void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned)
+    { inner.assignGroupsToGroup(groupName, groupNamesBeingAssigned); }
+
+    @Override
+    public void assignDefaultGroups(List<String> groupNameBeingAssigned)
+    { inner.assignDefaultGroups(groupNameBeingAssigned); }
+
+    @Override
+    public void assignDefaultGroups(String[] groupNameBeingAssigned)
+    { inner.assignDefaultGroups(groupNameBeingAssigned); }
+
+    @Override
+    protected void assignGroupsTo(PermissionGroup permGroup, List<String> groupNamesBeingAssigned, boolean checkForCircular)
+    { inner.assignGroupsTo(permGroup, groupNamesBeingAssigned, checkForCircular); }
+
+    @Override
+    public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
+    { return inner.revokeGroupFromUser(userId, groupNameBeingRevoked); }
+
+    @Override
+    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
+    { return inner.revokeGroupFromGroup(groupId, groupNameBeingRevoked); }
+
+    @Override
+    public boolean revokeDefaultGroup(String groupNameBeingRevoked)
+    { return inner.revokeDefaultGroup(groupNameBeingRevoked); }
+
+    @Override
+    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupNameBeingRevoked)
+    { return inner.revokeGroupFrom(permGroup, groupNameBeingRevoked); }
 
     @Override
     public void clear()
