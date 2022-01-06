@@ -522,6 +522,10 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getUserPermissionsGroupFromSaveString(saveString); }
 
     @Override
+    public void absorb(PermissionsRegistry<ID> other)
+    { inner.absorb(other); }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     { return inner.assignUserPermission(userId, permission); }
 

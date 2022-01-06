@@ -2755,6 +2755,12 @@ public class PermissionsRegistryTest
     //endregion
 
     //region Mutators
+    //region Absorb
+
+    // TO DO: Write tests here.
+
+    //endregion
+
     //region Permissions
     //region Assign
     //region Single

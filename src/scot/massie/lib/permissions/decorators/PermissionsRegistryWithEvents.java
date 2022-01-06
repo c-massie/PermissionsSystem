@@ -164,6 +164,12 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
 
     //region Methods
     @Override
+    public void absorb(PermissionsRegistry<ID> other)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     {
         Permission oldValue = super.assignUserPermission(userId, permission);

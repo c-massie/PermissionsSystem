@@ -649,6 +649,13 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public void absorb(PermissionsRegistry<ID> other)
+    {
+        synchronized(inner)
+        { super.absorb(other); }
+    }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     {
         synchronized(inner)

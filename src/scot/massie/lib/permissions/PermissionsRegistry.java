@@ -2218,6 +2218,70 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Mutators
+    //region Absorb
+    /**
+     * Adds the users, groups, and default permissions from another permissions registry to this one.
+     * @apiNote Where the groups from the other permissions registry already exist in this one, priority will not be
+     *          overridden. But priority will be copied for groups that do not currently exist in this permissions
+     *          registry.
+     * @param other The permissions registry to absorb the information from.
+     */
+    public void absorb(PermissionsRegistry<ID> other)
+    {
+        absorbGroups(other);
+        absorbDefaults(other);
+        absorbUsers(other);
+        markAsModified();
+    }
+
+    /**
+     * Adds the groups of another permissions registry to this one.
+     * @apiNote Where groups already exist in this one, priority is not overridden.
+     * @param other The permissions registry to draw groups from.
+     */
+    private void absorbGroups(PermissionsRegistry<ID> other)
+    {
+        for(String groupName : other.getGroupNames())
+        {
+            // Copy group priorities from other to this if they don't already exist here.
+            // TO DO: Think about changing it to "if they don't already exist here OR if the current priority is 0L.
+            if(!assignableGroups.containsKey(groupName))
+                getGroupPermissionsGroupOrNew(groupName, other.getGroupPriorityAsObject(groupName));
+
+            assignGroupPermissions(groupName, other.getGroupPermissionsWithArgs(groupName));
+            assignGroupsToGroup(groupName, other.getGroupsOfGroup(groupName));
+        }
+
+        markAsModified();
+    }
+
+    /**
+     * Adds the default permissions/groups from another permissions registry to this one.
+     * @param other The permissions registry to draw default permissions/groups from.
+     */
+    private void absorbDefaults(PermissionsRegistry<ID> other)
+    {
+        assignDefaultPermissions(other.getDefaultPermissions());
+        assignDefaultGroups(other.getDefaultGroups());
+        markAsModified();
+    }
+
+    /**
+     * Adds the users and their permissions + groups from another permissions registry to this one.
+     * @param other The permissions registry to draw user information from.
+     */
+    private void absorbUsers(PermissionsRegistry<ID> other)
+    {
+        for(ID user : other.getUsers())
+        {
+            assignUserPermissions(user, other.getUserPermissions(user));
+            assignGroupsToUser(user, other.getGroupsOfUser(user));
+        }
+
+        markAsModified();
+    }
+    //endregion
+
     //region Permissions
     //region Assign
     //region Single
