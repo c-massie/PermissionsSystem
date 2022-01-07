@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -2399,6 +2400,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Revoke
+    //region Single
     /**
      * Removes a permission from a user.
      * @param userId The ID of the user to remove a permission from.
@@ -2411,13 +2413,13 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     /**
      * Removes a permission from a group.
-     * @param groupId The name of the group to remove a permission from.
+     * @param groupeName The name of the group to remove a permission from.
      * @param permission The permission to remove.
      * @return A Permission object representing the specified permission in the permissions registry, or null if there
      *         was none. (And thus was not removed)
      */
-    public Permission revokeGroupPermission(String groupId, String permission)
-    { return revokePermission(getGroupPermissionsGroup(groupId), permission); }
+    public Permission revokeGroupPermission(String groupeName, String permission)
+    { return revokePermission(getGroupPermissionsGroup(groupeName), permission); }
 
     /**
      * Removes a permission from the default permissions.
@@ -2443,6 +2445,44 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         markAsModified();
         return permGroup.removePermission(permission);
     }
+    //endregion
+
+    //region All
+    /**
+     * Removes all direct permissions from a user.
+     * @apiNote This only removes direct permissions. Groups and their permission this has indirectly will be left
+     *          untouched.
+     * @param userId The ID of the user to remove all permissions from.
+     */
+    public void revokeAllUserPermissions(ID userId)
+    { revokeAllPermissions(permissionsForUsers.get(userId)); }
+
+    /**
+     * Removes all direct permissions from a group.
+     * @apiNote This only removes direct permissions. Groups and their permission this has indirectly will be left
+     *          untouched.
+     * @param groupName The name of the group to remove all permissions from.
+     */
+    public void revokeAllGroupPermissions(String groupName)
+    { revokeAllPermissions(getGroupPermissionsGroup(groupName)); }
+
+    /**
+     * Removes all direct permissions from the default permissions.
+     * @apiNote This only removes direct permissions. Groups and their permission this has indirectly will be left
+     *          untouched.
+     */
+    public void revokeAllDefaultPermissions()
+    { revokeAllPermissions(defaultPermissions); }
+
+    /**
+     * Removes all direct permissions from the specified permission group object.
+     * @apiNote This only removes direct permissions. Groups and their permission this has indirectly will be left
+     *          untouched.
+     * @param permGroup The permission group object to remove all permissions from.
+     */
+    protected void revokeAllPermissions(PermissionGroup permGroup)
+    { if(permGroup != null) permGroup.clearPermissions(); }
+    //endregion
     //endregion
     //endregion
 
@@ -2580,6 +2620,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Revoke
+    //region Single
     /**
      * Deässigns a group from a user.
      * @param userId The ID of the user to deässign a group from.
@@ -2591,12 +2632,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     /**
      * Deässigns a group from another group.
-     * @param groupId The name of the group to deässign another group from.
+     * @param groupName The name of the group to deässign another group from.
      * @param groupNameBeingRevoked The name of the group to deässign.
      * @return True if a group was deässigned from the group as a result of this call. Otherwise, false.
      */
-    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
-    { return revokeGroupFrom(getGroupPermissionsGroup(groupId), groupNameBeingRevoked); }
+    public boolean revokeGroupFromGroup(String groupName, String groupNameBeingRevoked)
+    { return revokeGroupFrom(getGroupPermissionsGroup(groupName), groupNameBeingRevoked); }
 
     /**
      * Deässigns a group as a default group.
@@ -2626,6 +2667,37 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         return permGroup.removePermissionGroup(permGroupBeingRevoked);
     }
     //endregion
+
+    //region All
+
+    /**
+     * Removes all groups from a user.
+     * @param userId The ID of the user to remove all groups from.
+     */
+    public void revokeAllGroupsFromUser(ID userId)
+    { revokeAllGroups(permissionsForUsers.get(userId)); }
+
+    /**
+     * Removes all groups from a group.
+     * @param groupName The name of the groups to remove all groups from.
+     */
+    public void revokeAllGroupsFromGroup(String groupName)
+    { revokeAllGroups(getGroupPermissionsGroup(groupName)); }
+
+    /**
+     * Removes all groups from the default permissions.
+     */
+    public void revokeAllDefaultGroups()
+    { revokeAllGroups(defaultPermissions); }
+
+    /**
+     * Removes all referenced groups of the given permission group object.
+     * @param permGroup The permission group object to remove all groups from.
+     */
+    protected void revokeAllGroups(PermissionGroup permGroup)
+    { if(permGroup != null) permGroup.clearGroups(); }
+    //endregion
+    //endregion
     //endregion
 
     //region Clear
@@ -2637,6 +2709,249 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         permissionsForUsers.clear();
         assignableGroups.clear();
         defaultPermissions.clear();
+    }
+
+    /**
+     * Removes all users from this registry.
+     */
+    public void clearUsers()
+    { permissionsForUsers.clear(); }
+
+    /**
+     * Removes all information about the specified users from this registry.
+     * @param userIds The IDs of the users to remove information about.
+     */
+    public void clearUsers(Collection<ID> userIds)
+    {
+        for(ID userId : userIds)
+            permissionsForUsers.remove(userId);
+    }
+
+    /**
+     * Removes all information about the specified users from this registry.
+     * @param userIds The IDs of the users to remove information about.
+     */
+    public void clearUsers(ID[] userIds)
+    {
+        for(ID userId : userIds)
+            permissionsForUsers.remove(userId);
+    }
+
+    /**
+     * Removes all information about the specified user from this registry.
+     * @param userId The ID of the user to remove information about.
+     */
+    public void clearUser(ID userId)
+    {
+        permissionsForUsers.remove(userId);
+    }
+
+    /**
+     * Removes all groups from this registry. Users and the default permissions will no longer have any groups.
+     */
+    public void clearGroups()
+    {
+        assignableGroups.clear();
+        defaultPermissions.clearGroups();
+
+        for(PermissionGroup user : permissionsForUsers.values())
+            user.clearGroups();
+    }
+
+    /**
+     * Removes the specified groups from this registry. Users, the default permissions, and other not-specified groups
+     * will no longer have any of the specified groups.
+     * @param groupNames The names of the groups to remove.
+     */
+    public void clearGroups(Collection<String> groupNames)
+    {
+        Set<String> otherGroupsToCheckIfNeedingPruning = new HashSet<>();
+        Collection<PermissionGroup> groupObjs = new ArrayList<>();
+
+        for(String groupName : groupNames)
+        {
+            PermissionGroup groupObj = assignableGroups.remove(groupName);
+
+            if(groupObj == null)
+                continue;
+
+            groupObjs.add(groupObj);
+
+            otherGroupsToCheckIfNeedingPruning.addAll(groupObj.getPermissionGroups()
+                                                              .stream()
+                                                              .map(PermissionGroup::getName)
+                                                              .collect(Collectors.toList()));
+        }
+
+        for(PermissionGroup groupObj : groupObjs)
+            defaultPermissions.removePermissionGroup(groupObj);
+
+        for(PermissionGroup user : permissionsForUsers.values())
+            for(PermissionGroup groupObj : groupObjs)
+                user.removePermissionGroup(groupObj);
+
+        for(PermissionGroup otherGroup : assignableGroups.values())
+        {
+            boolean changed = false;
+
+            for(PermissionGroup groupObj : groupObjs)
+                changed = changed || otherGroup.removePermissionGroup(groupObj);
+
+            if(changed && otherGroup.isEmpty())
+                otherGroupsToCheckIfNeedingPruning.add(otherGroup.getName());
+        }
+
+        prune(otherGroupsToCheckIfNeedingPruning);
+    }
+
+    /**
+     * Removes the specified groups from this registry. Users, the default permissions, and other not-specified groups
+     * will no longer have any of the specified groups.
+     * @param groupNames The names of the groups to remove.
+     */
+    public void clearGroups(String[] groupNames)
+    { clearGroups(Arrays.asList(groupNames)); }
+
+    /**
+     * Removes the specified group from this registry. Users, the default permissions, and other not-specified groups
+     * will no longer have the specified group.
+     * @param groupName The name of the group to remove.
+     */
+    public void clearGroup(String groupName)
+    {
+        PermissionGroup groupObj = assignableGroups.remove(groupName);
+
+        if(groupObj == null)
+            return;
+
+        List<String> otherGroupsToCheckIfNeedingPruning = groupObj.getPermissionGroups()
+                                                                  .stream()
+                                                                  .map(PermissionGroup::getName)
+                                                                  .collect(Collectors.toCollection(ArrayList::new));
+
+        defaultPermissions.removePermissionGroup(groupObj);
+
+        for(PermissionGroup user : permissionsForUsers.values())
+            user.removePermissionGroup(groupObj);
+
+        for(PermissionGroup otherGroup : assignableGroups.values())
+            if(otherGroup.removePermissionGroup(groupObj) && otherGroup.isEmpty())
+                otherGroupsToCheckIfNeedingPruning.add(otherGroup.getName());
+
+        prune(otherGroupsToCheckIfNeedingPruning);
+    }
+
+    /**
+     * Removes all default permissions and groups.
+     */
+    public void clearDefaults()
+    { defaultPermissions.clear(); }
+
+    /**
+     * Removes all groups from this registry that are currently unused by any users, other groups, or the default
+     * permissions, and do not have any permissions or groups themselves.
+     */
+    protected void prune()
+    {
+        Iterator<Map.Entry<String, PermissionGroup>> iter = assignableGroups.entrySet().iterator();
+        List<String> groupNamesOnlyExistentInOtherGroups = new ArrayList<>();
+
+        for(Map.Entry<String, PermissionGroup> entry = iter.next(); iter.hasNext(); entry = iter.next())
+        {
+            // If the group is empty and isn't referenced by the default permissions or any users or other groups,
+            // remove it.
+
+            final String groupName = entry.getKey();
+
+            if(   !entry.getValue().isEmpty()
+               || defaultPermissions.hasGroupDirectly(groupName)
+               || permissionsForUsers.values().stream().anyMatch(x -> x.hasGroupDirectly(groupName)))
+            { continue; }
+
+            if(assignableGroups.values().stream().anyMatch(x -> x.hasGroupDirectly(groupName)))
+            {
+                groupNamesOnlyExistentInOtherGroups.add(groupName);
+                continue;
+            }
+
+            iter.remove();
+        }
+
+        // Go over groups that were only existent in other groups and remove them if they're no longer referenced by any
+        // other groups. Do this repeatedly until no groups are removed.
+        for(boolean groupRemoved = true; groupRemoved;)
+        {
+            groupRemoved = false;
+            Iterator<String> groupNamesIter = groupNamesOnlyExistentInOtherGroups.iterator();
+
+            while(groupNamesIter.hasNext())
+            {
+                final String groupName = groupNamesIter.next();
+
+                if(assignableGroups.values().stream().noneMatch(x -> x.hasGroupDirectly(groupName)))
+                {
+                    assignableGroups.remove(groupName);
+                    groupNamesIter.remove();
+                    groupRemoved = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes the specified groups from this registry that are currently unused by any users, other groups, or the
+     * default permissions, and do not have any permissions or groups themselves. Groups specified that *do* have any
+     * permissions or other groups, or are had by any users, other groups, or the default permissions, are unaffected.
+     * @param groupNames The names of the groups to remove if they match the aforementioned criteria.
+     */
+    protected void prune(Collection<String> groupNames)
+    {
+        Iterator<Map.Entry<String, PermissionGroup>> iter = assignableGroups.entrySet().iterator();
+        List<String> groupNamesOnlyExistentInOtherGroups = new ArrayList<>();
+
+        for(Map.Entry<String, PermissionGroup> entry = iter.next(); iter.hasNext(); entry = iter.next())
+        {
+            // If the group is empty and isn't referenced by the default permissions or any users or other groups,
+            // remove it.
+
+            final String groupName = entry.getKey();
+
+            if(!groupNames.contains(groupName))
+                continue;
+
+            if(   !entry.getValue().isEmpty()
+                  || defaultPermissions.hasGroupDirectly(groupName)
+                  || permissionsForUsers.values().stream().anyMatch(x -> x.hasGroupDirectly(groupName)))
+            { continue; }
+
+            if(assignableGroups.values().stream().anyMatch(x -> x.hasGroupDirectly(groupName)))
+            {
+                groupNamesOnlyExistentInOtherGroups.add(groupName);
+                continue;
+            }
+
+            iter.remove();
+        }
+
+        // Go over groups that were only existent in other groups and remove them if they're no longer referenced by any
+        // other groups. Do this repeatedly until no groups are removed.
+        for(boolean groupRemoved = true; groupRemoved;)
+        {
+            groupRemoved = false;
+            Iterator<String> groupNamesIter = groupNamesOnlyExistentInOtherGroups.iterator();
+
+            while(groupNamesIter.hasNext())
+            {
+                final String groupName = groupNamesIter.next();
+
+                if(assignableGroups.values().stream().noneMatch(x -> x.hasGroupDirectly(groupName)))
+                {
+                    assignableGroups.remove(groupName);
+                    groupNamesIter.remove();
+                    groupRemoved = true;
+                }
+            }
+        }
     }
     //endregion
 

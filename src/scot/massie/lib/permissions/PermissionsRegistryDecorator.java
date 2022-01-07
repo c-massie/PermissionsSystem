@@ -574,8 +574,8 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.revokeUserPermission(userId, permission); }
 
     @Override
-    public Permission revokeGroupPermission(String groupId, String permission)
-    { return inner.revokeGroupPermission(groupId, permission); }
+    public Permission revokeGroupPermission(String groupeName, String permission)
+    { return inner.revokeGroupPermission(groupeName, permission); }
 
     @Override
     public Permission revokeDefaultPermission(String permission)
@@ -634,8 +634,8 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.revokeGroupFromUser(userId, groupNameBeingRevoked); }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
-    { return inner.revokeGroupFromGroup(groupId, groupNameBeingRevoked); }
+    public boolean revokeGroupFromGroup(String groupName, String groupNameBeingRevoked)
+    { return inner.revokeGroupFromGroup(groupName, groupNameBeingRevoked); }
 
     @Override
     public boolean revokeDefaultGroup(String groupNameBeingRevoked)

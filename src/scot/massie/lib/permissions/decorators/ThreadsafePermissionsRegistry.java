@@ -726,10 +726,10 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
-    public Permission revokeGroupPermission(String groupId, String permission)
+    public Permission revokeGroupPermission(String groupeName, String permission)
     {
         synchronized(inner)
-        { return inner.revokeGroupPermission(groupId, permission); }
+        { return inner.revokeGroupPermission(groupeName, permission); }
     }
 
     @Override
@@ -810,10 +810,10 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
+    public boolean revokeGroupFromGroup(String groupName, String groupNameBeingRevoked)
     {
         synchronized(inner)
-        { return inner.revokeGroupFromGroup(groupId, groupNameBeingRevoked); }
+        { return inner.revokeGroupFromGroup(groupName, groupNameBeingRevoked); }
     }
 
     @Override

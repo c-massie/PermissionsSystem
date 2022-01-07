@@ -246,10 +246,10 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public Permission revokeGroupPermission(String groupId, String permission)
+    public Permission revokeGroupPermission(String groupeName, String permission)
     {
-        Permission r = super.revokeGroupPermission(groupId, permission);
-        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupId, permission, r));
+        Permission r = super.revokeGroupPermission(groupeName, permission);
+        permissionRevoked_internal.invoke(PermissionRevokedEventArgs.newAboutGroup(this, groupeName, permission, r));
         return r;
     }
 
@@ -331,10 +331,10 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
-    public boolean revokeGroupFromGroup(String groupId, String groupNameBeingRevoked)
+    public boolean revokeGroupFromGroup(String groupName, String groupNameBeingRevoked)
     {
-        boolean result = super.revokeGroupFromGroup(groupId, groupNameBeingRevoked);
-        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutGroup(this, groupId, groupNameBeingRevoked));
+        boolean result = super.revokeGroupFromGroup(groupName, groupNameBeingRevoked);
+        groupRevoked_internal.invoke(PermissionGroupRevokedEventArgs.newAboutGroup(this, groupName, groupNameBeingRevoked));
         return result;
     }
 

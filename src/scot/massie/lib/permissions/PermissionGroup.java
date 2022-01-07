@@ -798,6 +798,9 @@ public class PermissionGroup
 
     /**
      * Removes the specified permission from the permission group.
+     * @apiNote Only removes permissions directly in the permission group, does not affect the permissions of any
+     *          referenced group or the default permissions. If this permission group references a group with the
+     *          permission, this group will still "have" the permission, just not directly.
      * @see PermissionSet#remove(String)
      * @param permissionPath The permission to remove from this group.
      * @return A permission object representing the permission directly in the group at the given path, or null if there
@@ -836,6 +839,9 @@ public class PermissionGroup
      * Removes a permission group as a group referenced by this permission group. Disassociates it from this permission
      * group. This will mean the given permission group will no longer be able to be queried by this permission group
      * for permissions that this group itself does not have.
+     * @apiNote Only removes permission groups directly in this permission group, does not affect other permission
+     *          group or the default permissions. If this permission group references a group with the given group, this
+     *          group will still extend from that group, just not directly.
      * @param permissionGroup The permission group to remove as a group referenced by this one.
      * @return True if this permission group was modified as a result of this call. Otherwise, false.
      */
