@@ -1,5 +1,7 @@
 package scot.massie.lib.permissions;
 
+import scot.massie.lib.collections.iterables.IterableUtils;
+import scot.massie.lib.collections.iterables.ListUtils;
 import scot.massie.lib.events.EventListener;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
@@ -854,6 +856,33 @@ public class PermissionGroup
         }
         else
             return false;
+    }
+
+    /**
+     * Removes a permission group with the given name as a group referenced by this permission group. Disassociates it
+     * from this permission group. This will mean the specified group will no longer be able to be queried by this
+     * permission group for permissions that this group itself does not have.
+     * @apiNote Only removes permission groups directly in this permission group, does not affect other permission
+     *          group or the default permissions. If this permission group references a group with the given group, this
+     *          group will still extend from that group, just not directly.
+     * @param groupName The name of the permission group to remove as a group referenced by this one.
+     * @return True if this permission group was modified as a result of this call. Otherwise, false.
+     */
+    public boolean removePermissionGroup(String groupName)
+    {
+        PermissionGroup groupObj = null;
+
+        for(PermissionGroup g : referencedGroups)
+            if(g.name.equals(groupName))
+            {
+                groupObj = g;
+                break;
+            }
+
+        if(groupObj == null)
+            return false;
+
+        return removePermissionGroup(groupObj);
     }
     //endregion
 

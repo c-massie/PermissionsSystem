@@ -349,6 +349,10 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     { synchronized(mainSyncLock) { return referencedGroups.remove(permissionGroup); } }
 
     @Override
+    public boolean removePermissionGroup(String groupName)
+    { synchronized(mainSyncLock) { return referencedGroups.removeIf(x -> x.name.equals(groupName)); } }
+
+    @Override
     public void reassignPriority(long newPriority)
     {
         synchronized(mainSyncLock)

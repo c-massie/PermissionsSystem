@@ -2219,6 +2219,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     //endregion
 
     //region Mutators
+    //region Other registries
     //region Absorb
     /**
      * Adds the users, groups, and default permissions from another permissions registry to this one.
@@ -2281,6 +2282,29 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         markAsModified();
     }
+    //endregion
+
+    //region Remove contents of
+
+    // Is there a better name than "removeContentsOf"? Something like "Outsorb", but that isn't a word.
+
+    /**
+     * Removes the users, groups, and default permissions of another permissions registry from this one.
+     * @param other The permissions registry to remove the information in this one about.
+     */
+    public void removeContentsOf(PermissionsRegistry<ID> other)
+    {
+        for(String p : other.getDefaultPermissions())
+            defaultPermissions.removePermission(p);
+
+        for(String g : other.getDefaultGroups())
+            defaultPermissions.removePermissionGroup(g);
+
+        clearUsers(other.getUsers());
+        clearGroups(other.getGroupNames());
+        markAsModified();
+    }
+    //endregion
     //endregion
 
     //region Permissions
@@ -2481,7 +2505,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permGroup The permission group object to remove all permissions from.
      */
     protected void revokeAllPermissions(PermissionGroup permGroup)
-    { if(permGroup != null) permGroup.clearPermissions(); }
+    {
+        if(permGroup != null)
+            permGroup.clearPermissions();
+
+        markAsModified();
+    }
     //endregion
     //endregion
     //endregion
@@ -2695,7 +2724,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param permGroup The permission group object to remove all groups from.
      */
     protected void revokeAllGroups(PermissionGroup permGroup)
-    { if(permGroup != null) permGroup.clearGroups(); }
+    {
+        if(permGroup != null)
+            permGroup.clearGroups();
+
+        markAsModified();
+    }
     //endregion
     //endregion
     //endregion
@@ -2709,13 +2743,17 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         permissionsForUsers.clear();
         assignableGroups.clear();
         defaultPermissions.clear();
+        markAsModified();
     }
 
     /**
      * Removes all users from this registry.
      */
     public void clearUsers()
-    { permissionsForUsers.clear(); }
+    {
+        permissionsForUsers.clear();
+        markAsModified();
+    }
 
     /**
      * Removes all information about the specified users from this registry.
@@ -2725,6 +2763,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         for(ID userId : userIds)
             permissionsForUsers.remove(userId);
+
+        markAsModified();
     }
 
     /**
@@ -2735,6 +2775,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     {
         for(ID userId : userIds)
             permissionsForUsers.remove(userId);
+
+        markAsModified();
     }
 
     /**
@@ -2744,6 +2786,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
     public void clearUser(ID userId)
     {
         permissionsForUsers.remove(userId);
+        markAsModified();
     }
 
     /**
@@ -2756,6 +2799,8 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
         for(PermissionGroup user : permissionsForUsers.values())
             user.clearGroups();
+
+        markAsModified();
     }
 
     /**
@@ -2802,6 +2847,7 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
         }
 
         prune(otherGroupsToCheckIfNeedingPruning);
+        markAsModified();
     }
 
     /**
@@ -2839,13 +2885,17 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
                 otherGroupsToCheckIfNeedingPruning.add(otherGroup.getName());
 
         prune(otherGroupsToCheckIfNeedingPruning);
+        markAsModified();
     }
 
     /**
      * Removes all default permissions and groups.
      */
     public void clearDefaults()
-    { defaultPermissions.clear(); }
+    {
+        defaultPermissions.clear();
+        markAsModified();
+    }
 
     /**
      * Removes all groups from this registry that are currently unused by any users, other groups, or the default
