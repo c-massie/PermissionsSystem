@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -117,6 +118,8 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     @Override
     protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
+
         synchronized(mainSyncLock)
         {
             PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
@@ -144,6 +147,8 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     @Override
     protected PermissionSet.PermissionWithPath getMostRelevantPermission(List<String> permissionAsStrings)
     {
+        Objects.requireNonNull(permissionAsStrings, "permissionAsStrings should not be null.");
+
         synchronized(mainSyncLock)
         {
             PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsStrings);
@@ -203,6 +208,9 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     @Override
     protected boolean hasPermissionOrAnyUnder(String permissionPath, Predicate<PermissionSet.PermissionWithPath> check)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
+        Objects.requireNonNull(check, "check should not be null.");
+
         // Add check for where all permissions under the path are included because it's covered by something that covers
         // it.
         // Add optimisation where everything's negated.
@@ -251,18 +259,20 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     }
 
     @Override
-    public boolean hasGroup(String groupId)
+    public boolean hasGroup(String groupName)
     {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
+
         synchronized(mainSyncLock)
         {
             List<PermissionGroup> groups = new ArrayList<>(this.referencedGroups);
             groups.sort(priorityComparatorHighestFirst);
 
             for(PermissionGroup pg : groups)
-                if(pg.name.equals(groupId) || pg.hasGroup(groupId))
+                if(pg.name.equals(groupName) || pg.hasGroup(groupName))
                     return true;
 
-            if(defaultPermissions.name.equals(groupId) || defaultPermissions.hasGroup(groupId))
+            if(defaultPermissions.name.equals(groupName) || defaultPermissions.hasGroup(groupName))
                 return true;
         }
 
@@ -270,15 +280,17 @@ public class ThreadsafePermissionGroup extends PermissionGroup
     }
 
     @Override
-    public boolean hasGroupDirectly(String groupId)
+    public boolean hasGroupDirectly(String groupName)
     {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
+
         synchronized(mainSyncLock)
         {
             List<PermissionGroup> groups = new ArrayList<>(this.referencedGroups);
             groups.sort(priorityComparatorHighestFirst);
 
             for(PermissionGroup pg : groups)
-                if(pg.name.equals(groupId))
+                if(pg.name.equals(groupName))
                     return true;
         }
 
@@ -318,19 +330,30 @@ public class ThreadsafePermissionGroup extends PermissionGroup
 
     @Override
     public Permission addPermission(String permissionAsString) throws ParseException
-    { synchronized(mainSyncLock) { return super.addPermission(permissionAsString); } }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
+        synchronized(mainSyncLock) { return super.addPermission(permissionAsString); }
+    }
 
     @Override
     public Permission addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
-    { synchronized(mainSyncLock) { return super.addPermissionWhileDeIndenting(permissionAsString); } }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
+        synchronized(mainSyncLock) { return super.addPermissionWhileDeIndenting(permissionAsString); }
+    }
 
     @Override
     public Permission removePermission(String permissionPath)
-    { synchronized(mainSyncLock) { return super.removePermission(permissionPath); } }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
+        synchronized(mainSyncLock) { return super.removePermission(permissionPath); }
+    }
 
     @Override
     public void addPermissionGroup(PermissionGroup permGroup)
     {
+        Objects.requireNonNull(permGroup, "permGroup should not be null.");
+
         synchronized(mainSyncLock)
         {
             if(referencedGroups.contains(permGroup))
@@ -346,11 +369,17 @@ public class ThreadsafePermissionGroup extends PermissionGroup
 
     @Override
     public boolean removePermissionGroup(PermissionGroup permissionGroup)
-    { synchronized(mainSyncLock) { return referencedGroups.remove(permissionGroup); } }
+    {
+        Objects.requireNonNull(permissionGroup, "permissionGroup should not be null.");
+        synchronized(mainSyncLock) { return referencedGroups.remove(permissionGroup); }
+    }
 
     @Override
     public boolean removePermissionGroup(String groupName)
-    { synchronized(mainSyncLock) { return referencedGroups.removeIf(x -> x.name.equals(groupName)); } }
+    {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
+        synchronized(mainSyncLock) { return referencedGroups.removeIf(x -> x.name.equals(groupName)); }
+    }
 
     @Override
     public void reassignPriority(long newPriority)

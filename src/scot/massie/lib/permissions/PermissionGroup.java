@@ -182,11 +182,11 @@ public class PermissionGroup
         { return null; }
 
         @Override
-        public boolean hasGroupDirectly(String groupId)
+        public boolean hasGroupDirectly(String groupName)
         { return false; }
 
         @Override
-        public boolean hasGroup(String groupId)
+        public boolean hasGroup(String groupName)
         { return false; }
 
         @Override
@@ -399,6 +399,7 @@ public class PermissionGroup
      */
     protected PermissionSet.PermissionWithPath getMostRelevantPermission(String permissionAsString)
     {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
         PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsString);
 
         if(mrp != null)
@@ -435,6 +436,7 @@ public class PermissionGroup
      */
     protected PermissionSet.PermissionWithPath getMostRelevantPermission(List<String> permissionAsStrings)
     {
+        Objects.requireNonNull(permissionAsStrings, "permissionAsStrings should not be null.");
         PermissionSet.PermissionWithPath mrp = permissionSet.getMostRelevantPermission(permissionAsStrings);
 
         if(mrp != null)
@@ -475,6 +477,7 @@ public class PermissionGroup
      */
     public String getPermissionArg(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
         if(mrp == null)
@@ -491,6 +494,7 @@ public class PermissionGroup
      */
     public PermissionStatus getPermissionStatus(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
         boolean hasPermission;
         String permArg;
@@ -564,6 +568,7 @@ public class PermissionGroup
      */
     public boolean hasPermission(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
         if(mrp == null)
@@ -592,6 +597,9 @@ public class PermissionGroup
      */
     protected boolean hasPermissionOrAnyUnder(String permissionPath, Predicate<PermissionSet.PermissionWithPath> check)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
+        Objects.requireNonNull(check, "check should not be null");
+
         // Add check for where all permissions under the path are included because it's covered by something that covers
         // it.
         // Add optimisation where everything's negated.
@@ -651,6 +659,7 @@ public class PermissionGroup
      */
     public boolean negatesPermission(String permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
         if(mrp == null)
@@ -675,6 +684,7 @@ public class PermissionGroup
      */
     protected boolean negatesPermission(List<String> permissionPath)
     {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
         PermissionSet.PermissionWithPath mrp = getMostRelevantPermission(permissionPath);
 
         if(mrp == null)
@@ -687,19 +697,21 @@ public class PermissionGroup
      * <p>Whether or not this group directly or indirectly references a group with the given name.</p>
      *
      * <p>This takes into account groups references by groups references by this one, and so on.</p>
-     * @param groupId The name of the group to check to see if this references.
+     * @param groupName The name of the group to check to see if this references.
      * @return True if this group or any group referenced by this group directly or indirectly references a group by the
      *         given name. Otherwise, false.
      */
-    public boolean hasGroup(String groupId)
+    public boolean hasGroup(String groupName)
     {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
+
         for(PermissionGroup pg : referencedGroups)
-            if(pg.name.equals(groupId) || pg.hasGroup(groupId))
+            if(pg.name.equals(groupName) || pg.hasGroup(groupName))
                 return true;
 
         // If statement is a step before returning false, not part of the final statement.
         //noinspection RedundantIfStatement
-        if(defaultPermissions.name.equals(groupId) || defaultPermissions.hasGroup(groupId))
+        if(defaultPermissions.name.equals(groupName) || defaultPermissions.hasGroup(groupName))
             return true;
 
         return false;
@@ -709,13 +721,15 @@ public class PermissionGroup
      * <p>Whether or not this group directly references a group with the given name.</p>
      *
      * <p>This ignores the groups referenced by the groups referenced by this one.</p>
-     * @param groupId The name of the group to check to see if this references.
+     * @param groupName The name of the group to check to see if this references.
      * @return True if this group references a group by the given name. Otherwise, false.
      */
-    public boolean hasGroupDirectly(String groupId)
+    public boolean hasGroupDirectly(String groupName)
     {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
+
         for(PermissionGroup pg : referencedGroups)
-            if(pg.name.equals(groupId))
+            if(pg.name.equals(groupName))
                 return true;
 
         return false;
@@ -785,7 +799,10 @@ public class PermissionGroup
      * @throws ParseException If the provided permission was not parsable as a string.
      */
     public Permission addPermission(String permissionAsString) throws ParseException
-    { return permissionSet.set(permissionAsString); }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
+        return permissionSet.set(permissionAsString);
+    }
 
     /**
      * <p>Adds a permission to this permission group, after having deïndented the string by 4 spaces.</p>
@@ -796,7 +813,10 @@ public class PermissionGroup
      * @throws ParseException If the provided permission was not parsable as a string.
      */
     public Permission addPermissionWhileDeIndenting(String permissionAsString) throws ParseException
-    { return permissionSet.setWhileDeIndenting(permissionAsString); }
+    {
+        Objects.requireNonNull(permissionAsString, "permissionAsString should not be null.");
+        return permissionSet.setWhileDeIndenting(permissionAsString);
+    }
 
     /**
      * Removes the specified permission from the permission group.
@@ -809,7 +829,10 @@ public class PermissionGroup
      *         was none.
      */
     public Permission removePermission(String permissionPath)
-    { return permissionSet.remove(permissionPath); }
+    {
+        Objects.requireNonNull(permissionPath, "permissionPath should not be null.");
+        return permissionSet.remove(permissionPath);
+    }
     //endregion
 
     //region Permission groups
@@ -820,6 +843,7 @@ public class PermissionGroup
      */
     public void addPermissionGroup(PermissionGroup permGroup)
     {
+        Objects.requireNonNull(permGroup, "permGroup should not be null.");
         int index = Collections.binarySearch(referencedGroups, permGroup, priorityComparatorHighestFirst);
 
         if(index >= 0)
@@ -849,6 +873,7 @@ public class PermissionGroup
      */
     public boolean removePermissionGroup(PermissionGroup permissionGroup)
     {
+        Objects.requireNonNull(permissionGroup, "permissionGroup should not be null.");
         if(referencedGroups.remove(permissionGroup))
         {
             permissionGroup.priorityChanged.deregister(priorityChangedListener);
@@ -870,6 +895,7 @@ public class PermissionGroup
      */
     public boolean removePermissionGroup(String groupName)
     {
+        Objects.requireNonNull(groupName, "groupName should not be null.");
         PermissionGroup groupObj = null;
 
         for(PermissionGroup g : referencedGroups)
