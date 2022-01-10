@@ -11,6 +11,7 @@ import scot.massie.lib.permissions.events.args.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -170,6 +171,12 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
+    public void removeContentsOf(PermissionsRegistry<ID> other)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     {
         Permission oldValue = super.assignUserPermission(userId, permission);
@@ -262,6 +269,24 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
+    public void revokeAllUserPermissions(ID userId)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void revokeAllGroupPermissions(String groupName)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void revokeAllDefaultPermissions()
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     {
         super.assignGroupToUser(userId, groupNameBeingAssigned);
@@ -348,10 +373,82 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     }
 
     @Override
+    public void revokeAllGroupsFromUser(ID userId)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void revokeAllGroupsFromGroup(String groupName)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void revokeAllDefaultGroups()
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public void clear()
     {
         super.clear();
         cleared_internal.invoke(new PermissionsClearedEventArgs<>(this));
+    }
+
+    @Override
+    public void clearUsers()
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearUsers(Collection<ID> userIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearUsers(ID[] userIds)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearUser(ID userId)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearGroups()
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearGroups(Collection<String> groupNames)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearGroups(String[] groupNames)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearGroup(String groupName)
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
+    public void clearDefaults()
+    {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     @Override

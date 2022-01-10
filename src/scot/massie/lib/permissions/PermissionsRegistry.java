@@ -2899,9 +2899,10 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     /**
      * Removes all groups from this registry that are currently unused by any users, other groups, or the default
-     * permissions, and do not have any permissions or groups themselves.
+     * permissions, and do not have any permissions or groups themselves. That is, groups that do not functionally
+     * exist in this registry, but are left over from other operations.
      */
-    protected void prune()
+    public void prune()
     {
         Iterator<Map.Entry<String, PermissionGroup>> iter = assignableGroups.entrySet().iterator();
         List<String> groupNamesOnlyExistentInOtherGroups = new ArrayList<>();
@@ -2950,11 +2951,12 @@ public class PermissionsRegistry<ID extends Comparable<? super ID>>
 
     /**
      * Removes the specified groups from this registry that are currently unused by any users, other groups, or the
-     * default permissions, and do not have any permissions or groups themselves. Groups specified that *do* have any
+     * default permissions, and do not have any permissions or groups themselves. That is, groups that do not
+     * functionally exist in this registry, but are left over from other operations. Groups specified that *do* have any
      * permissions or other groups, or are had by any users, other groups, or the default permissions, are unaffected.
      * @param groupNames The names of the groups to remove if they match the aforementioned criteria.
      */
-    protected void prune(Collection<String> groupNames)
+    public void prune(Collection<String> groupNames)
     {
         Iterator<Map.Entry<String, PermissionGroup>> iter = assignableGroups.entrySet().iterator();
         List<String> groupNamesOnlyExistentInOtherGroups = new ArrayList<>();

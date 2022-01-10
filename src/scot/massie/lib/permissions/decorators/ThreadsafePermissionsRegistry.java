@@ -24,6 +24,15 @@ import java.util.function.Function;
 public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>>
         extends PermissionsRegistryDecorator<ID>
 {
+    /*
+
+    Regex for quickly replacing auto-generated references to super with synchronized references to inner.
+
+    find:         @Override\n    (.+)\n    \{\n        (return )?super(.+)\n    }
+    replace with: @Override\n    $1\n    {\n        synchronized(inner)\n        { $2inner$3 }\n    }
+
+     */
+
     //region Initialisation
     /**
      * Creates a new threadsafe permissions registry, with the ability to save to/load from files.
@@ -652,7 +661,14 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     public void absorb(PermissionsRegistry<ID> other)
     {
         synchronized(inner)
-        { super.absorb(other); }
+        { inner.absorb(other); }
+    }
+
+    @Override
+    public void removeContentsOf(PermissionsRegistry<ID> other)
+    {
+        synchronized(inner)
+        { inner.removeContentsOf(other); }
     }
 
     @Override
@@ -740,6 +756,27 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public void revokeAllUserPermissions(ID userId)
+    {
+        synchronized(inner)
+        { inner.revokeAllUserPermissions(userId); }
+    }
+
+    @Override
+    public void revokeAllGroupPermissions(String groupName)
+    {
+        synchronized(inner)
+        { inner.revokeAllGroupPermissions(groupName); }
+    }
+
+    @Override
+    public void revokeAllDefaultPermissions()
+    {
+        synchronized(inner)
+        { inner.revokeAllDefaultPermissions(); }
+    }
+
+    @Override
     public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     {
         synchronized(inner)
@@ -824,10 +861,108 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     }
 
     @Override
+    public void revokeAllGroupsFromUser(ID userId)
+    {
+        synchronized(inner)
+        { inner.revokeAllGroupsFromUser(userId); }
+    }
+
+    @Override
+    public void revokeAllGroupsFromGroup(String groupName)
+    {
+        synchronized(inner)
+        { inner.revokeAllGroupsFromGroup(groupName); }
+    }
+
+    @Override
+    public void revokeAllDefaultGroups()
+    {
+        synchronized(inner)
+        { inner.revokeAllDefaultGroups(); }
+    }
+
+    @Override
     public void clear()
     {
         synchronized(inner)
         { inner.clear(); }
+    }
+
+    @Override
+    public void clearUsers()
+    {
+        synchronized(inner)
+        { inner.clearUsers(); }
+    }
+
+    @Override
+    public void clearUsers(Collection<ID> userIds)
+    {
+        synchronized(inner)
+        { inner.clearUsers(userIds); }
+    }
+
+    @Override
+    public void clearUsers(ID[] userIds)
+    {
+        synchronized(inner)
+        { inner.clearUsers(userIds); }
+    }
+
+    @Override
+    public void clearUser(ID userId)
+    {
+        synchronized(inner)
+        { inner.clearUser(userId); }
+    }
+
+    @Override
+    public void clearGroups()
+    {
+        synchronized(inner)
+        { inner.clearGroups(); }
+    }
+
+    @Override
+    public void clearGroups(Collection<String> groupNames)
+    {
+        synchronized(inner)
+        { inner.clearGroups(groupNames); }
+    }
+
+    @Override
+    public void clearGroups(String[] groupNames)
+    {
+        synchronized(inner)
+        { inner.clearGroups(groupNames); }
+    }
+
+    @Override
+    public void clearGroup(String groupName)
+    {
+        synchronized(inner)
+        { inner.clearGroup(groupName); }
+    }
+
+    @Override
+    public void clearDefaults()
+    {
+        synchronized(inner)
+        { inner.clearDefaults(); }
+    }
+
+    @Override
+    public void prune()
+    {
+        synchronized(inner)
+        { inner.prune(); }
+    }
+
+    @Override
+    public void prune(Collection<String> groupNames)
+    {
+        synchronized(inner)
+        { inner.prune(groupNames); }
     }
 
     @Override

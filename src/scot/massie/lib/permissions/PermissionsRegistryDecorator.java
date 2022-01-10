@@ -18,6 +18,16 @@ import java.util.function.Function;
  */
 public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
 {
+    /*
+    
+    Regex for quickly replacing references to super with references to inner. Also makes auto-generated functions a
+    single line.
+    
+    find:         @Override\n    (.+)\n    \{\n        (return )?super(.+)\n    }
+    replace with: @Override\n    $1\n    { $2inner$3 }
+    
+     */
+    
     //region Instance fields
     /**
      * The permissions registry being decorated.
@@ -526,6 +536,10 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.absorb(other); }
 
     @Override
+    public void removeContentsOf(PermissionsRegistry<ID> other)
+    { inner.removeContentsOf(other); }
+
+    @Override
     public Permission assignUserPermission(ID userId, String permission)
     { return inner.assignUserPermission(userId, permission); }
 
@@ -584,6 +598,22 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     protected Permission revokePermission(PermissionGroup permGroup, String permission)
     { return inner.revokePermission(permGroup, permission); }
+
+    @Override
+    public void revokeAllUserPermissions(ID userId)
+    { inner.revokeAllUserPermissions(userId); }
+
+    @Override
+    public void revokeAllGroupPermissions(String groupName)
+    { inner.revokeAllGroupPermissions(groupName); }
+
+    @Override
+    public void revokeAllDefaultPermissions()
+    { inner.revokeAllDefaultPermissions(); }
+
+    @Override
+    protected void revokeAllPermissions(PermissionGroup permGroup)
+    { inner.revokeAllPermissions(permGroup); }
 
     @Override
     public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
@@ -646,8 +676,68 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.revokeGroupFrom(permGroup, groupNameBeingRevoked); }
 
     @Override
+    public void revokeAllGroupsFromUser(ID userId)
+    { inner.revokeAllGroupsFromUser(userId); }
+
+    @Override
+    public void revokeAllGroupsFromGroup(String groupName)
+    { inner.revokeAllGroupsFromGroup(groupName); }
+
+    @Override
+    public void revokeAllDefaultGroups()
+    { inner.revokeAllDefaultGroups(); }
+
+    @Override
+    protected void revokeAllGroups(PermissionGroup permGroup)
+    { inner.revokeAllGroups(permGroup); }
+
+    @Override
     public void clear()
     { inner.clear(); }
+
+    @Override
+    public void clearUsers()
+    { inner.clearUsers(); }
+
+    @Override
+    public void clearUsers(Collection<ID> userIds)
+    { inner.clearUsers(userIds); }
+
+    @Override
+    public void clearUsers(ID[] userIds)
+    { inner.clearUsers(userIds); }
+
+    @Override
+    public void clearUser(ID userId)
+    { inner.clearUser(userId); }
+
+    @Override
+    public void clearGroups()
+    { inner.clearGroups(); }
+
+    @Override
+    public void clearGroups(Collection<String> groupNames)
+    { inner.clearGroups(groupNames); }
+
+    @Override
+    public void clearGroups(String[] groupNames)
+    { inner.clearGroups(groupNames); }
+
+    @Override
+    public void clearGroup(String groupName)
+    { inner.clearGroup(groupName); }
+
+    @Override
+    public void clearDefaults()
+    { inner.clearDefaults(); }
+
+    @Override
+    public void prune()
+    { inner.prune(); }
+
+    @Override
+    public void prune(Collection<String> groupNames)
+    { inner.prune(groupNames); }
 
     @Override
     protected void markAsModified()
