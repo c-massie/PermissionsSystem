@@ -23,6 +23,9 @@ import java.util.function.Function;
  *          class, rather than vice versa - so that events are fired outwith that class' synchronisation locks. As
  *          ThreadsafePermissionsRegistry doesn't add any of its own methods, this also means not having to keep two
  *          separate decorated references to your {@link PermissionsRegistry}.
+ * @apiNote If this decorates another decorator, events do not fire for modifications made to the permissions registry
+ *          by an enclosed decorator, only for modifications made through this one. (including by decorators enclosing
+ *          this one)
  * @see scot.massie.lib.permissions.PermissionsRegistry
  * @param <ID>The type of the unique identifier used to represent users.
  */

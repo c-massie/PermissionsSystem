@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -69,6 +70,17 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     //endregion
 
     //region Methods
+    /**
+     * Performs an arbitrary operation on the permissions registry enclosed by this decorator, synchronous with this
+     * decorator's lock.
+     * @param operation The operation to perform, with the enclosed permissions registry passed in.
+     */
+    public void performOperationSynchronously(Consumer<PermissionsRegistry<ID>> operation)
+    {
+        synchronized(inner)
+        { operation.accept(inner); }
+    }
+
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
     {
