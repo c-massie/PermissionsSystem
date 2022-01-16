@@ -1,18 +1,79 @@
 package scot.massie.lib.permissions.decorators;
 
+import scot.massie.lib.collections.iterables.queues.EvictingHashMap;
+import scot.massie.lib.events.InvokableEvent;
+import scot.massie.lib.events.SetEvent;
+import scot.massie.lib.events.args.EventArgs;
 import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
-import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
-import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
-import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
+    // NOTE: Assertions are not cached.
+
+    private class Cache<TArg, TResult>
+    {
+        EvictingHashMap<TArg, TResult> cachedValues = null;
+
+        Function<TArg, TResult> resultGetter;
+
+        public Cache(Function<TArg, TResult> function)
+        {
+            this.resultGetter = function;
+            CachedPermissionsRegistry.this.cacheInvalidated.register(this::invalidate);
+        }
+
+        public TResult get(TArg arg)
+        {
+            if(cachedValues == null)
+                return (cachedValues = new EvictingHashMap<>()).put(arg, resultGetter.apply(arg));
+
+            return cachedValues.computeIfAbsent(arg, x -> resultGetter.apply(x));
+        }
+
+        public void invalidate()
+        { cachedValues = null; }
+    }
+
+    private class BiCache<TArg1, TArg2, TResult>
+    {
+        EvictingHashMap<TArg1, EvictingHashMap<TArg2, TResult>> cachedValues = null;
+
+        BiFunction<TArg1, TArg2, TResult> resultGetter;
+
+        public BiCache(BiFunction<TArg1, TArg2, TResult> function)
+        {
+            this.resultGetter = function;
+            CachedPermissionsRegistry.this.cacheInvalidated.register(this::invalidate);
+        }
+
+        public TResult get(TArg1 arg1, TArg2 arg2)
+        {
+            if(cachedValues == null)
+            {
+                return (cachedValues = new EvictingHashMap<>())
+                        .put(arg1, new EvictingHashMap<>())
+                        .put(arg2, resultGetter.apply(arg1, arg2));
+            }
+
+            return cachedValues.computeIfAbsent(arg1, x -> new EvictingHashMap<>())
+                               .computeIfAbsent(arg2, x -> resultGetter.apply(arg1, arg2));
+        }
+
+        public void invalidate()
+        { cachedValues = null; }
+    }
+
+    private final InvokableEvent<EventArgs> cacheInvalidated = new SetEvent<>();
+
     public CachedPermissionsRegistry(Function<ID, String> idToString,
                                      Function<String, ID> idFromString,
                                      Path usersFile,
@@ -26,178 +87,70 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     { super(inner); }
 
     public void invalidateCache()
-    {
-        // TO DO: Write
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
+    { cacheInvalidated.invoke(null); }
+
+    //region getUserPermissionStatus(ID userId, String permission) { ... }
+    BiCache<ID, String, PermissionStatus> uPStatusCache = new BiCache<>(inner::getUserPermissionStatus);
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getUserPermissionStatus(userId, permission);
-    }
+    { return uPStatusCache.get(userId, permission); }
+    //endregion
+
+    //region getGroupPermissionStatus(String groupName, String permission) { ... }
+    BiCache<String, String, PermissionStatus> gPStatusCache = new BiCache<>(inner::getGroupPermissionStatus);
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getGroupPermissionStatus(groupName, permission);
-    }
+    { return gPStatusCache.get(groupName, permission); }
+    //endregion
+
+    //region getDefaultPermissionStatus(String permission) { ... }
+    Cache<String, PermissionStatus> dPStatusCache = new Cache<>(inner::getDefaultPermissionStatus);
 
     @Override
     public PermissionStatus getDefaultPermissionStatus(String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getDefaultPermissionStatus(permission);
-    }
+    { return dPStatusCache.get(permission); }
+    //endregion
+
+    //region getUserPermissionStatuses(ID userId, Iterable<String> permissions)
+    BiCache<ID, Iterable<String>, Map<String, PermissionStatus>> uPStatusesCache
+            = new BiCache<>((a, b) -> Collections.unmodifiableMap(inner.getUserPermissionStatuses(a, b)));
 
     @Override
     public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getUserPermissionStatuses(userId, permissions);
-    }
+    { return uPStatusesCache.get(userId, permissions); }
 
     @Override
     public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getUserPermissionStatuses(userId, permissions);
-    }
+    { return getUserPermissionStatuses(userId, Arrays.asList(permissions)); }
+    //endregion
+
+    //region getGroupPermissionStatuses(String groupName, Iterable<String> permissions)
+    BiCache<String, Iterable<String>, Map<String, PermissionStatus>> gPStatusesCache
+            = new BiCache<>((a, b) -> Collections.unmodifiableMap(inner.getGroupPermissionStatuses(a, b)));
 
     @Override
     public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getGroupPermissionStatuses(groupName, permissions);
-    }
+    { return gPStatusesCache.get(groupName, permissions); }
 
     @Override
     public Map<String, PermissionStatus> getGroupPermissionStatuses(String groupName, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getGroupPermissionStatuses(groupName, permissions);
-    }
+    { return getGroupPermissionStatuses(groupName, Arrays.asList(permissions)); }
+    //endregion
+
+    //region getDefaultPermissionStatuses(Iterable<String> permissions)
+    Cache<Iterable<String>, Map<String, PermissionStatus>> dPStatusesCache
+            = new Cache<>(x -> Collections.unmodifiableMap(inner.getDefaultPermissionStatuses(x)));
 
     @Override
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getDefaultPermissionStatuses(permissions);
-    }
+    { return dPStatusesCache.get(permissions); }
 
     @Override
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getDefaultPermissionStatuses(permissions);
-    }
-
-    @Override
-    public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertUserHasPermission(userId, permission);
-    }
-
-    @Override
-    public void assertGroupHasPermission(String groupName, String permission) throws GroupMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertGroupHasPermission(groupName, permission);
-    }
-
-    @Override
-    public void assertIsDefaultPermission(String permission) throws PermissionNotDefaultException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertIsDefaultPermission(permission);
-    }
-
-    @Override
-    public void assertUserHasAllPermissions(ID userId, Iterable<String> permissions) throws UserMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertUserHasAllPermissions(userId, permissions);
-    }
-
-    @Override
-    public void assertUserHasAllPermissions(ID userId, String... permissions) throws UserMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertUserHasAllPermissions(userId, permissions);
-    }
-
-    @Override
-    public void assertGroupHasAllPermissions(String groupName, Iterable<String> permissions) throws GroupMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertGroupHasAllPermissions(groupName, permissions);
-    }
-
-    @Override
-    public void assertGroupHasAllPermissions(String groupName, String... permissions) throws GroupMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertGroupHasAllPermissions(groupName, permissions);
-    }
-
-    @Override
-    public void assertAllAreDefaultPermissions(Iterable<String> permissions) throws PermissionNotDefaultException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertAllAreDefaultPermissions(permissions);
-    }
-
-    @Override
-    public void assertAllAreDefaultPermissions(String... permissions) throws PermissionNotDefaultException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertAllAreDefaultPermissions(permissions);
-    }
-
-    @Override
-    public void assertUserHasAnyPermission(ID userId, Iterable<String> permissions) throws UserMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertUserHasAnyPermission(userId, permissions);
-    }
-
-    @Override
-    public void assertUserHasAnyPermission(ID userId, String... permissions) throws UserMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertUserHasAnyPermission(userId, permissions);
-    }
-
-    @Override
-    public void assertGroupHasAnyPermission(String groupName, Iterable<String> permissions) throws GroupMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertGroupHasAnyPermission(groupName, permissions);
-    }
-
-    @Override
-    public void assertGroupHasAnyPermission(String groupName, String... permissions) throws GroupMissingPermissionException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertGroupHasAnyPermission(groupName, permissions);
-    }
-
-    @Override
-    public void assertAnyAreDefaultPermission(Iterable<String> permissions) throws PermissionNotDefaultException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertAnyAreDefaultPermission(permissions);
-    }
-
-    @Override
-    public void assertAnyAreDefaultPermission(String... permissions) throws PermissionNotDefaultException
-    {
-        // TO DO: Replace with calls that check caches.
-        inner.assertAnyAreDefaultPermission(permissions);
-    }
+    { return getDefaultPermissionStatuses(Arrays.asList(permissions)); }
+    //endregion
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
