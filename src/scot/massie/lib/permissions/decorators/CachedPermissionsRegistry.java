@@ -152,297 +152,279 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     { return getDefaultPermissionStatuses(Arrays.asList(permissions)); }
     //endregion
 
+    //region boolean userHasPermission(ID userId, String permission)
+    BiCache<ID, String, Boolean> uHasPermissionCache = new BiCache<>(inner::userHasPermission);
+
     @Override
     public boolean userHasPermission(ID userId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasPermission(userId, permission);
-    }
+    { return uHasPermissionCache.get(userId, permission); }
+    //endregion
+
+    //region groupHasPermission(String groupName, String permission)
+    BiCache<String, String, Boolean> gHasPermissionCache = new BiCache<>(inner::groupHasPermission);
 
     @Override
     public boolean groupHasPermission(String groupName, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasPermission(groupName, permission);
-    }
+    { return gHasPermissionCache.get(groupName, permission); }
+    //endregion
+
+    //region isDefaultPermission(String permission)
+    Cache<String, Boolean> dHasPermissionCache = new Cache<>(inner::isDefaultPermission);
 
     @Override
     public boolean isDefaultPermission(String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.isDefaultPermission(permission);
-    }
+    { return dHasPermissionCache.get(permission); }
+    //endregion
+
+    //region userHasAllPermissions(ID userId, Iterable<String> permissions)
+    BiCache<ID, Iterable<String>, Boolean> uHasAllPermsCache = new BiCache<>(inner::userHasAllPermissions);
 
     @Override
     public boolean userHasAllPermissions(ID userId, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAllPermissions(userId, permissions);
-    }
+    { return uHasAllPermsCache.get(userId, permissions); }
 
     @Override
     public boolean userHasAllPermissions(ID userId, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAllPermissions(userId, permissions);
-    }
+    { return userHasAllPermissions(userId, Arrays.asList(permissions)); }
+    //endregion
+
+    //region groupHasAllPermissions(String groupName, Iterable<String> permissions)
+    BiCache<String, Iterable<String>, Boolean> gHasAllPermsCache = new BiCache<>(inner::groupHasAllPermissions);
 
     @Override
     public boolean groupHasAllPermissions(String groupName, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAllPermissions(groupName, permissions);
-    }
+    { return gHasAllPermsCache.get(groupName, permissions); }
 
     @Override
     public boolean groupHasAllPermissions(String groupName, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAllPermissions(groupName, permissions);
-    }
+    { return groupHasAllPermissions(groupName, Arrays.asList(permissions)); }
+    //endregion
+
+    //region areAllDefaultPermissions(Iterable<String> permissions)
+    Cache<Iterable<String>, Boolean> dHasAllPermsCache = new Cache<>(inner::areAllDefaultPermissions);
 
     @Override
     public boolean areAllDefaultPermissions(Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.areAllDefaultPermissions(permissions);
-    }
+    { return dHasAllPermsCache.get(permissions); }
 
     @Override
     public boolean areAllDefaultPermissions(String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.areAllDefaultPermissions(permissions);
-    }
+    { return areAllDefaultPermissions(Arrays.asList(permissions)); }
+    //endregion
+
+    //region userHasAnyPermissions(ID userId, Iterable<String> permissions)
+    BiCache<ID, Iterable<String>, Boolean> uHasAnyPermsCache = new BiCache<>(inner::userHasAnyPermissions);
 
     @Override
     public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnyPermissions(userId, permissions);
-    }
+    { return uHasAnyPermsCache.get(userId, permissions); }
 
     @Override
     public boolean userHasAnyPermissions(ID userId, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnyPermissions(userId, permissions);
-    }
+    { return userHasAnyPermissions(userId, Arrays.asList(permissions)); }
+    //endregion
+
+    //region groupHasAnyPermissions(String groupName, Iterable<String> permissions)
+    BiCache<String, Iterable<String>, Boolean> gHasAnyPermsCache = new BiCache<>(inner::groupHasAnyPermissions);
 
     @Override
     public boolean groupHasAnyPermissions(String groupName, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAnyPermissions(groupName, permissions);
-    }
+    { return gHasAnyPermsCache.get(groupName, permissions); }
 
     @Override
     public boolean groupHasAnyPermissions(String groupName, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAnyPermissions(groupName, permissions);
-    }
+    { return groupHasAnyPermissions(groupName, Arrays.asList(permissions)); }
+    //endregion
+
+    //region anyAreDefaultPermissions(Iterable<String> permissions)
+    Cache<Iterable<String>, Boolean> dHasAnyPermsCache = new Cache<>(inner::anyAreDefaultPermissions);
 
     @Override
     public boolean anyAreDefaultPermissions(Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.anyAreDefaultPermissions(permissions);
-    }
+    { return dHasAnyPermsCache.get(permissions); }
 
     @Override
     public boolean anyAreDefaultPermissions(String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.anyAreDefaultPermissions(permissions);
-    }
+    { return anyAreDefaultPermissions(Arrays.asList(permissions)); }
+    //endregion
+
+    //region userHasAnySubPermissionOf(ID userId, String permission)
+    BiCache<ID, String, Boolean> uHasAnySubPermsOfCache = new BiCache<>(inner::userHasAnySubPermissionOf);
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnySubPermissionOf(userId, permission);
-    }
+    { return uHasAnySubPermsOfCache.get(userId, permission); }
+    //endregion
+
+    //region userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
+    BiCache<ID, Iterable<String>, Boolean> uHasAnySubPermsOfMultipleCache = new BiCache<>(inner::userHasAnySubPermissionOf);
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnySubPermissionOf(userId, permissions);
-    }
+    { return uHasAnySubPermsOfMultipleCache.get(userId, permissions); }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnySubPermissionOf(userId, permissions);
-    }
+    { return userHasAnySubPermissionOf(userId, Arrays.asList(permissions)); }
+    //endregion
+
+    //region groupHasAnySubPermissionOf(String groupId, String permission)
+    BiCache<String, String, Boolean> gHasAnySubPermsOfCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAnySubPermissionOf(groupId, permission);
-    }
+    { return gHasAnySubPermsOfCache.get(groupId, permission); }
+    //endregion
+
+    //region groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
+    BiCache<String, Iterable<String>, Boolean> gHasAnySubPermsOfMultipleCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAnySubPermissionOf(groupId, permissions);
-    }
+    { return gHasAnySubPermsOfMultipleCache.get(groupId, permissions); }
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupHasAnySubPermissionOf(groupId, permissions);
-    }
+    { return groupHasAnySubPermissionOf(groupId, Arrays.asList(permissions)); }
+    //endregion
+
+    //region isOrAnySubPermissionOfIsDefault(String permission)
+    Cache<String, Boolean> dHasAnySubPermsOfCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
 
     @Override
     public boolean isOrAnySubPermissionOfIsDefault(String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.isOrAnySubPermissionOfIsDefault(permission);
-    }
+    { return dHasAnySubPermsOfCache.get(permission); }
+    //endregion
+
+    //region isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
+    Cache<Iterable<String>, Boolean> dHasAnySubPermsOfMultipleCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
 
     @Override
     public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.isOrAnySubPermissionOfIsDefault(permissions);
-    }
+    { return dHasAnySubPermsOfMultipleCache.get(permissions); }
 
     @Override
     public boolean isOrAnySubPermissionOfIsDefault(String... permissions)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.isOrAnySubPermissionOfIsDefault(permissions);
-    }
+    { return isOrAnySubPermissionOfIsDefault(Arrays.asList(permissions)); }
+    //endregion
+
+    //region getUserPermissionArg(ID userId, String permission)
+    BiCache<ID, String, String> uPArgCache = new BiCache<>(inner::getUserPermissionArg);
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getUserPermissionArg(userId, permission);
-    }
+    { return uPArgCache.get(userId, permission); }
+    //endregion
+
+    //region getGroupPermissionArg(String groupId, String permission)
+    BiCache<String, String, String> gPArgCache = new BiCache<>(inner::getGroupPermissionArg);
 
     @Override
     public String getGroupPermissionArg(String groupId, String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getGroupPermissionArg(groupId, permission);
-    }
+    { return gPArgCache.get(groupId, permission); }
+    //endregion
+
+    //region getDefaultPermissionArg(String permission)
+    Cache<String, String> dPArgCache = new Cache<>(inner::getDefaultPermissionArg);
 
     @Override
     public String getDefaultPermissionArg(String permission)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.getDefaultPermissionArg(permission);
-    }
+    { return dPArgCache.get(permission); }
+    //endregion
+
+    //region userHasGroup(ID userId, String groupName)
+    BiCache<ID, String, Boolean> uHasGroupCache = new BiCache<>(inner::userHasGroup);
 
     @Override
     public boolean userHasGroup(ID userId, String groupName)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasGroup(userId, groupName);
-    }
+    { return uHasGroupCache.get(userId, groupName); }
+    //endregion
+
+    //region groupExtendsFromGroup(String groupId, String superGroupName)
+    BiCache<String, String, Boolean> gHasGroupCache = new BiCache<>(inner::groupExtendsFromGroup);
 
     @Override
     public boolean groupExtendsFromGroup(String groupId, String superGroupName)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupExtendsFromGroup(groupId, superGroupName);
-    }
+    { return gHasGroupCache.get(groupId, superGroupName); }
+    //endregion
+
+    //region isDefaultGroup(String groupId)
+    Cache<String, Boolean> dHasGroupCache = new Cache<>(inner::isDefaultGroup);
 
     @Override
     public boolean isDefaultGroup(String groupId)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.isDefaultGroup(groupId);
-    }
+    { return dHasGroupCache.get(groupId); }
+    //endregion
+
+    //region userHasAllGroups(ID userId, Iterable<String> groupNames)
+    BiCache<ID, Iterable<String>, Boolean> uHasAllGroupsCache = new BiCache<>(inner::userHasAllGroups);
 
     @Override
     public boolean userHasAllGroups(ID userId, Iterable<String> groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAllGroups(userId, groupNames);
-    }
+    { return uHasAllGroupsCache.get(userId, groupNames); }
 
     @Override
     public boolean userHasAllGroups(ID userId, String... groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAllGroups(userId, groupNames);
-    }
+    { return userHasAllGroups(userId, Arrays.asList(groupNames)); }
+    //endregion
+
+    //region groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
+    BiCache<String, Iterable<String>, Boolean> gHasAllGroupsCache = new BiCache<>(inner::groupExtendsFromAllGroups);
 
     @Override
     public boolean groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupExtendsFromAllGroups(groupName, superGroupNames);
-    }
+    { return gHasAllGroupsCache.get(groupName, superGroupNames); }
 
     @Override
     public boolean groupExtendsFromAllGroups(String groupName, String... superGroupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupExtendsFromAllGroups(groupName, superGroupNames);
-    }
+    { return groupExtendsFromAllGroups(groupName, Arrays.asList(superGroupNames)); }
+    //endregion
+
+    //region areAllDefaultGroups(Iterable<String> groupNames)
+    Cache<Iterable<String>, Boolean> dHasAllGroupsCache = new Cache<>(inner::areAllDefaultGroups);
 
     @Override
     public boolean areAllDefaultGroups(Iterable<String> groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.areAllDefaultGroups(groupNames);
-    }
+    { return dHasAllGroupsCache.get(groupNames); }
 
     @Override
     public boolean areAllDefaultGroups(String... groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.areAllDefaultGroups(groupNames);
-    }
+    { return areAllDefaultGroups(Arrays.asList(groupNames)); }
+    //endregion
+
+    //region userHasAnyGroups(ID userId, Iterable<String> groupNames)
+    BiCache<ID, Iterable<String>, Boolean> uHasAnyGroupsCache = new BiCache<>(inner::userHasAnyGroups);
 
     @Override
     public boolean userHasAnyGroups(ID userId, Iterable<String> groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnyGroups(userId, groupNames);
-    }
+    { return uHasAnyGroupsCache.get(userId, groupNames); }
 
     @Override
     public boolean userHasAnyGroups(ID userId, String... groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.userHasAnyGroups(userId, groupNames);
-    }
+    { return userHasAnyGroups(userId, Arrays.asList(groupNames)); }
+    //endregion
+
+    //region groupExtendsFromAnyGroups(String groupName, Iterable<String> superGroupNames)
+    BiCache<String, Iterable<String>, Boolean> gHasAnyGroupsCache = new BiCache<>(inner::groupExtendsFromAnyGroups);
 
     @Override
     public boolean groupExtendsFromAnyGroups(String groupName, Iterable<String> superGroupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupExtendsFromAnyGroups(groupName, superGroupNames);
-    }
+    { return gHasAnyGroupsCache.get(groupName, superGroupNames); }
 
     @Override
     public boolean groupExtendsFromAnyGroups(String groupName, String... superGroupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.groupExtendsFromAnyGroups(groupName, superGroupNames);
-    }
+    { return groupExtendsFromAnyGroups(groupName, Arrays.asList(superGroupNames)); }
+    //endregion
+
+    //region anyAreDefaultGroups(Iterable<String> groupNames)
+    Cache<Iterable<String>, Boolean> dHasAnyGroupsCache = new Cache<>(inner::anyAreDefaultGroups);
 
     @Override
     public boolean anyAreDefaultGroups(Iterable<String> groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.anyAreDefaultGroups(groupNames);
-    }
+    { return dHasAnyGroupsCache.get(groupNames); }
 
     @Override
     public boolean anyAreDefaultGroups(String... groupNames)
-    {
-        // TO DO: Replace with calls that check caches.
-        return inner.anyAreDefaultGroups(groupNames);
-    }
+    { return anyAreDefaultGroups(Arrays.asList(groupNames)); }
+    //endregion
 }
