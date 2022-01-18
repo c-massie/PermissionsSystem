@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
+public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
     // NOTE: Assertions are not cached.
 
@@ -59,6 +59,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
         {
             if(cachedValues == null)
             {
+                //noinspection ConstantConditions
                 return (cachedValues = new EvictingHashMap<>())
                         .put(arg1, new EvictingHashMap<>())
                         .put(arg2, resultGetter.apply(arg1, arg2));
@@ -90,7 +91,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     { cacheInvalidated.invoke(null); }
 
     //region getUserPermissionStatus(ID userId, String permission) { ... }
-    BiCache<ID, String, PermissionStatus> uPStatusCache = new BiCache<>(inner::getUserPermissionStatus);
+    private final BiCache<ID, String, PermissionStatus> uPStatusCache = new BiCache<>(inner::getUserPermissionStatus);
 
     @Override
     public PermissionStatus getUserPermissionStatus(ID userId, String permission)
@@ -98,7 +99,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getGroupPermissionStatus(String groupName, String permission) { ... }
-    BiCache<String, String, PermissionStatus> gPStatusCache = new BiCache<>(inner::getGroupPermissionStatus);
+    private final BiCache<String, String, PermissionStatus> gPStatusCache = new BiCache<>(inner::getGroupPermissionStatus);
 
     @Override
     public PermissionStatus getGroupPermissionStatus(String groupName, String permission)
@@ -106,7 +107,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getDefaultPermissionStatus(String permission) { ... }
-    Cache<String, PermissionStatus> dPStatusCache = new Cache<>(inner::getDefaultPermissionStatus);
+    private final Cache<String, PermissionStatus> dPStatusCache = new Cache<>(inner::getDefaultPermissionStatus);
 
     @Override
     public PermissionStatus getDefaultPermissionStatus(String permission)
@@ -114,7 +115,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getUserPermissionStatuses(ID userId, Iterable<String> permissions)
-    BiCache<ID, Iterable<String>, Map<String, PermissionStatus>> uPStatusesCache
+    private final BiCache<ID, Iterable<String>, Map<String, PermissionStatus>> uPStatusesCache
             = new BiCache<>((a, b) -> Collections.unmodifiableMap(inner.getUserPermissionStatuses(a, b)));
 
     @Override
@@ -127,7 +128,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getGroupPermissionStatuses(String groupName, Iterable<String> permissions)
-    BiCache<String, Iterable<String>, Map<String, PermissionStatus>> gPStatusesCache
+    private final BiCache<String, Iterable<String>, Map<String, PermissionStatus>> gPStatusesCache
             = new BiCache<>((a, b) -> Collections.unmodifiableMap(inner.getGroupPermissionStatuses(a, b)));
 
     @Override
@@ -140,7 +141,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getDefaultPermissionStatuses(Iterable<String> permissions)
-    Cache<Iterable<String>, Map<String, PermissionStatus>> dPStatusesCache
+    private final Cache<Iterable<String>, Map<String, PermissionStatus>> dPStatusesCache
             = new Cache<>(x -> Collections.unmodifiableMap(inner.getDefaultPermissionStatuses(x)));
 
     @Override
@@ -153,7 +154,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region boolean userHasPermission(ID userId, String permission)
-    BiCache<ID, String, Boolean> uHasPermissionCache = new BiCache<>(inner::userHasPermission);
+    private final BiCache<ID, String, Boolean> uHasPermissionCache = new BiCache<>(inner::userHasPermission);
 
     @Override
     public boolean userHasPermission(ID userId, String permission)
@@ -161,7 +162,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupHasPermission(String groupName, String permission)
-    BiCache<String, String, Boolean> gHasPermissionCache = new BiCache<>(inner::groupHasPermission);
+    private final BiCache<String, String, Boolean> gHasPermissionCache = new BiCache<>(inner::groupHasPermission);
 
     @Override
     public boolean groupHasPermission(String groupName, String permission)
@@ -169,7 +170,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region isDefaultPermission(String permission)
-    Cache<String, Boolean> dHasPermissionCache = new Cache<>(inner::isDefaultPermission);
+    private final Cache<String, Boolean> dHasPermissionCache = new Cache<>(inner::isDefaultPermission);
 
     @Override
     public boolean isDefaultPermission(String permission)
@@ -177,7 +178,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAllPermissions(ID userId, Iterable<String> permissions)
-    BiCache<ID, Iterable<String>, Boolean> uHasAllPermsCache = new BiCache<>(inner::userHasAllPermissions);
+    private final BiCache<ID, Iterable<String>, Boolean> uHasAllPermsCache = new BiCache<>(inner::userHasAllPermissions);
 
     @Override
     public boolean userHasAllPermissions(ID userId, Iterable<String> permissions)
@@ -189,7 +190,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupHasAllPermissions(String groupName, Iterable<String> permissions)
-    BiCache<String, Iterable<String>, Boolean> gHasAllPermsCache = new BiCache<>(inner::groupHasAllPermissions);
+    private final BiCache<String, Iterable<String>, Boolean> gHasAllPermsCache = new BiCache<>(inner::groupHasAllPermissions);
 
     @Override
     public boolean groupHasAllPermissions(String groupName, Iterable<String> permissions)
@@ -201,7 +202,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region areAllDefaultPermissions(Iterable<String> permissions)
-    Cache<Iterable<String>, Boolean> dHasAllPermsCache = new Cache<>(inner::areAllDefaultPermissions);
+    private final Cache<Iterable<String>, Boolean> dHasAllPermsCache = new Cache<>(inner::areAllDefaultPermissions);
 
     @Override
     public boolean areAllDefaultPermissions(Iterable<String> permissions)
@@ -213,7 +214,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAnyPermissions(ID userId, Iterable<String> permissions)
-    BiCache<ID, Iterable<String>, Boolean> uHasAnyPermsCache = new BiCache<>(inner::userHasAnyPermissions);
+    private final BiCache<ID, Iterable<String>, Boolean> uHasAnyPermsCache = new BiCache<>(inner::userHasAnyPermissions);
 
     @Override
     public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
@@ -225,7 +226,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupHasAnyPermissions(String groupName, Iterable<String> permissions)
-    BiCache<String, Iterable<String>, Boolean> gHasAnyPermsCache = new BiCache<>(inner::groupHasAnyPermissions);
+    private final BiCache<String, Iterable<String>, Boolean> gHasAnyPermsCache = new BiCache<>(inner::groupHasAnyPermissions);
 
     @Override
     public boolean groupHasAnyPermissions(String groupName, Iterable<String> permissions)
@@ -237,7 +238,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region anyAreDefaultPermissions(Iterable<String> permissions)
-    Cache<Iterable<String>, Boolean> dHasAnyPermsCache = new Cache<>(inner::anyAreDefaultPermissions);
+    private final Cache<Iterable<String>, Boolean> dHasAnyPermsCache = new Cache<>(inner::anyAreDefaultPermissions);
 
     @Override
     public boolean anyAreDefaultPermissions(Iterable<String> permissions)
@@ -249,7 +250,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAnySubPermissionOf(ID userId, String permission)
-    BiCache<ID, String, Boolean> uHasAnySubPermsOfCache = new BiCache<>(inner::userHasAnySubPermissionOf);
+    private final BiCache<ID, String, Boolean> uHasAnySubPermsOfCache = new BiCache<>(inner::userHasAnySubPermissionOf);
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
@@ -257,7 +258,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
-    BiCache<ID, Iterable<String>, Boolean> uHasAnySubPermsOfMultipleCache = new BiCache<>(inner::userHasAnySubPermissionOf);
+    private final BiCache<ID, Iterable<String>, Boolean> uHasAnySubPermsOfMultipleCache = new BiCache<>(inner::userHasAnySubPermissionOf);
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, Iterable<String> permissions)
@@ -269,7 +270,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupHasAnySubPermissionOf(String groupId, String permission)
-    BiCache<String, String, Boolean> gHasAnySubPermsOfCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
+    private final BiCache<String, String, Boolean> gHasAnySubPermsOfCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, String permission)
@@ -277,7 +278,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
-    BiCache<String, Iterable<String>, Boolean> gHasAnySubPermsOfMultipleCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
+    private final BiCache<String, Iterable<String>, Boolean> gHasAnySubPermsOfMultipleCache = new BiCache<>(inner::groupHasAnySubPermissionOf);
 
     @Override
     public boolean groupHasAnySubPermissionOf(String groupId, Iterable<String> permissions)
@@ -289,7 +290,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region isOrAnySubPermissionOfIsDefault(String permission)
-    Cache<String, Boolean> dHasAnySubPermsOfCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
+    private final Cache<String, Boolean> dHasAnySubPermsOfCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
 
     @Override
     public boolean isOrAnySubPermissionOfIsDefault(String permission)
@@ -297,7 +298,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
-    Cache<Iterable<String>, Boolean> dHasAnySubPermsOfMultipleCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
+    private final Cache<Iterable<String>, Boolean> dHasAnySubPermsOfMultipleCache = new Cache<>(inner::isOrAnySubPermissionOfIsDefault);
 
     @Override
     public boolean isOrAnySubPermissionOfIsDefault(Iterable<String> permissions)
@@ -309,7 +310,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getUserPermissionArg(ID userId, String permission)
-    BiCache<ID, String, String> uPArgCache = new BiCache<>(inner::getUserPermissionArg);
+    private final BiCache<ID, String, String> uPArgCache = new BiCache<>(inner::getUserPermissionArg);
 
     @Override
     public String getUserPermissionArg(ID userId, String permission)
@@ -317,7 +318,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getGroupPermissionArg(String groupId, String permission)
-    BiCache<String, String, String> gPArgCache = new BiCache<>(inner::getGroupPermissionArg);
+    private final BiCache<String, String, String> gPArgCache = new BiCache<>(inner::getGroupPermissionArg);
 
     @Override
     public String getGroupPermissionArg(String groupId, String permission)
@@ -325,7 +326,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region getDefaultPermissionArg(String permission)
-    Cache<String, String> dPArgCache = new Cache<>(inner::getDefaultPermissionArg);
+    private final Cache<String, String> dPArgCache = new Cache<>(inner::getDefaultPermissionArg);
 
     @Override
     public String getDefaultPermissionArg(String permission)
@@ -333,7 +334,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasGroup(ID userId, String groupName)
-    BiCache<ID, String, Boolean> uHasGroupCache = new BiCache<>(inner::userHasGroup);
+    private final BiCache<ID, String, Boolean> uHasGroupCache = new BiCache<>(inner::userHasGroup);
 
     @Override
     public boolean userHasGroup(ID userId, String groupName)
@@ -341,7 +342,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupExtendsFromGroup(String groupId, String superGroupName)
-    BiCache<String, String, Boolean> gHasGroupCache = new BiCache<>(inner::groupExtendsFromGroup);
+    private final BiCache<String, String, Boolean> gHasGroupCache = new BiCache<>(inner::groupExtendsFromGroup);
 
     @Override
     public boolean groupExtendsFromGroup(String groupId, String superGroupName)
@@ -349,7 +350,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region isDefaultGroup(String groupId)
-    Cache<String, Boolean> dHasGroupCache = new Cache<>(inner::isDefaultGroup);
+    private final Cache<String, Boolean> dHasGroupCache = new Cache<>(inner::isDefaultGroup);
 
     @Override
     public boolean isDefaultGroup(String groupId)
@@ -357,7 +358,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAllGroups(ID userId, Iterable<String> groupNames)
-    BiCache<ID, Iterable<String>, Boolean> uHasAllGroupsCache = new BiCache<>(inner::userHasAllGroups);
+    private final BiCache<ID, Iterable<String>, Boolean> uHasAllGroupsCache = new BiCache<>(inner::userHasAllGroups);
 
     @Override
     public boolean userHasAllGroups(ID userId, Iterable<String> groupNames)
@@ -369,7 +370,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
-    BiCache<String, Iterable<String>, Boolean> gHasAllGroupsCache = new BiCache<>(inner::groupExtendsFromAllGroups);
+    private final BiCache<String, Iterable<String>, Boolean> gHasAllGroupsCache = new BiCache<>(inner::groupExtendsFromAllGroups);
 
     @Override
     public boolean groupExtendsFromAllGroups(String groupName, Iterable<String> superGroupNames)
@@ -381,7 +382,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region areAllDefaultGroups(Iterable<String> groupNames)
-    Cache<Iterable<String>, Boolean> dHasAllGroupsCache = new Cache<>(inner::areAllDefaultGroups);
+    private final Cache<Iterable<String>, Boolean> dHasAllGroupsCache = new Cache<>(inner::areAllDefaultGroups);
 
     @Override
     public boolean areAllDefaultGroups(Iterable<String> groupNames)
@@ -393,7 +394,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region userHasAnyGroups(ID userId, Iterable<String> groupNames)
-    BiCache<ID, Iterable<String>, Boolean> uHasAnyGroupsCache = new BiCache<>(inner::userHasAnyGroups);
+    private final BiCache<ID, Iterable<String>, Boolean> uHasAnyGroupsCache = new BiCache<>(inner::userHasAnyGroups);
 
     @Override
     public boolean userHasAnyGroups(ID userId, Iterable<String> groupNames)
@@ -405,7 +406,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region groupExtendsFromAnyGroups(String groupName, Iterable<String> superGroupNames)
-    BiCache<String, Iterable<String>, Boolean> gHasAnyGroupsCache = new BiCache<>(inner::groupExtendsFromAnyGroups);
+    private final BiCache<String, Iterable<String>, Boolean> gHasAnyGroupsCache = new BiCache<>(inner::groupExtendsFromAnyGroups);
 
     @Override
     public boolean groupExtendsFromAnyGroups(String groupName, Iterable<String> superGroupNames)
@@ -417,7 +418,7 @@ public class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extend
     //endregion
 
     //region anyAreDefaultGroups(Iterable<String> groupNames)
-    Cache<Iterable<String>, Boolean> dHasAnyGroupsCache = new Cache<>(inner::anyAreDefaultGroups);
+    private final Cache<Iterable<String>, Boolean> dHasAnyGroupsCache = new Cache<>(inner::anyAreDefaultGroups);
 
     @Override
     public boolean anyAreDefaultGroups(Iterable<String> groupNames)
