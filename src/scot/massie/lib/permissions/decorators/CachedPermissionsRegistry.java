@@ -4,13 +4,18 @@ import scot.massie.lib.collections.iterables.queues.EvictingHashMap;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.EventArgs;
+import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.PermissionGroup;
 import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -19,6 +24,7 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
 {
     // NOTE: Assertions are not cached.
 
+    //region Subclasses
     private class Cache<TArg, TResult>
     {
         EvictingHashMap<TArg, TResult> cachedValues = null;
@@ -72,9 +78,13 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
         public void invalidate()
         { cachedValues = null; }
     }
+    //endregion
 
+    //region Events
     private final InvokableEvent<EventArgs> cacheInvalidated = new SetEvent<>();
+    //endregion
 
+    //region initialisation
     public CachedPermissionsRegistry(Function<ID, String> idToString,
                                      Function<String, ID> idFromString,
                                      Path usersFile,
@@ -86,10 +96,14 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
 
     public CachedPermissionsRegistry(PermissionsRegistry<ID> inner)
     { super(inner); }
+    //endregion
 
+    //region methods
     public void invalidateCache()
     { cacheInvalidated.invoke(null); }
 
+    //region PermissionRegistry methods
+    //region Accessors
     //region getUserPermissionStatus(ID userId, String permission) { ... }
     private final BiCache<ID, String, PermissionStatus> uPStatusCache = new BiCache<>(inner::getUserPermissionStatus);
 
@@ -427,5 +441,379 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     @Override
     public boolean anyAreDefaultGroups(String... groupNames)
     { return anyAreDefaultGroups(Arrays.asList(groupNames)); }
+    //endregion
+    //endregion
+
+    //region Mutators
+    @Override
+    public void absorb(PermissionsRegistry<ID> other)
+    {
+        super.absorb(other);
+        invalidateCache();
+    }
+
+    @Override
+    public void removeContentsOf(PermissionsRegistry<ID> other)
+    {
+        super.removeContentsOf(other);
+        invalidateCache();
+    }
+
+    @Override
+    public Permission assignUserPermission(ID userId, String permission)
+    {
+        Permission result = super.assignUserPermission(userId, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public Permission assignGroupPermission(String groupId, String permission)
+    {
+        Permission result = super.assignGroupPermission(groupId, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public Permission assignDefaultPermission(String permission)
+    {
+        Permission result = super.assignDefaultPermission(permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    protected Permission assignPermission(PermissionGroup permGroup, String permission)
+    {
+        Permission result = super.assignPermission(permGroup, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public void assignUserPermissions(ID userId, List<String> permissions)
+    {
+        super.assignUserPermissions(userId, permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignUserPermissions(ID userId, String[] permissions)
+    {
+        super.assignUserPermissions(userId, permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, List<String> permissions)
+    {
+        super.assignGroupPermissions(groupName, permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupPermissions(String groupName, String[] permissions)
+    {
+        super.assignGroupPermissions(groupName, permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignDefaultPermissions(List<String> permissions)
+    {
+        super.assignDefaultPermissions(permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignDefaultPermissions(String[] permissions)
+    {
+        super.assignDefaultPermissions(permissions);
+        invalidateCache();
+    }
+
+    @Override
+    protected void assignPermissions(PermissionGroup permGroup, List<String> permissions)
+    {
+        super.assignPermissions(permGroup, permissions);
+        invalidateCache();
+    }
+
+    @Override
+    public Permission revokeUserPermission(ID userId, String permission)
+    {
+        Permission result = super.revokeUserPermission(userId, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public Permission revokeGroupPermission(String groupeName, String permission)
+    {
+        Permission result = super.revokeGroupPermission(groupeName, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public Permission revokeDefaultPermission(String permission)
+    {
+        Permission result = super.revokeDefaultPermission(permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    protected Permission revokePermission(PermissionGroup permGroup, String permission)
+    {
+        Permission result = super.revokePermission(permGroup, permission);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public void revokeAllUserPermissions(ID userId)
+    {
+        super.revokeAllUserPermissions(userId);
+        invalidateCache();
+    }
+
+    @Override
+    public void revokeAllGroupPermissions(String groupName)
+    {
+        super.revokeAllGroupPermissions(groupName);
+        invalidateCache();
+    }
+
+    @Override
+    public void revokeAllDefaultPermissions()
+    {
+        super.revokeAllDefaultPermissions();
+        invalidateCache();
+    }
+
+    @Override
+    protected void revokeAllPermissions(PermissionGroup permGroup)
+    {
+        super.revokeAllPermissions(permGroup);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
+    {
+        super.assignGroupToUser(userId, groupNameBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupToGroup(String groupName, String groupNameBeingAssigned)
+    {
+        super.assignGroupToGroup(groupName, groupNameBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignDefaultGroup(String groupNameBeingAssigned)
+    {
+        super.assignDefaultGroup(groupNameBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    protected void assignGroupTo(PermissionGroup permGroup, String groupNameBeingAssigned, boolean checkForCircular)
+    {
+        super.assignGroupTo(permGroup, groupNameBeingAssigned, checkForCircular);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
+    {
+        super.assignGroupsToUser(userId, groupNamesBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned)
+    {
+        super.assignGroupsToUser(userId, groupNamesBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned)
+    {
+        super.assignGroupsToGroup(groupName, groupNamesBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned)
+    {
+        super.assignGroupsToGroup(groupName, groupNamesBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignDefaultGroups(List<String> groupNameBeingAssigned)
+    {
+        super.assignDefaultGroups(groupNameBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    public void assignDefaultGroups(String[] groupNameBeingAssigned)
+    {
+        super.assignDefaultGroups(groupNameBeingAssigned);
+        invalidateCache();
+    }
+
+    @Override
+    protected void assignGroupsTo(PermissionGroup permGroup, List<String> groupNamesBeingAssigned, boolean checkForCircular)
+    {
+        super.assignGroupsTo(permGroup, groupNamesBeingAssigned, checkForCircular);
+        invalidateCache();
+    }
+
+    @Override
+    public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
+    {
+        boolean result = super.revokeGroupFromUser(userId, groupNameBeingRevoked);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public boolean revokeGroupFromGroup(String groupName, String groupNameBeingRevoked)
+    {
+        boolean result = super.revokeGroupFromGroup(groupName, groupNameBeingRevoked);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public boolean revokeDefaultGroup(String groupNameBeingRevoked)
+    {
+        boolean result = super.revokeDefaultGroup(groupNameBeingRevoked);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupNameBeingRevoked)
+    {
+        boolean result = super.revokeGroupFrom(permGroup, groupNameBeingRevoked);
+        invalidateCache();
+        return result;
+    }
+
+    @Override
+    public void revokeAllGroupsFromUser(ID userId)
+    {
+        super.revokeAllGroupsFromUser(userId);
+        invalidateCache();
+    }
+
+    @Override
+    public void revokeAllGroupsFromGroup(String groupName)
+    {
+        super.revokeAllGroupsFromGroup(groupName);
+        invalidateCache();
+    }
+
+    @Override
+    public void revokeAllDefaultGroups()
+    {
+        super.revokeAllDefaultGroups();
+        invalidateCache();
+    }
+
+    @Override
+    protected void revokeAllGroups(PermissionGroup permGroup)
+    {
+        super.revokeAllGroups(permGroup);
+        invalidateCache();
+    }
+
+    @Override
+    public void clear()
+    {
+        super.clear();
+        invalidateCache();
+    }
+
+    @Override
+    public void clearUsers()
+    {
+        super.clearUsers();
+        invalidateCache();
+    }
+
+    @Override
+    public void clearUsers(Collection<ID> userIds)
+    {
+        super.clearUsers(userIds);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearUsers(ID[] userIds)
+    {
+        super.clearUsers(userIds);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearUser(ID userId)
+    {
+        super.clearUser(userId);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearGroups()
+    {
+        super.clearGroups();
+        invalidateCache();
+    }
+
+    @Override
+    public void clearGroups(Collection<String> groupNames)
+    {
+        super.clearGroups(groupNames);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearGroups(String[] groupNames)
+    {
+        super.clearGroups(groupNames);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearGroup(String groupName)
+    {
+        super.clearGroup(groupName);
+        invalidateCache();
+    }
+
+    @Override
+    public void clearDefaults()
+    {
+        super.clearDefaults();
+        invalidateCache();
+    }
+
+    @Override
+    public void load() throws IOException
+    {
+        super.load();
+        invalidateCache();
+    }
+    //endregion
+    //endregion
     //endregion
 }
