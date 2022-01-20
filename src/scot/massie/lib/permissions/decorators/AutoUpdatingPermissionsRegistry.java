@@ -1,5 +1,6 @@
 package scot.massie.lib.permissions.decorators;
 
+import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 
@@ -65,7 +66,7 @@ public class AutoUpdatingPermissionsRegistry<ID extends Comparable<? super ID>> 
      * when prompted.
      * @param inner The wrapped permissions registry.
      */
-    public AutoUpdatingPermissionsRegistry(PermissionsRegistry<ID> inner)
+    public AutoUpdatingPermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
     { super(inner); }
 
     /**

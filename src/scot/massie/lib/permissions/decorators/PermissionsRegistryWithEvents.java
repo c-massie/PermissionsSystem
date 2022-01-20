@@ -5,6 +5,7 @@ import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.ProtectedEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 import scot.massie.lib.permissions.events.args.*;
@@ -26,7 +27,7 @@ import java.util.function.Function;
  * @apiNote If this decorates another decorator, events do not fire for modifications made to the permissions registry
  *          by an enclosed decorator, only for modifications made through this one. (including by decorators enclosing
  *          this one)
- * @see scot.massie.lib.permissions.PermissionsRegistry
+ * @see PermissionsRegistry
  * @param <ID>The type of the unique identifier used to represent users.
  */
 public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
@@ -162,7 +163,7 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
      * Wraps an existing permissions registry in a permissions registry with events, which will fire as appropriate.
      * @param inner The wrapped permissions registry.
      */
-    public PermissionsRegistryWithEvents(PermissionsRegistry<ID> inner)
+    public PermissionsRegistryWithEvents(GroupMapPermissionsRegistry<ID> inner)
     { super(inner); }
     //endregion
 

@@ -1,27 +1,52 @@
 package scot.massie.lib.permissions.decorators;
 
 import org.junit.jupiter.api.Test;
-import scot.massie.lib.permissions.PermissionsRegistry;
+import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
+import scot.massie.lib.permissions.GroupMapPermissionsRegistryTest;
 import scot.massie.lib.permissions.PermissionsRegistryTest;
-import scot.massie.lib.permissions.decorators.PermissionsRegistryWithEvents;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
+public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest<PermissionsRegistryWithEvents<String>>
 {
     @Override
-    protected PermissionsRegistry<String> getNewPermissionsRegistry()
+    protected PermissionsRegistryWithEvents<String> getNewPermissionsRegistry()
     { return new PermissionsRegistryWithEvents<>(s -> s, s -> s); }
 
-    protected PermissionsRegistryWithEvents<String> getNewPermissionsRegistryWithEvents()
-    { return new PermissionsRegistryWithEvents<>(s -> s, s -> s); }
+    @Override
+    protected void createUser(PermissionsRegistryWithEvents<String> reg, String userId)
+    {
+        // TO DO: Write.
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    @Override
+    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName)
+    {
+        // TO DO: Write.
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    @Override
+    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName, int priority)
+    {
+        // TO DO: Write.
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
+
+    @Override
+    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName, double priority)
+    {
+        // TO DO: Write.
+        throw new UnsupportedOperationException("Not yet implemented.");
+    }
 
     @Test
     void events_assignUserPermission()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionAssigned.register(args ->
@@ -41,7 +66,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_assignGroupPermission()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionAssigned.register(args ->
@@ -61,7 +86,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_assignDefaultPermission()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionAssigned.register(args ->
@@ -81,7 +106,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeUserPermission_permissionPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignUserPermission("doot", "first.second:someArg");
 
@@ -102,7 +127,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeUserPermission_permissionNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionRevoked.register(args ->
@@ -122,7 +147,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupPermission_permissionPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignGroupPermission("doot", "first.second:someArg");
 
@@ -143,7 +168,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupPermission_permissionNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionRevoked.register(args ->
@@ -163,7 +188,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeDefaultPermission_permissionPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignDefaultPermission("first.second:someArg");
 
@@ -184,7 +209,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeDefaultPermission_permissionNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.permissionRevoked.register(args ->
@@ -204,7 +229,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_assignGroupToUser()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupAssigned.register(args ->
@@ -224,7 +249,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_assignGroupToGroup()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupAssigned.register(args ->
@@ -244,7 +269,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_assignDefaultGroup()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupAssigned.register(args ->
@@ -264,7 +289,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupFromUser_groupPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignGroupToUser("doottarget", "dootgroup");
 
@@ -285,7 +310,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupFromUser_groupNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupRevoked.register(args ->
@@ -305,7 +330,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupFromGroup_groupPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignGroupToGroup("doottarget", "dootgroup");
 
@@ -326,7 +351,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeGroupFromGroup_groupNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupRevoked.register(args ->
@@ -346,7 +371,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeDefaultGroup_groupPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupRevoked.register(args ->
@@ -366,7 +391,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_revokeDefaultGroup_groupNotPresent()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.groupRevoked.register(args ->
@@ -386,7 +411,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_clear_empty()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
 
         reg.cleared.register(args ->
@@ -405,7 +430,7 @@ public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest
     @Test
     void events_clear_populated()
     {
-        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistryWithEvents();
+        PermissionsRegistryWithEvents<String> reg = getNewPermissionsRegistry();
         MutableWrapper<Boolean> happened = new MutableWrapper<>(false);
         reg.assignUserPermission("doot", "first.second.third");
         reg.assignGroupPermission("nootgroup", "eins.zwei.drei");

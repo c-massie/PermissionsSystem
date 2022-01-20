@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Base class for decorators of {@link PermissionsRegistry}.
+ * Base class for decorators of {@link GroupMapPermissionsRegistry}.
  * @param <ID> The user ID type of the permissions registry being decorated.
  */
-public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> extends PermissionsRegistry<ID>
+public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> extends GroupMapPermissionsRegistry<ID>
 {
     /*
     
@@ -32,12 +32,12 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     /**
      * The permissions registry being decorated.
      */
-    protected final PermissionsRegistry<ID> inner;
+    protected final GroupMapPermissionsRegistry<ID> inner;
     //endregion
 
     //region Initialisation
     /**
-     * Creates a new decorator, decorating a fresh instance of {@link PermissionsRegistry}.
+     * Creates a new decorator, decorating a fresh instance of {@link GroupMapPermissionsRegistry}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      * @param usersFile The filepath of the users permissions save file.
@@ -49,25 +49,25 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
                                         Path groupsFile)
     {
         super(idToString, idFromString, usersFile, groupsFile);
-        this.inner = new PermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile);
+        this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile);
     }
 
     /**
-     * Creates a new decorator, decorating a fresh instance of {@link PermissionsRegistry}.
+     * Creates a new decorator, decorating a fresh instance of {@link GroupMapPermissionsRegistry}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */
     public PermissionsRegistryDecorator(Function<ID, String> idToString, Function<String, ID> idFromString)
     {
         super(idToString, idFromString);
-        this.inner = new PermissionsRegistry<>(idToString, idFromString);
+        this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString);
     }
 
     /**
-     * Creates a new decorator, decorating the given instance of {@link PermissionsRegistry}.
-     * @param inner The instance of {@link PermissionsRegistry} to decorate.
+     * Creates a new decorator, decorating the given instance of {@link GroupMapPermissionsRegistry}.
+     * @param inner The instance of {@link GroupMapPermissionsRegistry} to decorate.
      */
-    public PermissionsRegistryDecorator(PermissionsRegistry<ID> inner)
+    public PermissionsRegistryDecorator(GroupMapPermissionsRegistry<ID> inner)
     {
         super(inner.getIdToStringFunction(),
               inner.getIdFromStringFunction(),
@@ -780,11 +780,11 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.loadGroups(); }
 
     @Override
-    protected void loadUsersFromSaveString(String saveString) throws IOException
+    public void loadUsersFromSaveString(String saveString) throws IOException
     { inner.loadUsersFromSaveString(saveString); }
 
     @Override
-    protected void loadGroupsFromSaveString(String saveString) throws IOException
+    public void loadGroupsFromSaveString(String saveString) throws IOException
     { inner.loadGroupsFromSaveString(saveString); }
 
     @Override

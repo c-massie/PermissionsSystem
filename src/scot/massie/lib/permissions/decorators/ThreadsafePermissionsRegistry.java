@@ -3,6 +3,7 @@ package scot.massie.lib.permissions.decorators;
 import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionGroup;
 import scot.massie.lib.permissions.PermissionStatus;
+import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
@@ -19,7 +20,7 @@ import java.util.function.Function;
 
 /**
  * <p>A {@link PermissionsRegistry permissions registry} decorator providing synchronous access.</p>
- * @see scot.massie.lib.permissions.PermissionsRegistry
+ * @see PermissionsRegistry
  * @param <ID>The type of the unique identifier used to represent users.
  */
 public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super ID>>
@@ -60,7 +61,7 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
      * Wraps an existing permissions registry in a threadsafe permissions registry, providing synchronous access to it.
      * @param inner The wrapped permissions registry.
      */
-    public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
+    public ThreadsafePermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
     {
         super(inner.getIdToStringFunction(),
               inner.getIdFromStringFunction(),

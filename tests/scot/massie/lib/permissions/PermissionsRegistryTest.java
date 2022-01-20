@@ -4,14 +4,12 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import scot.massie.lib.permissions.exceptions.MissingPermissionException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
-import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PermissionsRegistryTest
+public abstract class PermissionsRegistryTest<TPReg extends PermissionsRegistry<String>>
 {
     /*
 
@@ -30,8 +28,11 @@ public class PermissionsRegistryTest
 
      */
 
-    protected PermissionsRegistry<String> getNewPermissionsRegistry()
-    { return new PermissionsRegistry<>(s -> s, s -> s); }
+    protected abstract TPReg getNewPermissionsRegistry();
+    protected abstract void createUser(TPReg reg, String userId);
+    protected abstract void createGroup(TPReg reg, String groupName);
+    protected abstract void createGroup(TPReg reg, String groupName, int priority);
+    protected abstract void createGroup(TPReg reg, String groupName, double priority);
 
 
 
@@ -44,7 +45,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasPermission_has()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -55,7 +56,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasPermission_doesntHave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -75,7 +76,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasNone()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
 
         assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1",
@@ -97,7 +98,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasNoneOfOne()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
 
         assertThatThrownBy(() -> reg.assertUserHasAllPermissions("user1", "some.other.permission"))
@@ -113,7 +114,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasOneOfMultiple()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
 
@@ -135,7 +136,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasSome()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -157,7 +158,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasAllButOne()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -178,7 +179,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasAll()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.permission.doot");
@@ -193,7 +194,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAllPermissions_hasAllOfOne()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.permission.doot");
@@ -208,7 +209,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasNone()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
 
         assertThatThrownBy(() -> reg.assertUserHasAnyPermission("user1",
@@ -230,7 +231,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasNoneOfOne()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
 
         assertThatThrownBy(() -> reg.assertUserHasAnyPermission("user1", "some.permission.doot"))
@@ -246,7 +247,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasOneOfMultiple()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
 
@@ -260,7 +261,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasSome()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -275,7 +276,7 @@ public class PermissionsRegistryTest
     @Test
     void assertHasAnyPermissions_hasAll()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permissions");
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
@@ -297,7 +298,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_doesNotHave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
 
         PermissionStatus ps = reg.getUserPermissionStatus("user1", "some.other.perm");
@@ -318,7 +319,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_doesNotHave_hasSubpermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.perm.doot");
 
@@ -340,7 +341,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_doesNotHave_hasAllSubpermissionsViaWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.perm.*");
 
@@ -362,7 +363,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasDirectlyExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.perm: My perm arg.");
 
@@ -377,7 +378,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasDirectlyUnderOtherWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other: My perm arg.");
 
@@ -392,7 +393,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasDirectlyUnderWildcardWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.*: My perm arg.");
 
@@ -407,7 +408,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasDirectlyExactlyWithArg_hasDirectlyUnderOtherWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other: My parent perm arg.");
         reg.assignUserPermission("user1", "some.other.perm: My perm arg.");
@@ -423,7 +424,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasViaGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
@@ -439,7 +440,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasViaGroupsGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
@@ -456,7 +457,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasViaDefaultsExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignDefaultPermission("some.other.perm: My perm arg.");
 
@@ -471,7 +472,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_hasViaDefaultGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
         reg.assignDefaultGroup("group1");
@@ -487,7 +488,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedDirectlyExactly_hasViaGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
@@ -511,7 +512,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedDirectlyExactly_hasViaDefaultsExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignDefaultPermission("some.other.perm: My perm arg.");
         reg.assignUserPermission("user1", "-some.other.perm");
@@ -534,7 +535,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaGroupsGroupExactly()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
@@ -559,10 +560,10 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaHigherPriorityGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
-        reg.getGroupPermissionsGroupOrNew("group1", 10);
-        reg.getGroupPermissionsGroupOrNew("group2", 20);
+        createGroup(reg, "group1", 10);
+        createGroup(reg, "group2", 20);
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignGroupPermission("group1", "-some.other.perm");
@@ -579,10 +580,10 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedViaGroupExactly_hasViaLowerPriorityGroupExactlyWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
-        reg.getGroupPermissionsGroupOrNew("group1", 10);
-        reg.getGroupPermissionsGroupOrNew("group2", 20);
+        createGroup(reg, "group1", 10);
+        createGroup(reg, "group2", 20);
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignGroupPermission("group1", "some.other.perm: My perm arg.");
@@ -606,7 +607,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedDirectlySubpermission_hasDirectlySuperpermissionWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other: My perm arg.");
         reg.assignUserPermission("user1", "-some.other.perm");
@@ -629,7 +630,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissionStatus_negatedDirectlyCoveringWildcard_hasDirectlySameButNotWildcardWithArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other: My perm arg.");
         reg.assignUserPermission("user1", "-some.other.*");
@@ -655,7 +656,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_none()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1");
 
@@ -667,7 +668,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_single_doesntHave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.noot: permarg");
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1", "some.permission.doot");
@@ -683,7 +684,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_single_has()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot: permarg");
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1", "some.permission.doot");
@@ -699,7 +700,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_multiple_doesntHaveAny()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.noot: permarg");
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
@@ -722,7 +723,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_multiple_hasSome()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.noot: permarg");
         reg.assignUserPermission("user1", "some.permission.hoot: otharg");
         reg.assignUserPermission("user1", "some.permission.joot: morarg");
@@ -747,7 +748,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_multiple_hasAll()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.noot: permarg");
         reg.assignUserPermission("user1", "some.permission.doot: somarg");
         reg.assignUserPermission("user1", "some.permission.hoot: otharg");
@@ -774,7 +775,7 @@ public class PermissionsRegistryTest
     @Test
     void getPermissionStatuses_multiple_hasAllUnderSamePermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission: permarg");
 
         Map<String, PermissionStatus> permStatuses = reg.getUserPermissionStatuses("user1",
@@ -801,7 +802,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_none()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -812,7 +813,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_exact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -823,7 +824,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_atWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot.*");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -834,7 +835,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_underExact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -845,7 +846,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_underWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot.*");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -856,7 +857,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_overExact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -867,7 +868,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_overWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot.*");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -878,7 +879,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_root()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -889,7 +890,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_atUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "*");
         reg.assignUserPermission("user1", "some.permission.hoot");
@@ -901,7 +902,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_underUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "*");
         reg.assignUserPermission("user1", "some.permission.hoot");
@@ -913,7 +914,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negatedRedundantly_exact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "-some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -924,7 +925,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_exact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot");
@@ -936,7 +937,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_atWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot.*");
@@ -948,7 +949,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_underExact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot");
@@ -960,7 +961,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_underWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot.*");
@@ -972,7 +973,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_overExact()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot");
@@ -984,7 +985,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermission_negated_overWildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "-some.permission.hoot.noot.*");
@@ -1000,7 +1001,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1017,7 +1018,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1035,7 +1036,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1053,7 +1054,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negated()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1069,7 +1070,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negated_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1087,7 +1088,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negated_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1107,7 +1108,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_hasSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1127,7 +1128,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negatesSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1147,7 +1148,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negated_hasSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1167,7 +1168,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negated_negatesSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1189,7 +1190,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_universal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1208,7 +1209,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_universal_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1228,7 +1229,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_universal_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1248,7 +1249,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negatedUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1267,7 +1268,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negatedUniversal_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1289,7 +1290,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroup_negatedUniversal_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -1315,7 +1316,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1334,7 +1335,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1355,7 +1356,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1376,7 +1377,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negated()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1395,7 +1396,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negated_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1416,7 +1417,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negated_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1439,7 +1440,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_hasSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1463,7 +1464,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negatesSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1487,7 +1488,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negated_hasSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1511,7 +1512,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negated_negatesSubPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1537,7 +1538,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_universal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1560,7 +1561,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_universal_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1585,7 +1586,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_universal_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1610,7 +1611,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negatedUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1633,7 +1634,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negatedUniversal_independentlyHasPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1658,7 +1659,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasPermissionViaGroupViaGroup_negatedUniversal_negatesPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("group1", "group2");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "europe.austria.vienna");
@@ -1688,7 +1689,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasNone()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
 
         assertThat(reg.userHasAllPermissions("user1",
@@ -1702,7 +1703,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasSome()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -1718,7 +1719,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasAllDirectly()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.noot");
@@ -1736,7 +1737,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaGroups()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
         reg.assignUserPermission("user1", "some.irrelevant.permission");
@@ -1755,7 +1756,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
         reg.assignUserPermission("user1", "some.irrelevant.permission");
@@ -1773,7 +1774,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllPermissions_hasSomeDirectly_restViaSuperpermissions()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -1793,7 +1794,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasNone()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
 
         assertThat(reg.userHasAnyPermissions("user1",
@@ -1807,7 +1808,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasSome()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -1823,7 +1824,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasAll()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.noot");
@@ -1841,7 +1842,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasSomeViaGroups()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "some.permission.doot");
@@ -1858,7 +1859,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasSomeViaDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignDefaultPermission("some.permission.doot");
         reg.assignDefaultPermission("some.other.permission");
@@ -1874,7 +1875,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyPermissions_hasSomeViaSuperpermissions()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.irrelevant.permission");
         reg.assignUserPermission("user1", "some.permission");
 
@@ -1892,14 +1893,14 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_none()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertFalse(reg.userHasAnySubPermissionOf("user1", "my.perm"));
     }
 
     @Test
     public void hasAnySubPermissionOf_direct()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "my.perm");
 
         assertTrue(reg.userHasAnySubPermissionOf("user1", "my.perm"));
@@ -1910,7 +1911,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_inherited()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "my.perm");
 
@@ -1922,7 +1923,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_negatedSame()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "this.is.a.perm");
         reg.assignUserPermission("user1", "-this.is.a.perm");
@@ -1935,7 +1936,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_negatedUnder()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "this.is.a");
         reg.assignUserPermission("user1", "-this.is.a.perm");
@@ -1949,7 +1950,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_negatedOver()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "this.is.a");
         reg.assignUserPermission("user1", "-this.is");
@@ -1963,7 +1964,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_negatedSameStar()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "this.is.a.perm");
         reg.assignUserPermission("user1", "-this.is.a.perm.*");
@@ -1976,7 +1977,7 @@ public class PermissionsRegistryTest
     @Test
     public void hasAnySubPermissionOf_negatedAboveStar()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "this.is.a.perm");
         reg.assignUserPermission("user1", "-this.is.a.*");
@@ -1993,7 +1994,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin: doot");
 
@@ -2003,7 +2004,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_empty()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin:");
 
@@ -2013,7 +2014,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_noArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2023,7 +2024,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_noPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2033,7 +2034,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_universal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
         reg.assignUserPermission("user1", "*: doot");
@@ -2047,7 +2048,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_acrossHierarchy()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2069,7 +2070,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_acrossHierarchy_negatingMiddle()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2093,7 +2094,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_acrossHierarchy_withUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2113,7 +2114,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_acrossHierarchy_withUniversalAndNegatingMiddle()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
 
@@ -2140,7 +2141,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_notOverwritten()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2153,7 +2154,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_notOverwrittenTwice()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2169,7 +2170,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_negated()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2184,7 +2185,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_negatedBySubGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2201,7 +2202,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_different()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2216,7 +2217,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_subgroupNegatesUserDifferent()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2234,7 +2235,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_noArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2249,7 +2250,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwriting_subgroupNegatesUserNoArg()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignUserPermission("user1", "europe.austria.vienna");
         reg.assignUserPermission("user1", "europe.germany.berlin");
@@ -2267,7 +2268,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighest()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2288,7 +2289,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowest()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2310,7 +2311,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithNegation()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2332,7 +2333,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithNegation()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2354,7 +2355,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2376,7 +2377,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2398,7 +2399,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userHighestWithUniversalAndNegation()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2420,7 +2421,7 @@ public class PermissionsRegistryTest
     @Test
     public void getUserPermissionArg_overwritingAcrossHierarchy_userLowestWithUniversalAndNegation()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToGroup("group1", "group2");
         reg.assignUserPermission("user1", "europe.austria.vienna");
@@ -2447,11 +2448,11 @@ public class PermissionsRegistryTest
     @Test
     public void hasGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("red", "blue");
         reg.assignGroupToGroup("green", "red");
         reg.assignGroupToGroup("cyan", "green");
-        reg.getGroupPermissionsGroupOrNew("yellow");
+        createGroup(reg, "yellow");
         reg.assignGroupToUser("user1", "green");
 
         assertFalse(reg.userHasGroup("user1", "cyan"));
@@ -2466,7 +2467,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllGroups_none()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         assertThat(reg.userHasAllGroups("user1", "group1", "group2", "group3", "group4"))
                 .isFalse();
@@ -2475,7 +2476,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllGroups_some()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
 
@@ -2486,7 +2487,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllGroups_all()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignGroupToUser("user1", "group3");
@@ -2499,7 +2500,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllGroups_allViaOtherGroups()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignGroupToGroup("group2", "group3");
@@ -2512,7 +2513,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAllGroups_allViaDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignDefaultGroup("group3");
@@ -2528,7 +2529,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyGroups_none()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         assertThat(reg.userHasAnyGroups("user1", "group1", "group2", "group3", "group4"))
                 .isFalse();
@@ -2537,7 +2538,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyGroups_some()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
 
@@ -2548,7 +2549,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyGroups_someViaDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultGroup("group1");
         reg.assignDefaultGroup("group2");
 
@@ -2559,7 +2560,7 @@ public class PermissionsRegistryTest
     @Test
     void hasAnyGroups_all()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupToUser("user1", "group2");
         reg.assignGroupToUser("user1", "group3");
@@ -2590,14 +2591,14 @@ public class PermissionsRegistryTest
     @Test
     public void getUsers_empty()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertThat(reg.getUsers()).isEmpty();
     }
 
     @Test
     public void getUsers()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("userdoot", "my.first.perm");
         reg.assignUserPermission("userhoot", "my.second.perm");
         reg.assignUserPermission("usernoot", "my.third.perm");
@@ -2612,7 +2613,7 @@ public class PermissionsRegistryTest
     @Test
     void getAllPermissionStatuses_userDoesntExist()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         Collection<PermissionStatus> pstatuses = reg.getAllUserPermissionStatuses("user1");
 
@@ -2622,8 +2623,8 @@ public class PermissionsRegistryTest
     @Test
     void getAllPermissionStatuses_userHasNone()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getUserPermissionsGroupOrNew("user1");
+        TPReg reg = getNewPermissionsRegistry();
+        createUser(reg, "user1");
 
         Collection<PermissionStatus> pstatuses = reg.getAllUserPermissionStatuses("user1");
 
@@ -2633,7 +2634,7 @@ public class PermissionsRegistryTest
     @Test
     void getAllPermissionStatuses_userHasSomeDirectly()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission");
         reg.assignUserPermission("user1", "some.other.permission");
         reg.assignUserPermission("user1", "yet.another.permission");
@@ -2649,7 +2650,7 @@ public class PermissionsRegistryTest
     {
         // This method shouldn't include permissions a user has indirectly.
 
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "some.permission");
         reg.assignGroupPermission("group1", "some.other.permission");
@@ -2663,7 +2664,7 @@ public class PermissionsRegistryTest
     {
         // This method shouldn't include permissions a user has indirectly.
 
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         reg.assignDefaultPermission("some.permission");
         reg.assignDefaultPermission("some.other.permission");
@@ -2678,14 +2679,14 @@ public class PermissionsRegistryTest
     @Test
     public void getGroupNames_empty()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertThat(reg.getGroupNames()).isEmpty();
     }
 
     @Test
     public void getGroupNames()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupPermission("groupdoot", "my.first.perm");
         reg.assignGroupPermission("grouphoot", "my.second.perm");
         reg.assignGroupPermission("groupnoot", "my.third.perm");
@@ -2699,14 +2700,14 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissions_noUser()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertThat(reg.getUserPermissions("nonexistentuser")).isEmpty();
     }
 
     @Test
     public void getPermissions()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("userdoot", "europe.france.paris");
         reg.assignUserPermission("userhoot", "europe.germany.berlin");
         reg.assignUserPermission("userhoot", "europe.greece.athens");
@@ -2722,7 +2723,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissions_withNegating()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("userdoot", "europe.france.paris");
         reg.assignUserPermission("userhoot", "europe.germany.berlin");
         reg.assignUserPermission("userhoot", "-europe.greece.athens");
@@ -2738,7 +2739,7 @@ public class PermissionsRegistryTest
     @Test
     public void getPermissions_withArgs()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("userdoot", "europe.france.paris");
         reg.assignUserPermission("userhoot", "europe.germany.berlin");
         reg.assignUserPermission("userhoot", "europe.greece.athens: Where the parthenon is");
@@ -2767,7 +2768,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
 
@@ -2778,7 +2779,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermission_negating()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "-some.permission.doot");
         reg.assignUserPermission("user1", "some.other.permission");
 
@@ -2789,7 +2790,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermission_wildcard()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot.*");
         reg.assignUserPermission("user1", "some.other.permission");
 
@@ -2800,7 +2801,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermission_universal()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "*");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -2812,7 +2813,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermission_universalNegating()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "-*");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -2824,7 +2825,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignPermissionToGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupPermission("group1", "some.permission.doot");
         reg.assignGroupPermission("group1", "some.other.permission");
 
@@ -2845,7 +2846,7 @@ public class PermissionsRegistryTest
     @Test
     public void revokePermission()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -2864,7 +2865,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignGroupToUser()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignUserPermission("user1", "some.permission.hoot");
         reg.assignUserPermission("user1", "some.other.permission");
@@ -2883,7 +2884,7 @@ public class PermissionsRegistryTest
     @Test
     public void assignGroupToGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupPermission("group1", "some.permission.hoot");
         reg.assignGroupPermission("group1", "some.other.permission");
@@ -2915,7 +2916,7 @@ public class PermissionsRegistryTest
     @Test
     void revokeGroupFromUser_had()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToUser("user1", "group1");
         assertThat(reg.userHasGroup("user1", "group1"))
                 .withFailMessage("Failed initial test set-up - .userHasGroup did not return true after assigning the "
@@ -2929,7 +2930,7 @@ public class PermissionsRegistryTest
     @Test
     void revokeGroupFromUser_didntHave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertThat(reg.userHasGroup("user1", "group1"))
                 .withFailMessage("Failed initial test set-up - .userHasGroup did not return false despite having not "
                                  + "assigned the group to the user.")
@@ -2942,7 +2943,7 @@ public class PermissionsRegistryTest
     @Test
     void revokeGroupFromGroup_had()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupToGroup("subgroup", "supergroup");
         assertThat(reg.groupExtendsFromGroup("subgroup", "supergroup"))
                 .withFailMessage("Failed initial test set-up - .groupExtendsFromGroup did not return true after "
@@ -2956,7 +2957,7 @@ public class PermissionsRegistryTest
     @Test
     void revokeGroupFromGroup_didntHave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         assertThat(reg.groupExtendsFromGroup("subgroup", "supergroup"))
                 .withFailMessage("Failed initial test set-up - .groupExtendsFromGroup did not return false despite "
                                  + "having not assigned the supergroup to the subgroup.")
@@ -2972,7 +2973,7 @@ public class PermissionsRegistryTest
     @Test
     void clear_empty()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         reg.clear();
 
@@ -2984,10 +2985,10 @@ public class PermissionsRegistryTest
     @Test
     void clear_onlyHadUsers()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getUserPermissionsGroupOrNew("doot");
-        reg.getUserPermissionsGroupOrNew("noot");
-        reg.getUserPermissionsGroupOrNew("hoot");
+        TPReg reg = getNewPermissionsRegistry();
+        createUser(reg, "doot");
+        createUser(reg, "noot");
+        createUser(reg, "hoot");
 
         reg.clear();
 
@@ -2999,10 +3000,10 @@ public class PermissionsRegistryTest
     @Test
     void clear_onlyHadGroups()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroupOrNew("doot");
-        reg.getGroupPermissionsGroupOrNew("noot");
-        reg.getGroupPermissionsGroupOrNew("hoot");
+        TPReg reg = getNewPermissionsRegistry();
+        createGroup(reg, "doot");
+        createGroup(reg, "noot");
+        createGroup(reg, "hoot");
 
         reg.clear();
 
@@ -3014,7 +3015,7 @@ public class PermissionsRegistryTest
     @Test
     void clear_onlyHadDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("some.permission.doot");
         reg.assignDefaultPermission("some.permission.noot");
         reg.assignDefaultPermission("some.other.permission");
@@ -3030,7 +3031,7 @@ public class PermissionsRegistryTest
     @Test
     void clear_hadUsersGroupsAndDefaults()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignUserPermission("user1", "some.permission.doot");
         reg.assignGroupToUser("user1", "group1");
         reg.assignGroupPermission("group1", "some.permission.noot");
@@ -3058,7 +3059,7 @@ public class PermissionsRegistryTest
     @Test
     public void singleLine_saving()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignGroupPermission("yellow", "permission.to.yellow");
         reg.assignGroupToGroup("red", "yellow");
         reg.assignGroupToGroup("blue", "red");
@@ -3072,7 +3073,7 @@ public class PermissionsRegistryTest
     @Test
     public void singleLine_loading() throws IOException
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         String saveString =   "blue #red"
                               + "\nred: 5 #yellow"
                               + "\n\nyellow"
@@ -3091,7 +3092,7 @@ public class PermissionsRegistryTest
     @Test
     public void multilinePermissionArgsLoaded()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         String saveString = "group1\n"
                             + "    my.perm.first\n"
@@ -3130,7 +3131,7 @@ public class PermissionsRegistryTest
     @Test
     public void multilinePermissionArgLoadAndSave()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
 
         String saveString = "group1\n"
                             + "    my.perm.first\n"
@@ -3158,7 +3159,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_loadingAndSaving()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("this.is.a.permission");
         reg.assignDefaultPermission("this.is.another.permission: 5");
         reg.assignDefaultGroup("somedefaultgroup");
@@ -3181,15 +3182,15 @@ public class PermissionsRegistryTest
     @Test
     public void groupPriority_saving()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroupOrNew("katara", 5);
-        reg.getGroupPermissionsGroupOrNew("iroh", -3.76);
-        reg.getGroupPermissionsGroupOrNew("azula", -3.4);
-        reg.getGroupPermissionsGroupOrNew("suki", -3.9);
-        reg.getGroupPermissionsGroupOrNew("appa", -3);
-        reg.getGroupPermissionsGroupOrNew("momo", -4);
-        reg.getGroupPermissionsGroupOrNew("jet", 4.2);
-        reg.getGroupPermissionsGroupOrNew("sozin", 2.5);
+        TPReg reg = getNewPermissionsRegistry();
+        createGroup(reg, "katara", 5);
+        createGroup(reg, "iroh", -3.76);
+        createGroup(reg, "azula", -3.4);
+        createGroup(reg, "suki", -3.9);
+        createGroup(reg, "appa", -3);
+        createGroup(reg, "momo", -4);
+        createGroup(reg, "jet", 4.2);
+        createGroup(reg, "sozin", 2.5);
 
         reg.assignGroupPermission("katara", "someperm: doot");
         reg.assignGroupPermission("momo", "someperm: moot");
@@ -3215,15 +3216,15 @@ public class PermissionsRegistryTest
     @Test
     public void groupPriority_order()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroupOrNew("katara", 5);
-        reg.getGroupPermissionsGroupOrNew("iroh", -3.76);
-        reg.getGroupPermissionsGroupOrNew("azula", -3.4);
-        reg.getGroupPermissionsGroupOrNew("suki", -3.9);
-        reg.getGroupPermissionsGroupOrNew("appa", -3);
-        reg.getGroupPermissionsGroupOrNew("momo", -4);
-        reg.getGroupPermissionsGroupOrNew("jet", 4.2);
-        reg.getGroupPermissionsGroupOrNew("sozin", 2.5);
+        TPReg reg = getNewPermissionsRegistry();
+        createGroup(reg, "katara", 5);
+        createGroup(reg, "iroh", -3.76);
+        createGroup(reg, "azula", -3.4);
+        createGroup(reg, "suki", -3.9);
+        createGroup(reg, "appa", -3);
+        createGroup(reg, "momo", -4);
+        createGroup(reg, "jet", 4.2);
+        createGroup(reg, "sozin", 2.5);
 
         reg.assignGroupToUser("user1", "katara");
         reg.assignGroupToUser("user1", "iroh");
@@ -3260,17 +3261,17 @@ public class PermissionsRegistryTest
     {
         // secondary priority inferred from alphabetical order.
 
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
-        reg.getGroupPermissionsGroupOrNew("katara");
-        reg.getGroupPermissionsGroupOrNew("iroh");
-        reg.getGroupPermissionsGroupOrNew("azula");
-        reg.getGroupPermissionsGroupOrNew("suki");
-        reg.getGroupPermissionsGroupOrNew("appa");
-        reg.getGroupPermissionsGroupOrNew("momo");
-        reg.getGroupPermissionsGroupOrNew("jet");
-        reg.getGroupPermissionsGroupOrNew("sozin");
-        reg.getGroupPermissionsGroupOrNew("toph", 2);
-        reg.getGroupPermissionsGroupOrNew("boulder", 2);
+        TPReg reg = getNewPermissionsRegistry();
+        createGroup(reg, "katara");
+        createGroup(reg, "iroh");
+        createGroup(reg, "azula");
+        createGroup(reg, "suki");
+        createGroup(reg, "appa");
+        createGroup(reg, "momo");
+        createGroup(reg, "jet");
+        createGroup(reg, "sozin");
+        createGroup(reg, "toph", 2);
+        createGroup(reg, "boulder", 2);
 
         reg.assignGroupToUser("user1", "katara");
         reg.assignGroupToUser("user1", "iroh");
@@ -3312,7 +3313,7 @@ public class PermissionsRegistryTest
     @Test
     public void priorityRetainedForGroupsUsedBeforeDeclared()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         String saveString = "group1\n    #group2\n    some.other.permission\n\ngroup2: 3\n    some.permission.here";
 
         try
@@ -3328,7 +3329,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_fallingBack_otherwiseEmpty()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("this.is.a.permission");
         assertTrue(reg.userHasPermission("toodles", "this.is.a.permission.too"));
     }
@@ -3336,7 +3337,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_fallingBack_onExistingUser()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("this.is.a.permission: 5");
         reg.assignDefaultPermission("this.is.another.permission: 6");
         reg.assignUserPermission("toodles", "this.is.a: 7");
@@ -3347,7 +3348,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_fallingBack_toDefaultGroup()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultGroup("mygroup");
         reg.assignGroupPermission("mygroup", "this.is.a: 5");
         reg.assignGroupPermission("mygroup", "this.is.another.permission: 6");
@@ -3365,7 +3366,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_group_nonexisting()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("first.second.third: doot");
         reg.assignDefaultGroup("thedefaultgroup");
 
@@ -3377,7 +3378,7 @@ public class PermissionsRegistryTest
     @Test
     public void defaultPermissions_group_existing()
     {
-        PermissionsRegistry<String> reg = getNewPermissionsRegistry();
+        TPReg reg = getNewPermissionsRegistry();
         reg.assignDefaultPermission("first.second.third: doot");
         reg.assignDefaultGroup("thedefaultgroup");
         reg.assignGroupPermission("testgroup", "another.permission");

@@ -7,6 +7,7 @@ import scot.massie.lib.events.args.EventArgs;
 import scot.massie.lib.permissions.Permission;
 import scot.massie.lib.permissions.PermissionGroup;
 import scot.massie.lib.permissions.PermissionStatus;
+import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 
@@ -94,7 +95,7 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     public CachedPermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(idToString, idFromString); }
 
-    public CachedPermissionsRegistry(PermissionsRegistry<ID> inner)
+    public CachedPermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
     { super(inner); }
     //endregion
 
