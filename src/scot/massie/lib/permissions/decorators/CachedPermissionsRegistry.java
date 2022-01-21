@@ -4,10 +4,9 @@ import scot.massie.lib.collections.iterables.queues.EvictingHashMap;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.EventArgs;
-import scot.massie.lib.permissions.Permission;
-import scot.massie.lib.permissions.PermissionGroup;
-import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
+import scot.massie.lib.permissions.Permission;
+import scot.massie.lib.permissions.PermissionStatus;
 import scot.massie.lib.permissions.PermissionsRegistry;
 import scot.massie.lib.permissions.PermissionsRegistryDecorator;
 
@@ -485,14 +484,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     }
 
     @Override
-    protected Permission assignPermission(PermissionGroup permGroup, String permission)
-    {
-        Permission result = super.assignPermission(permGroup, permission);
-        invalidateCache();
-        return result;
-    }
-
-    @Override
     public void assignUserPermissions(ID userId, List<String> permissions)
     {
         super.assignUserPermissions(userId, permissions);
@@ -535,13 +526,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     }
 
     @Override
-    protected void assignPermissions(PermissionGroup permGroup, List<String> permissions)
-    {
-        super.assignPermissions(permGroup, permissions);
-        invalidateCache();
-    }
-
-    @Override
     public Permission revokeUserPermission(ID userId, String permission)
     {
         Permission result = super.revokeUserPermission(userId, permission);
@@ -561,14 +545,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     public Permission revokeDefaultPermission(String permission)
     {
         Permission result = super.revokeDefaultPermission(permission);
-        invalidateCache();
-        return result;
-    }
-
-    @Override
-    protected Permission revokePermission(PermissionGroup permGroup, String permission)
-    {
-        Permission result = super.revokePermission(permGroup, permission);
         invalidateCache();
         return result;
     }
@@ -595,13 +571,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     }
 
     @Override
-    protected void revokeAllPermissions(PermissionGroup permGroup)
-    {
-        super.revokeAllPermissions(permGroup);
-        invalidateCache();
-    }
-
-    @Override
     public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     {
         super.assignGroupToUser(userId, groupNameBeingAssigned);
@@ -619,13 +588,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     public void assignDefaultGroup(String groupNameBeingAssigned)
     {
         super.assignDefaultGroup(groupNameBeingAssigned);
-        invalidateCache();
-    }
-
-    @Override
-    protected void assignGroupTo(PermissionGroup permGroup, String groupNameBeingAssigned, boolean checkForCircular)
-    {
-        super.assignGroupTo(permGroup, groupNameBeingAssigned, checkForCircular);
         invalidateCache();
     }
 
@@ -672,13 +634,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     }
 
     @Override
-    protected void assignGroupsTo(PermissionGroup permGroup, List<String> groupNamesBeingAssigned, boolean checkForCircular)
-    {
-        super.assignGroupsTo(permGroup, groupNamesBeingAssigned, checkForCircular);
-        invalidateCache();
-    }
-
-    @Override
     public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
     {
         boolean result = super.revokeGroupFromUser(userId, groupNameBeingRevoked);
@@ -703,14 +658,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     }
 
     @Override
-    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupNameBeingRevoked)
-    {
-        boolean result = super.revokeGroupFrom(permGroup, groupNameBeingRevoked);
-        invalidateCache();
-        return result;
-    }
-
-    @Override
     public void revokeAllGroupsFromUser(ID userId)
     {
         super.revokeAllGroupsFromUser(userId);
@@ -728,13 +675,6 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     public void revokeAllDefaultGroups()
     {
         super.revokeAllDefaultGroups();
-        invalidateCache();
-    }
-
-    @Override
-    protected void revokeAllGroups(PermissionGroup permGroup)
-    {
-        super.revokeAllGroups(permGroup);
         invalidateCache();
     }
 

@@ -64,7 +64,7 @@ import java.util.stream.Stream;
  * most relevant permission. Permission arguments may be multiple lines.</p>
  * @param <ID> The type of the unique identifier used to represent users.
  */
-public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> implements GroupBasedPermissionsRegistry<ID>
+public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> implements PermissionsRegistry<ID>
 {
     //region Inner classes
     //region Exceptions

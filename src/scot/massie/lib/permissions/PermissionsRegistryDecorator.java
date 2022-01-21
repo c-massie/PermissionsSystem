@@ -4,7 +4,6 @@ import scot.massie.lib.permissions.exceptions.GroupMissingPermissionException;
 import scot.massie.lib.permissions.exceptions.PermissionNotDefaultException;
 import scot.massie.lib.permissions.exceptions.UserMissingPermissionException;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -16,7 +15,7 @@ import java.util.function.Function;
  * Base class for decorators of {@link GroupMapPermissionsRegistry}.
  * @param <ID> The user ID type of the permissions registry being decorated.
  */
-public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> extends GroupMapPermissionsRegistry<ID>
+public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> implements PermissionsRegistry<ID>
 {
     /*
     
@@ -47,10 +46,7 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
                                         Function<String, ID> idFromString,
                                         Path usersFile,
                                         Path groupsFile)
-    {
-        super(idToString, idFromString, usersFile, groupsFile);
-        this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile);
-    }
+    { this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString, usersFile, groupsFile); }
 
     /**
      * Creates a new decorator, decorating a fresh instance of {@link GroupMapPermissionsRegistry}.
@@ -58,24 +54,14 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */
     public PermissionsRegistryDecorator(Function<ID, String> idToString, Function<String, ID> idFromString)
-    {
-        super(idToString, idFromString);
-        this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString);
-    }
+    { this.inner = new GroupMapPermissionsRegistry<>(idToString, idFromString); }
 
     /**
      * Creates a new decorator, decorating the given instance of {@link GroupMapPermissionsRegistry}.
      * @param inner The instance of {@link GroupMapPermissionsRegistry} to decorate.
      */
     public PermissionsRegistryDecorator(GroupMapPermissionsRegistry<ID> inner)
-    {
-        super(inner.getIdToStringFunction(),
-              inner.getIdFromStringFunction(),
-              inner.getUsersFilePath(),
-              inner.getGroupsFilePath());
-
-        this.inner = inner;
-    }
+    { this.inner = inner; }
     //endregion
 
     //region Methods
@@ -90,10 +76,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public PermissionStatus getDefaultPermissionStatus(String permission)
     { return inner.getDefaultPermissionStatus(permission); }
-
-    @Override
-    protected PermissionStatus getPermissionStatus(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { return inner.getPermissionStatus(permGroup, permission, deferToDefault); }
 
     @Override
     public Map<String, PermissionStatus> getUserPermissionStatuses(ID userId, Iterable<String> permissions)
@@ -118,10 +100,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public Map<String, PermissionStatus> getDefaultPermissionStatuses(String... permissions)
     { return inner.getDefaultPermissionStatuses(permissions); }
-
-    @Override
-    protected Map<String, PermissionStatus> getPermissionStatuses(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
-    { return inner.getPermissionStatuses(permGroup, permissions, deferToDefault); }
 
     @Override
     public void assertUserHasPermission(ID userId, String permission) throws UserMissingPermissionException
@@ -196,10 +174,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.isDefaultPermission(permission); }
 
     @Override
-    protected boolean hasPermission(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { return inner.hasPermission(permGroup, permission, deferToDefault); }
-
-    @Override
     public boolean userHasAllPermissions(ID userId, Iterable<String> permissions)
     { return inner.userHasAllPermissions(userId, permissions); }
 
@@ -224,10 +198,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.areAllDefaultPermissions(permissions); }
 
     @Override
-    protected boolean hasAllPermissions(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
-    { return inner.hasAllPermissions(permGroup, permissions, deferToDefault); }
-
-    @Override
     public boolean userHasAnyPermissions(ID userId, Iterable<String> permissions)
     { return inner.userHasAnyPermissions(userId, permissions); }
 
@@ -250,10 +220,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public boolean anyAreDefaultPermissions(String... permissions)
     { return inner.anyAreDefaultPermissions(permissions); }
-
-    @Override
-    protected boolean hasAnyPermissions(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
-    { return inner.hasAnyPermissions(permGroup, permissions, deferToDefault); }
 
     @Override
     public boolean userHasAnySubPermissionOf(ID userId, String permission)
@@ -292,18 +258,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.isOrAnySubPermissionOfIsDefault(permissions); }
 
     @Override
-    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { return inner.hasAnySubPermissionOf(permGroup, permission, deferToDefault); }
-
-    @Override
-    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, String[] permissions, boolean deferToDefault)
-    { return inner.hasAnySubPermissionOf(permGroup, permissions, deferToDefault); }
-
-    @Override
-    protected boolean hasAnySubPermissionOf(PermissionGroup permGroup, Iterable<String> permissions, boolean deferToDefault)
-    { return inner.hasAnySubPermissionOf(permGroup, permissions, deferToDefault); }
-
-    @Override
     public String getUserPermissionArg(ID userId, String permission)
     { return inner.getUserPermissionArg(userId, permission); }
 
@@ -316,10 +270,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getDefaultPermissionArg(permission); }
 
     @Override
-    protected String getPermissionArg(PermissionGroup permGroup, String permission, boolean deferToDefault)
-    { return inner.getPermissionArg(permGroup, permission, deferToDefault); }
-
-    @Override
     public boolean userHasGroup(ID userId, String groupName)
     { return inner.userHasGroup(userId, groupName); }
 
@@ -330,10 +280,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public boolean isDefaultGroup(String groupId)
     { return inner.isDefaultGroup(groupId); }
-
-    @Override
-    protected boolean hasGroup(PermissionGroup permGroup, String groupId, boolean deferToDefault)
-    { return inner.hasGroup(permGroup, groupId, deferToDefault); }
 
     @Override
     public boolean userHasAllGroups(ID userId, Iterable<String> groupNames)
@@ -360,10 +306,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.areAllDefaultGroups(groupNames); }
 
     @Override
-    protected boolean hasAllGroups(PermissionGroup permGroup, Iterable<String> groupNames, boolean deferToDefault)
-    { return inner.hasAllGroups(permGroup, groupNames, deferToDefault); }
-
-    @Override
     public boolean userHasAnyGroups(ID userId, Iterable<String> groupNames)
     { return inner.userHasAnyGroups(userId, groupNames); }
 
@@ -386,10 +328,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public boolean anyAreDefaultGroups(String... groupNames)
     { return inner.anyAreDefaultGroups(groupNames); }
-
-    @Override
-    protected boolean hasAnyGroups(PermissionGroup permGroup, Iterable<String> groupNames, boolean deferToDefault)
-    { return inner.hasAnyGroups(permGroup, groupNames, deferToDefault); }
 
     @Override
     public boolean hasBeenDifferentiatedFromFiles()
@@ -444,10 +382,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getDefaultPermissions(); }
 
     @Override
-    protected List<String> getPermissions(PermissionGroup permGroup)
-    { return inner.getPermissions(permGroup); }
-
-    @Override
     public List<String> getUserPermissionsWithArgs(ID userId)
     { return inner.getUserPermissionsWithArgs(userId); }
 
@@ -458,10 +392,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public List<String> getDefaultPermissionsWithArgs()
     { return inner.getDefaultPermissionsWithArgs(); }
-
-    @Override
-    protected List<String> getPermissionsWithArgs(PermissionGroup permGroup)
-    { return inner.getPermissionsWithArgs(permGroup); }
 
     @Override
     public Collection<PermissionStatus> getAllUserPermissionStatuses(ID userId)
@@ -476,10 +406,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.getAllDefaultPermissionStatuses(); }
 
     @Override
-    protected Collection<PermissionStatus> getAllPermissionsStatuses(PermissionGroup permGroup)
-    { return inner.getAllPermissionsStatuses(permGroup); }
-
-    @Override
     public List<String> getGroupsOfUser(ID userId)
     { return inner.getGroupsOfUser(userId); }
 
@@ -490,46 +416,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public List<String> getDefaultGroups()
     { return inner.getDefaultGroups(); }
-
-    @Override
-    protected List<String> getGroupsOf(PermissionGroup permGroup)
-    { return inner.getGroupsOf(permGroup); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroup(String groupName)
-    { return inner.getGroupPermissionsGroup(groupName); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupName)
-    { return inner.getGroupPermissionsGroupOrNew(groupName); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, long priority)
-    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, double priority)
-    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, PermissionGroup.Priority priority)
-    { return inner.getGroupPermissionsGroupOrNew(groupName, priority); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupOrNew(String groupName, String priorityAsString) throws InvalidPriorityException
-    { return inner.getGroupPermissionsGroupOrNew(groupName, priorityAsString); }
-
-    @Override
-    PermissionGroup getGroupPermissionsGroupFromSaveString(String saveString)
-    { return inner.getGroupPermissionsGroupFromSaveString(saveString); }
-
-    @Override
-    PermissionGroup getUserPermissionsGroupOrNew(ID userId)
-    { return inner.getUserPermissionsGroupOrNew(userId); }
-
-    @Override
-    PermissionGroup getUserPermissionsGroupFromSaveString(String saveString)
-    { return inner.getUserPermissionsGroupFromSaveString(saveString); }
 
     @Override
     public void absorb(PermissionsRegistry<ID> other)
@@ -550,10 +436,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public Permission assignDefaultPermission(String permission)
     { return inner.assignDefaultPermission(permission); }
-
-    @Override
-    protected Permission assignPermission(PermissionGroup permGroup, String permission)
-    { return inner.assignPermission(permGroup, permission); }
 
     @Override
     public void assignUserPermissions(ID userId, List<String> permissions)
@@ -580,10 +462,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.assignDefaultPermissions(permissions); }
 
     @Override
-    protected void assignPermissions(PermissionGroup permGroup, List<String> permissions)
-    { inner.assignPermissions(permGroup, permissions); }
-
-    @Override
     public Permission revokeUserPermission(ID userId, String permission)
     { return inner.revokeUserPermission(userId, permission); }
 
@@ -594,10 +472,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public Permission revokeDefaultPermission(String permission)
     { return inner.revokeDefaultPermission(permission); }
-
-    @Override
-    protected Permission revokePermission(PermissionGroup permGroup, String permission)
-    { return inner.revokePermission(permGroup, permission); }
 
     @Override
     public void revokeAllUserPermissions(ID userId)
@@ -612,10 +486,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.revokeAllDefaultPermissions(); }
 
     @Override
-    protected void revokeAllPermissions(PermissionGroup permGroup)
-    { inner.revokeAllPermissions(permGroup); }
-
-    @Override
     public void assignGroupToUser(ID userId, String groupNameBeingAssigned)
     { inner.assignGroupToUser(userId, groupNameBeingAssigned); }
 
@@ -626,10 +496,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public void assignDefaultGroup(String groupNameBeingAssigned)
     { inner.assignDefaultGroup(groupNameBeingAssigned); }
-
-    @Override
-    protected void assignGroupTo(PermissionGroup permGroup, String groupNameBeingAssigned, boolean checkForCircular)
-    { inner.assignGroupTo(permGroup, groupNameBeingAssigned, checkForCircular); }
 
     @Override
     public void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned)
@@ -656,10 +522,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.assignDefaultGroups(groupNameBeingAssigned); }
 
     @Override
-    protected void assignGroupsTo(PermissionGroup permGroup, List<String> groupNamesBeingAssigned, boolean checkForCircular)
-    { inner.assignGroupsTo(permGroup, groupNamesBeingAssigned, checkForCircular); }
-
-    @Override
     public boolean revokeGroupFromUser(ID userId, String groupNameBeingRevoked)
     { return inner.revokeGroupFromUser(userId, groupNameBeingRevoked); }
 
@@ -672,10 +534,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { return inner.revokeDefaultGroup(groupNameBeingRevoked); }
 
     @Override
-    protected boolean revokeGroupFrom(PermissionGroup permGroup, String groupNameBeingRevoked)
-    { return inner.revokeGroupFrom(permGroup, groupNameBeingRevoked); }
-
-    @Override
     public void revokeAllGroupsFromUser(ID userId)
     { inner.revokeAllGroupsFromUser(userId); }
 
@@ -686,10 +544,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public void revokeAllDefaultGroups()
     { inner.revokeAllDefaultGroups(); }
-
-    @Override
-    protected void revokeAllGroups(PermissionGroup permGroup)
-    { inner.revokeAllGroups(permGroup); }
 
     @Override
     public void clear()
@@ -740,26 +594,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     { inner.prune(groupNames); }
 
     @Override
-    protected void markAsModified()
-    { inner.markAsModified(); }
-
-    @Override
-    protected void saveUsers(BufferedWriter writer) throws IOException
-    { inner.saveUsers(writer); }
-
-    @Override
-    protected void saveGroups(BufferedWriter writer) throws IOException
-    { inner.saveGroups(writer); }
-
-    @Override
-    protected void saveUsers() throws IOException
-    { inner.saveUsers(); }
-
-    @Override
-    protected void saveGroups() throws IOException
-    { inner.saveGroups(); }
-
-    @Override
     public String usersToSaveString()
     { return inner.usersToSaveString(); }
 
@@ -770,14 +604,6 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> ext
     @Override
     public void save() throws IOException
     { inner.save(); }
-
-    @Override
-    protected void loadUsers() throws IOException
-    { inner.loadUsers(); }
-
-    @Override
-    protected void loadGroups() throws IOException
-    { inner.loadGroups(); }
 
     @Override
     public void loadUsersFromSaveString(String saveString) throws IOException
