@@ -49,6 +49,178 @@ import java.util.function.Function;
  */
 public interface PermissionsRegistry<ID extends Comparable<? super ID>>
 {
+    //region Inner classes
+    /**
+     * Base exception for PermissionsRegistry-related exceptions.
+     */
+    class PermissionsRegistryException extends RuntimeException
+    {
+        public PermissionsRegistryException() { super(); }
+        public PermissionsRegistryException(String message) { super(message); }
+        public PermissionsRegistryException(Throwable cause) { super(cause); }
+        public PermissionsRegistryException(String message, Throwable cause) { super(message, cause); }
+    }
+
+    /**
+     * Exception for attempting to create a group with an invalid name.
+     */
+    class InvalidGroupNameException extends PermissionsRegistryException
+    {
+        public InvalidGroupNameException(String groupNameString)
+        {
+            super();
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, String message)
+        {
+            super(message);
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, Throwable cause)
+        {
+            super(cause);
+            this.groupNameString = groupNameString;
+        }
+
+        public InvalidGroupNameException(String groupNameString, String message, Throwable cause)
+        {
+            super(message, cause);
+            this.groupNameString = groupNameString;
+        }
+
+        protected final String groupNameString;
+
+        /**
+         * Gets the invalid group name string that caused this exception.
+         * @return The invalid group name string that caused this exception.
+         */
+        public String getGroupNameString()
+        { return groupNameString; }
+    }
+
+    /**
+     * Exception for attempting to parse a permission string that is not parsable as a permission.
+     */
+    class InvalidPermissionException extends PermissionsRegistryException
+    {
+        public InvalidPermissionException(String permission)
+        {
+            super();
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, String message)
+        {
+            super(message);
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, Throwable cause)
+        {
+            super(cause);
+            this.permissionString = permission;
+        }
+
+        public InvalidPermissionException(String permission, String message, Throwable cause)
+        {
+            super(message, cause);
+            this.permissionString = permission;
+        }
+
+        protected final String permissionString;
+
+        /**
+         * Gets the unparsable permission string that caused this exception.
+         * @return The unparsable permission string that caused this exception.
+         */
+        public String getPermissionString()
+        { return permissionString; }
+    }
+
+    /**
+     * Exception for attempting to parse a string as a group priority that cannot be read as a number.
+     */
+    class InvalidPriorityException extends NumberFormatException
+    {
+        public InvalidPriorityException(String invalidPriority)
+        {
+            super("Invalid permission group priority: " + invalidPriority);
+            this.invalidPriority = invalidPriority;
+        }
+
+        protected final String invalidPriority;
+
+        /**
+         * Gets the string that cannot be read as a number, which caused this exception.
+         * @return The string that cannot be read as a number, which caused this exception.
+         */
+        public String getInvalidPriority()
+        { return invalidPriority; }
+    }
+
+    /**
+     * Exception for attempting to assign a group to another group when the assignment would cause both groups to
+     * extend from each-other.
+     */
+    class CircularGroupHierarchyException extends PermissionsRegistryException
+    {
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName)
+        {
+            super();
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               String msg)
+        {
+            super(msg);
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               Throwable cause)
+        {
+            super(cause);
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        public CircularGroupHierarchyException(String ancestorGroupName,
+                                               String descendantGroupName,
+                                               String message,
+                                               Throwable cause)
+        {
+            super(message, cause);
+            this.currentAncestorGroupName = ancestorGroupName;
+            this.currentDescendantGroupName = descendantGroupName;
+        }
+
+        protected final String currentAncestorGroupName;
+        protected final String currentDescendantGroupName;
+
+        /**
+         * Gets the name of the group that, before the exception was thrown, was extended by the other.
+         * @return The name of the ancestor group.
+         */
+        public String getCurrentAncestorGroupName()
+        { return currentAncestorGroupName; }
+
+        /**
+         * Gets the name of the group that, before the exception was thrown, descended from the other.
+         * @return The name of the descendant group.
+         */
+        public String getCurrentDescendantGroupName()
+        { return currentDescendantGroupName; }
+    }
+    //endregion
+
     //region Assertions
     //region Permissions
     //region Has
@@ -983,7 +1155,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * @param groupId The name of the group to assign a permission to.
      * @param permission The permission to assign.
      * @return A Permission object representing the permission previously assigned, or null if there was none.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If the group name was not a valid group name.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     Permission assignGroupPermission(String groupId, String permission);
 
@@ -1014,7 +1186,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns permissions to a group.
      * @param groupName The name of the group to assign permissions to.
      * @param permissions A list of permissions to assign.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If the group name was not a valid group name.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     void assignGroupPermissions(String groupName, List<String> permissions);
 
@@ -1022,7 +1194,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns permissions to a group.
      * @param groupName The name of the group to assign permissions to.
      * @param permissions An array of permissions to assign.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If the group name was not a valid group name.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     void assignGroupPermissions(String groupName, String[] permissions);
 
@@ -1103,7 +1275,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a group to a user.
      * @param userId The ID of the user to assign a group to.
      * @param groupNameBeingAssigned The name of the group being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If the group name was not a valid group name.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     void assignGroupToUser(ID userId, String groupNameBeingAssigned);
 
@@ -1111,14 +1283,14 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns a group to another group. A group cannot extend from itself or a group that extends from it.
      * @param groupName The name of the group to assign another group to.
      * @param groupNameBeingAssigned The name of the group being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If either of the group names was not a valid group name.
+     * @throws InvalidGroupNameException If either of the group names was not a valid group name.
      */
     void assignGroupToGroup(String groupName, String groupNameBeingAssigned);
 
     /**
      * Assigns a group to the default permissions.
      * @param groupNameBeingAssigned The name of the group being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If the group name was not a valid group name.
+     * @throws InvalidGroupNameException If the group name was not a valid group name.
      */
     void assignDefaultGroup(String groupNameBeingAssigned);
     //endregion
@@ -1128,7 +1300,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns groups to a user.
      * @param userId The ID of the user to assign groups to.
      * @param groupNamesBeingAssigned A list of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the group names were not valid group names.
+     * @throws InvalidGroupNameException If any of the group names were not valid group names.
      */
     void assignGroupsToUser(ID userId, List<String> groupNamesBeingAssigned);
 
@@ -1136,7 +1308,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns groups to a user.
      * @param userId The ID of the user to assign groups to.
      * @param groupNamesBeingAssigned An array of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the group names were not valid group names.
+     * @throws InvalidGroupNameException If any of the group names were not valid group names.
      */
     void assignGroupsToUser(ID userId, String[] groupNamesBeingAssigned);
 
@@ -1144,7 +1316,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns groups to another group. A group cannot extend from itself or a group that extends from it.
      * @param groupName The name of the group to assign other groups to.
      * @param groupNamesBeingAssigned A list of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the group names involved were not valid group names.
+     * @throws InvalidGroupNameException If any of the group names involved were not valid group names.
      */
     void assignGroupsToGroup(String groupName, List<String> groupNamesBeingAssigned);
 
@@ -1152,21 +1324,21 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * Assigns groups to another group. A group cannot extend from itself or a group that extends from it.
      * @param groupName The name of the group to assign other groups to.
      * @param groupNamesBeingAssigned An array of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the group names involved were not valid group names.
+     * @throws InvalidGroupNameException If any of the group names involved were not valid group names.
      */
     void assignGroupsToGroup(String groupName, String[] groupNamesBeingAssigned);
 
     /**
      * Assigns groups to the default permissions.
      * @param groupNamesBeingAssigned A list of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the groups names were not valid group names.
+     * @throws InvalidGroupNameException If any of the groups names were not valid group names.
      */
     void assignDefaultGroups(List<String> groupNamesBeingAssigned);
 
     /**
      * Assigns groups to the default permissions.
      * @param groupNamesBeingAssigned An array of the names of groups being assigned.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the groups names were not valid group names.
+     * @throws InvalidGroupNameException If any of the groups names were not valid group names.
      */
     void assignDefaultGroups(String[] groupNamesBeingAssigned);
     //endregion
@@ -1334,7 +1506,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered users first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the groups assigned to users have invalid names.
+     * @throws InvalidGroupNameException If any of the groups assigned to users have invalid names.
      */
     void loadUsersFromSaveString(String saveString) throws IOException;
 
@@ -1347,7 +1519,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      * <p>Does not clear registered groups first.</p>
      * @param saveString The string to read.
      * @throws IOException If an IO exception was thrown while reading from the provided save string.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
+     * @throws InvalidGroupNameException If any of the groups loaded or any groups added to them have invalid names.
      */
     void loadGroupsFromSaveString(String saveString) throws IOException;
 
@@ -1356,7 +1528,7 @@ public interface PermissionsRegistry<ID extends Comparable<? super ID>>
      *
      * <p>Does nothing if the users and groups files have not been specified or cannot be read from.</p>
      * @throws IOException If an IO exception was thrown while reading from the users or groups files.
-     * @throws GroupMapPermissionsRegistry.InvalidGroupNameException If any of the groups loaded or assigned to any group or user have invalid
+     * @throws InvalidGroupNameException If any of the groups loaded or assigned to any group or user have invalid
      *                                   names.
      */
     void load() throws IOException;
