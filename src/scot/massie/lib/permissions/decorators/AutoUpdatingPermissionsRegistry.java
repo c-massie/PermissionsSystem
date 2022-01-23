@@ -66,7 +66,7 @@ public class AutoUpdatingPermissionsRegistry<ID extends Comparable<? super ID>> 
      * when prompted.
      * @param inner The wrapped permissions registry.
      */
-    public AutoUpdatingPermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
+    public AutoUpdatingPermissionsRegistry(PermissionsRegistry<ID> inner)
     { super(inner); }
 
     /**

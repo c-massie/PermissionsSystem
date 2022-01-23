@@ -163,7 +163,7 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
      * Wraps an existing permissions registry in a permissions registry with events, which will fire as appropriate.
      * @param inner The wrapped permissions registry.
      */
-    public PermissionsRegistryWithEvents(GroupMapPermissionsRegistry<ID> inner)
+    public PermissionsRegistryWithEvents(PermissionsRegistry<ID> inner)
     { super(inner); }
     //endregion
 

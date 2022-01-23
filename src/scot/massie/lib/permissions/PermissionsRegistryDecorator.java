@@ -31,7 +31,7 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> imp
     /**
      * The permissions registry being decorated.
      */
-    protected final GroupMapPermissionsRegistry<ID> inner;
+    protected final PermissionsRegistry<ID> inner;
     //endregion
 
     //region Initialisation
@@ -60,7 +60,7 @@ public class PermissionsRegistryDecorator<ID extends Comparable<? super ID>> imp
      * Creates a new decorator, decorating the given instance of {@link GroupMapPermissionsRegistry}.
      * @param inner The instance of {@link GroupMapPermissionsRegistry} to decorate.
      */
-    public PermissionsRegistryDecorator(GroupMapPermissionsRegistry<ID> inner)
+    public PermissionsRegistryDecorator(PermissionsRegistry<ID> inner)
     { this.inner = inner; }
     //endregion
 

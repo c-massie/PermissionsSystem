@@ -1,47 +1,19 @@
 package scot.massie.lib.permissions.decorators;
 
 import org.junit.jupiter.api.Test;
-import scot.massie.lib.permissions.GroupMapPermissionsRegistry;
-import scot.massie.lib.permissions.GroupMapPermissionsRegistryTest;
-import scot.massie.lib.permissions.PermissionsRegistryTest;
+import scot.massie.lib.permissions.PermissionsRegistryDecoratorTest;
 import scot.massie.lib.permissions.events.PermissionsChangedEventTarget;
 import scot.massie.lib.utils.wrappers.MutableWrapper;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class PermissionsRegistryWithEventsTest extends PermissionsRegistryTest<PermissionsRegistryWithEvents<String>>
+public class PermissionsRegistryWithEventsTest
+        extends PermissionsRegistryDecoratorTest<PermissionsRegistryWithEvents<String>>
 {
     @Override
     protected PermissionsRegistryWithEvents<String> getNewPermissionsRegistry()
     { return new PermissionsRegistryWithEvents<>(s -> s, s -> s); }
 
-    @Override
-    protected void createUser(PermissionsRegistryWithEvents<String> reg, String userId)
-    {
-        // TO DO: Write.
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName)
-    {
-        // TO DO: Write.
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName, int priority)
-    {
-        // TO DO: Write.
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
-
-    @Override
-    protected void createGroup(PermissionsRegistryWithEvents<String> reg, String groupName, double priority)
-    {
-        // TO DO: Write.
-        throw new UnsupportedOperationException("Not yet implemented.");
-    }
 
     @Test
     void events_assignUserPermission()

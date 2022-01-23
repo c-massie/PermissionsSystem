@@ -94,7 +94,7 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     public CachedPermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(idToString, idFromString); }
 
-    public CachedPermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
+    public CachedPermissionsRegistry(PermissionsRegistry<ID> inner)
     { super(inner); }
     //endregion
 

@@ -61,13 +61,8 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
      * Wraps an existing permissions registry in a threadsafe permissions registry, providing synchronous access to it.
      * @param inner The wrapped permissions registry.
      */
-    public ThreadsafePermissionsRegistry(GroupMapPermissionsRegistry<ID> inner)
-    {
-        super(inner.getIdToStringFunction(),
-              inner.getIdFromStringFunction(),
-              inner.getUsersFilePath(),
-              inner.getGroupsFilePath());
-    }
+    public ThreadsafePermissionsRegistry(PermissionsRegistry<ID> inner)
+    { super(inner); }
     //endregion
 
     //region Methods
