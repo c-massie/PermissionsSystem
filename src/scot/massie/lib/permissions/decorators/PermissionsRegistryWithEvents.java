@@ -28,7 +28,7 @@ import java.util.function.Function;
  *          by an enclosed decorator, only for modifications made through this one. (including by decorators enclosing
  *          this one)
  * @see PermissionsRegistry
- * @param <ID>The type of the unique identifier used to represent users.
+ * @param <ID> The type of the unique identifier used to represent users.
  */
 public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
@@ -142,7 +142,9 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
 
     //region Initialisation
     /**
-     * Creates a new permissions registry with events, with the ability to save to/load from files.
+     * Creates a new permissions registry with events, with the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #PermissionsRegistryWithEvents(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      * @param usersFile The filepath of the users permissions save file.
@@ -152,7 +154,9 @@ public class PermissionsRegistryWithEvents<ID extends Comparable<? super ID>> ex
     { super(idToString, idFromString, usersFile, groupsFile); }
 
     /**
-     * Creates a new permissions registry with events, without the ability to save to/load from files.
+     * Creates a new permissions registry with events, without the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #PermissionsRegistryWithEvents(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */

@@ -37,7 +37,9 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
 
     //region Initialisation
     /**
-     * Creates a new threadsafe permissions registry, with the ability to save to/load from files.
+     * Creates a new threadsafe permissions registry, with the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #ThreadsafePermissionsRegistry(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      * @param usersFile The filepath of the users permissions save file.
@@ -50,7 +52,9 @@ public final class ThreadsafePermissionsRegistry<ID extends Comparable<? super I
     { super(idToString, idFromString, usersFile, groupsFile); }
 
     /**
-     * Creates a new threadsafe permissions registry, without the ability to save to/load from files.
+     * Creates a new threadsafe permissions registry, without the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #ThreadsafePermissionsRegistry(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */

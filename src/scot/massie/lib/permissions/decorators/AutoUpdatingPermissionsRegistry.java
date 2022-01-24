@@ -16,7 +16,8 @@ import java.util.function.Supplier;
 /**
  * <p>A {@link PermissionsRegistry} decorator that, when prompted, updates the contents of its enclosed registry
  * according to provided criteria.</p>
- * @param <ID>The type of the unique identifier used to represent users.
+ * @see PermissionsRegistry
+ * @param <ID> The type of the unique identifier used to represent users.
  */
 public class AutoUpdatingPermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
@@ -41,7 +42,9 @@ public class AutoUpdatingPermissionsRegistry<ID extends Comparable<? super ID>> 
     Map<Supplier<Collection<ID>>, String> exclusiveAutoUserGroups = new HashMap<>();
 
     /**
-     * Creates a new auto-updating permissions registry, with the ability to save to/load from files.
+     * Creates a new auto-updating permissions registry, with the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #AutoUpdatingPermissionsRegistry(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      * @param usersFile The filepath of the users permissions save file.
@@ -54,7 +57,9 @@ public class AutoUpdatingPermissionsRegistry<ID extends Comparable<? super ID>> 
     { super(idToString, idFromString, usersFile, groupsFile); }
 
     /**
-     * Creates a new auto-updating permissions registry, without the ability to save to/load from files.
+     * Creates a new auto-updating permissions registry, without the ability to save to/load from files. This is the
+     * equivalent of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #AutoUpdatingPermissionsRegistry(PermissionsRegistry)}.
      * @param idToString The conversion for turning a user ID into a reversible string representation of it.
      * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
      */

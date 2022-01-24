@@ -20,53 +20,113 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * <p>A {@link PermissionsRegistry} decorator that stores the results of accessor calls and returning stored results
+ * from accessor calls where applicable, only refreshing stored results when the contents changes.</p>
+ * @see PermissionsRegistry
+ * @apiNote This assumes that the contents of the contained permissions registry is static when not calling any of the
+ *          standard permissions registry mutators, and that the contained registry is not mutated from outwith this
+ *          decorator. If this is not the case, this decorator should not be used, as this can lead to caches becoming
+ *          outdated without being invalidated.
+ * @param <ID> The type of the unique identifier used to represent users.
+ */
 public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> extends PermissionsRegistryDecorator<ID>
 {
     // NOTE: Assertions are not cached.
 
     //region Subclasses
+
+    /**
+     * Cache for single-argument accessors. This encapsulates a function and stores the result when queried.
+     * @param <TArg> The argument type.
+     * @param <TResult> The type returned.
+     */
     private class Cache<TArg, TResult>
     {
+        /**
+         * The map of cached results against the single argument passed in.
+         */
         EvictingHashMap<TArg, TResult> cachedValues = null;
 
+        /**
+         * The encapsulated function.
+         */
         Function<TArg, TResult> resultGetter;
 
+        /**
+         * Creates a new cache.
+         * @param function The function that this cache should call and cache the result of.
+         */
         public Cache(Function<TArg, TResult> function)
         {
             this.resultGetter = function;
-            CachedPermissionsRegistry.this.cacheInvalidated.register(this::invalidate);
+            cacheInvalidated.register(this::invalidate);
         }
 
+        /**
+         * Gets the result of the encapsulated function. If a result for the given arg already exists in this cache,
+         * retrieves the result from the cache instead of calling the function again. Otherwise, calls the encapsulated
+         * function with the given arg, stores the result, and returns the result.
+         * @param arg The arg to pass into the encapsulated function.
+         * @return The result of calling the encapsulated function with the given argument.
+         */
         public TResult get(TArg arg)
         {
             if(cachedValues == null)
-                return (cachedValues = new EvictingHashMap<>()).put(arg, resultGetter.apply(arg));
+                return (cachedValues = new EvictingHashMap<>(cacheSize)).put(arg, resultGetter.apply(arg));
 
             return cachedValues.computeIfAbsent(arg, x -> resultGetter.apply(x));
         }
 
+        /**
+         * Wipes the stored results of this cache.
+         */
         public void invalidate()
         { cachedValues = null; }
     }
 
+    /**
+     * Cache for dual-argument accessors. This encapsulates a function and stores the result when queried.
+     * @param <TArg1> The first argument type.
+     * @param <TArg2> The second argument type.
+     * @param <TResult> The type returned.
+     */
     private class BiCache<TArg1, TArg2, TResult>
     {
+        /**
+         * The map of cached results against the single argument passed in.
+         */
         EvictingHashMap<TArg1, EvictingHashMap<TArg2, TResult>> cachedValues = null;
 
+        /**
+         * The encapsulated function.
+         */
         BiFunction<TArg1, TArg2, TResult> resultGetter;
 
+        /**
+         * Creates a new cache.
+         * @param function The function that this cache should call and cache the result of.
+         */
         public BiCache(BiFunction<TArg1, TArg2, TResult> function)
         {
             this.resultGetter = function;
-            CachedPermissionsRegistry.this.cacheInvalidated.register(this::invalidate);
+            cacheInvalidated.register(this::invalidate);
         }
 
+        /**
+         * Gets the result of the encapsulated function. If a result for the given arg already exists in this cache,
+         * retrieves the result from the cache instead of calling the function again. Otherwise, calls the encapsulated
+         * function with the given args, stores the result, and returns the result.
+         * @param arg1 The first arg to pass into the encapsulated function.
+         * @param arg2 The second arg to pass into the encapsulated function.
+         * @return The result of calling the encapsulated function with the given arguments.
+         */
         public TResult get(TArg1 arg1, TArg2 arg2)
         {
             if(cachedValues == null)
             {
                 //noinspection ConstantConditions
-                return (cachedValues = new EvictingHashMap<>())
+                return (cachedValues = new EvictingHashMap<>(cacheSize))
                         .put(arg1, new EvictingHashMap<>())
                         .put(arg2, resultGetter.apply(arg1, arg2));
             }
@@ -75,30 +135,66 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
                                .computeIfAbsent(arg2, x -> resultGetter.apply(arg1, arg2));
         }
 
+        /**
+         * Wipes the stored results of this cache.
+         */
         public void invalidate()
         { cachedValues = null; }
     }
     //endregion
 
+    //region Instance variables
+    private final int cacheSize = 50;
+    //endregion
+
     //region Events
+    /**
+     * Event that's fired by calling {@link #invalidateCache()} - caches for accessors listen to this event and wipe
+     * when it fires.
+     */
     private final InvokableEvent<EventArgs> cacheInvalidated = new SetEvent<>();
     //endregion
 
     //region initialisation
+    /**
+     * Creates a new cached permissions registry, with the ability to save to/load from files. This is the equivalent of
+     * passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #CachedPermissionsRegistry(PermissionsRegistry)}.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     * @param usersFile The filepath of the users permissions save file.
+     * @param groupsFile The filepath of the groups permissions save file.
+     */
     public CachedPermissionsRegistry(Function<ID, String> idToString,
                                      Function<String, ID> idFromString,
                                      Path usersFile,
                                      Path groupsFile)
     { super(idToString, idFromString, usersFile, groupsFile); }
 
+    /**
+     * Creates a new cached permissions registry, without the ability to save to/load from files. This is the equivalent
+     * of passing a new instance of {@link GroupMapPermissionsRegistry} created with the given arguments into
+     * {@link #CachedPermissionsRegistry(PermissionsRegistry)}.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     */
     public CachedPermissionsRegistry(Function<ID, String> idToString, Function<String, ID> idFromString)
     { super(idToString, idFromString); }
 
+    /**
+     * Wraps an existing permissions registry in a cached permissions registry, providing access to it that caches
+     * accessor call results.
+     * @param inner The wrapped permissions registry.
+     */
     public CachedPermissionsRegistry(PermissionsRegistry<ID> inner)
     { super(inner); }
     //endregion
 
     //region methods
+
+    /**
+     * Deletes the caches for all accessors of this permissions registry.
+     */
     public void invalidateCache()
     { cacheInvalidated.invoke(null); }
 
