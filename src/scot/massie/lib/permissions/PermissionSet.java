@@ -127,12 +127,31 @@ public final class PermissionSet
     //region Methods
     //region Static utils
     //region String manipulation
+    /**
+     * Splits a permission path into an array of strings, which are the steps of the path in order, as delimited by full
+     * stops. ('.')
+     * @param permissionPath The path to split.
+     * @return An array of strings, where each string is a substring of the given path as delimited by full stops, ('.')
+     *         ordered by their order in the given string.
+     */
     static String[] splitPath(String permissionPath)
     { return permissionPath.split("\\.", -1); }
 
+    /**
+     * Creates a string representation of a permission and its path, without the permission argument.
+     * @param path The permission path.
+     * @param perm The permission.
+     * @return A string representation of the permission and its path, without the argument.
+     */
     static String applyPermissionToPathStringWithoutArg(String path, Permission perm)
     { return perm.negates() ? ("-" + path) : path; }
 
+    /**
+     * Creates a string representation of a permission and its path.
+     * @param path The permission path.
+     * @param perm The permission.
+     * @return A string representation of the permission and its path, including the argument if applicable.
+     */
     static String applyPermissionToPathString(String path, Permission perm)
     {
         if(perm.negates())
@@ -149,6 +168,14 @@ public final class PermissionSet
         return path;
     }
 
+    /**
+     * Creates a string representation of a permission and its path.
+     * @param path The permission path.
+     * @param perm The permission.
+     * @param includeArg Whether or not to include the permission argument in the string representation.
+     * @return A string representation of the permission and its path, including the argument if specified and
+     *         applicable.
+     */
     static String applyPermissionToPathString(String path, Permission perm, boolean includeArg)
     { return includeArg ? applyPermissionToPathString(path, perm) : applyPermissionToPathStringWithoutArg(path, perm); }
     //endregion

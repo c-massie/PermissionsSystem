@@ -29,39 +29,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>A registry for assigning permissions to users in a system and checking them.</p>
- *
- * <p>Users may be assigned permissions to indicate allowance to do something, or to provide some level of per-user
- * configurability.</p>
- *
- * <p>Permissions are provided as dot-separated alphanumeric strings. (e.g. "first.second.third") A permission is said
- * to "cover" another permission where the other permission starts with the dot-separated sections ("nodes") of the
- * first, in order. (e.g. "first.second.third" covers "first.second.third.fourth", but not "first.second.fourth" or
- * "second.first.third.fourth") A permission does not cover another where the other starts with the first, but doesn't
- * have the first's last node exactly. (e.g. "first.second.thi" does not cover "first.second.third" or
- * "first.second.third.fourth")</p>
- *
- * <p>The "most relevant permission" a user has to a given permission is the permission the user has that covers the
- * given permission with the most number of nodes.</p>
- *
- * <p>Users may be assigned "Groups", which are referred to by name, as strings. Groups may have their own permissions
- * and may be assigned other groups. Groups may also have "priorities" (numbers) associated with them. Where a user or
- * group does not have a given permission, it then checks the groups it is assigned, in order of priority from highest
- * to lowest, to see if they cover the given permission.</p>
- *
- * <p>A default "*" group may be defined with permissions and/or groups, which all users are considered to have assigned
- * to them. This may be thought of as a lowest priority group associated with all users.</p>
- *
- * <p>Permissions may be prefixed with a "-" to indicate that a user does *not* have the given permission, that that
- * permission is negated. If the most relevant permission to a given permission a user or group has is negating, that
- * user or group is considered not to have the given permission.</p>
- *
- * <p>Permissions may be suffixed with a ".*" to indicate that they cover permissions longer than it, but not the
- * permission itself. ("first.second.*" covers "first.second.third", but not "first.second")</p>
- *
- * <p>Permissions may be followed by (after any suffixes) a colon (":") and any arbitrary string. This string is the
- * "permission argument". When getting the permission argument of a given permission, it returns the argument of the
- * most relevant permission. Permission arguments may be multiple lines.</p>
+ * <p>A {@link PermissionsRegistry} that stores its uses, groups, and the default permissions in instances of
+ * {@link PermissionGroup}</p>
+ * @see PermissionsRegistry
  * @param <ID> The type of the unique identifier used to represent users.
  */
 public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> implements PermissionsRegistry<ID>
@@ -143,6 +113,11 @@ public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> impl
             return line;
         }
 
+        /**
+         * Gets the number of spaces at the start of a given string.
+         * @param of The string to get the number of spaces at the start of.
+         * @return The number of spaces at the start of the given string.
+         */
         private static int getIndentLevel(String of)
         {
             // Assumes a single-line line
@@ -248,6 +223,16 @@ public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> impl
     //endregion
 
     //region Initialisation
+
+    /**
+     * Creates a new permissions registry with the ability to save and load to and from files. Uses the given
+     * {@link PermissionGroup} object as the default permissions rather than creating a new one.
+     * @param defaultPermissions The object to use to store default permissions.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     * @param usersFile The filepath of the users permissions save file.
+     * @param groupsFile The filepath of the groups permissions save file.
+     */
     protected GroupMapPermissionsRegistry(PermissionGroup defaultPermissions,
                                           Function<ID, String> idToString,
                                           Function<String, ID> idFromString,
@@ -274,6 +259,13 @@ public class GroupMapPermissionsRegistry<ID extends Comparable<? super ID>> impl
                                        Path groupsFile)
     { this(new PermissionGroup("*"), idToString, idFromString, usersFile, groupsFile); }
 
+    /**
+     * Creates a new permissions registry without the ability to save and load to and from files. Uses the given
+     * {@link PermissionGroup} object as the default permissions rather than creating a new one.
+     * @param defaultPermissions The object to use to store default permissions.
+     * @param idToString The conversion for turning a user ID into a reversible string representation of it.
+     * @param idFromString The conversion for turning a user ID as a string string back into a user ID object.
+     */
     protected GroupMapPermissionsRegistry(PermissionGroup defaultPermissions,
                                           Function<ID, String> idToString,
                                           Function<String, ID> idFromString)
