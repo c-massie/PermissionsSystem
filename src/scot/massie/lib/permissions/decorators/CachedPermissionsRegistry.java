@@ -73,7 +73,12 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
         public TResult get(TArg arg)
         {
             if(cachedValues == null)
-                return (cachedValues = new EvictingHashMap<>(cacheSize)).put(arg, resultGetter.apply(arg));
+            {
+                cachedValues = new EvictingHashMap<>(cacheSize);
+                TResult result = resultGetter.apply(arg);
+                cachedValues.put(arg, result);
+                return result;
+            }
 
             return cachedValues.computeIfAbsent(arg, x -> resultGetter.apply(x));
         }
@@ -125,10 +130,13 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
         {
             if(cachedValues == null)
             {
-                //noinspection ConstantConditions
-                return (cachedValues = new EvictingHashMap<>(cacheSize))
-                        .put(arg1, new EvictingHashMap<>())
-                        .put(arg2, resultGetter.apply(arg1, arg2));
+                cachedValues                            = new EvictingHashMap<>(cacheSize);
+                EvictingHashMap<TArg2, TResult> arg1Map = new EvictingHashMap<>(cacheSize);
+                TResult result                          = resultGetter.apply(arg1, arg2);
+
+                cachedValues.put(arg1, arg1Map);
+                arg1Map.put(arg2, result);
+                return result;
             }
 
             return cachedValues.computeIfAbsent(arg1, x -> new EvictingHashMap<>())
@@ -144,7 +152,7 @@ public final class CachedPermissionsRegistry<ID extends Comparable<? super ID>> 
     //endregion
 
     //region Instance variables
-    private final int cacheSize = 50;
+    private final int cacheSize = 20;
     //endregion
 
     //region Events
