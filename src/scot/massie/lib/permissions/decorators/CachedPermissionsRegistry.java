@@ -1,6 +1,6 @@
 package scot.massie.lib.permissions.decorators;
 
-import scot.massie.lib.collections.iterables.queues.EvictingHashMap;
+import scot.massie.lib.collections.maps.EvictingHashMap;
 import scot.massie.lib.events.InvokableEvent;
 import scot.massie.lib.events.SetEvent;
 import scot.massie.lib.events.args.EventArgs;
